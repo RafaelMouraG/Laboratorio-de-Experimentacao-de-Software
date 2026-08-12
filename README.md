@@ -81,3 +81,33 @@ Link do repositório/GitHub Projects: `<preencher>`
 **Prazo final:** conforme cronograma da disciplina.
 **Valor total:** 15 pontos | Desconto de 1,0 ponto por dia de atraso | Desconto de até 10% da nota da sprint por qualidade insuficiente do uso do GitHub Projects (WIP não respeitado, Issues sem Assignee, cartões desatualizados, ausência de evolução semanal).
 **Observação:** não é permitido o uso de bibliotecas de terceiros que consultem a API do GitHub — a query GraphQL deve ser escrita e consumida por script próprio do grupo. A correção é feita a partir do GitHub Projects: commits sem referência ao número da Issue correspondente não serão considerados.
+
+---
+
+## Execução dos scripts de mineração
+
+### 1. Autenticação
+Crie um arquivo `.env` na raiz do projeto com um Personal Access Token do GitHub:
+```env
+GITHUB_TOKEN=ghp_seu_token_aqui
+```
+
+### 2. Dependências
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Coleta de dados
+Os resultados são salvos em `data/amostra/`. Use `--n` para definir a quantidade de repositórios.
+
+Amostra de teste (10 repositórios):
+```bash
+python scripts/collect_sample_rq01_rq02.py --n 10 --out data/amostra/rq01_rq02_10.csv
+python scripts/collect_sample_rq05_rq06.py --n 10 --out data/amostra/rq05_rq06_10.csv
+```
+
+Amostra final (100 repositórios):
+```bash
+python scripts/collect_sample_rq01_rq02.py --n 100 --out data/amostra/rq01_rq02_100.csv
+python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_100.csv
+```
