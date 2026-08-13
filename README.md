@@ -143,7 +143,29 @@ python scripts/collect_sample_rq03_rq04.py --n 100 --out data/amostra/rq03_rq04_
 python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_100.csv
 ```
 
-### 4. Análise da RQ07 (bônus)
+### 4. Análise da RQ03
+
+Também sem coleta nova: cruza a idade do repositório (RQ01) com o total de releases (RQ03).
+
+```bash
+python scripts/analyze_rq03.py
+```
+
+Faz duas coisas que o total bruto de releases não responde sozinho:
+
+1. **Releases por ano** (`releases / age_years`) como métrica principal — o total acumulado favorece
+   repositório antigo, e a normalização corrige isso. O total bruto continua no CSV como métrica
+   secundária.
+2. **Separa os repositórios sem release.** São 40 dos 100, e incluí-los ou não muda a mediana de
+   136,5 para 15 (ou de 22,2 para 5,8 releases por ano). O script reporta os dois recortes com
+   mediana, quartis e média, mostra o percentual de repositórios sem release por linguagem e lista
+   os maiores para classificação manual no relatório — entre eles estão `torvalds/linux` e
+   `golang/go`, que versionam por tag em vez de publicar em *GitHub Releases*.
+
+Saídas: `data/sprint_s01/rq03_releases_por_ano.csv` (por repositório, com a coluna `sem_release`) e
+`data/sprint_s01/rq03_resumo.csv` (o comparativo com e sem os zeros).
+
+### 5. Análise da RQ07 (bônus)
 
 A RQ07 não faz coleta nova: ela cruza, por repositório, a linguagem primária (RQ05) com as métricas
 das RQ02, RQ03 e RQ04. Rode depois de ter os três CSVs da sprint:
@@ -175,6 +197,19 @@ documentação) e misturá-los com as demais puxaria as medianas para baixo.
 | RQ05 | linguagem primária | `primaryLanguage.name` | `primary_language` |
 | RQ06 | razão issues fechadas / total | `issues.totalCount` e `issues(states: CLOSED).totalCount` | `closed_issues_ratio` |
 | RQ07 | RQ02/RQ03/RQ04 por linguagem | cruzamento dos CSVs acima (sem coleta nova) | `mediana_prs_aceitas`, `mediana_releases`, `mediana_dias_sem_push` |
+
+Métricas derivadas, calculadas a partir das acima e usadas no relatório:
+
+| RQ | Métrica derivada | Cálculo | Coluna no CSV |
+|---|---|---|---|
+| RQ03 | releases por ano | `releases / age_years` | `releases_por_ano` |
+| RQ03 | repositório sem release | `releases == 0` | `sem_release` |
+
+### Relatório
+
+`relatorio/ameacas_a_validade.md` — seção de ameaças à validade (construto, interna, externa e de
+conclusão), com os números da coleta de 13/08/2026. É seção padrão de artigo de Engenharia de
+Software Experimental e cobre o item (iv) da discussão pedida no enunciado.
 
 
 #### Limitações conhecidas da coleta
