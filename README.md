@@ -121,7 +121,7 @@ python -c "import pandas, requests, dotenv; print('ok')"
 ```
 
 Para sair do ambiente, `deactivate`. Se preferir não ativar, dá pra chamar o interpretador direto:
-`./.venv/bin/python scripts/analyze_rq07.py`.
+`./.venv/bin/python src/analysis/analyze_rq07.py`.
 
 > Os comandos abaixo usam `python`, que com o ambiente ativo é o do `.venv`. Sem ativar, o `python3`
 > do sistema não enxerga o pandas e os scripts quebram com `ModuleNotFoundError: No module named 'pandas'`.
@@ -131,16 +131,21 @@ Os resultados são salvos em `data/amostra/`. Use `--n` para definir a quantidad
 
 Amostra de teste (10 repositórios):
 ```bash
-python scripts/collect_sample_rq01_rq02.py --n 10 --out data/amostra/rq01_rq02_10.csv
-python scripts/collect_sample_rq03_rq04.py --n 10 --out data/amostra/rq03_rq04_10.csv
-python scripts/collect_sample_rq05_rq06.py --n 10 --out data/amostra/rq05_rq06_10.csv
+python src/collection/collect_sample_rq01_rq02.py --n 10 --out data/amostra/rq01_rq02_10.csv
+python src/collection/collect_sample_rq03_rq04.py --n 10 --out data/amostra/rq03_rq04_10.csv
+python src/collection/collect_sample_rq05_rq06.py --n 10 --out data/amostra/rq05_rq06_10.csv
 ```
 
 Amostra final (100 repositórios):
 ```bash
-python scripts/collect_sample_rq01_rq02.py --n 100 --out data/amostra/rq01_rq02_100.csv
-python scripts/collect_sample_rq03_rq04.py --n 100 --out data/amostra/rq03_rq04_100.csv
-python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_100.csv
+python src/collection/collect_sample_rq01_rq02.py --n 100 --out data/amostra/rq01_rq02_100.csv
+python src/collection/collect_sample_rq03_rq04.py --n 100 --out data/amostra/rq03_rq04_100.csv
+python src/collection/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_100.csv
+```
+
+E para o script consolidado:
+```bash
+python src/collection/collect_all_rqs.py --n 100
 ```
 
 ### 4. Análise da RQ03
@@ -148,7 +153,7 @@ python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_
 Também sem coleta nova: cruza a idade do repositório (RQ01) com o total de releases (RQ03).
 
 ```bash
-python scripts/analyze_rq03.py
+python src/analysis/analyze_rq03.py
 ```
 
 Faz duas coisas que o total bruto de releases não responde sozinho:
@@ -171,7 +176,7 @@ A RQ07 não faz coleta nova: ela cruza, por repositório, a linguagem primária 
 das RQ02, RQ03 e RQ04. Rode depois de ter os três CSVs da sprint:
 
 ```bash
-python scripts/analyze_rq07.py
+python src/analysis/analyze_rq07.py
 ```
 
 Saídas em `data/sprint_s01/`: `rq07_por_linguagem.csv` (mediana das três métricas por linguagem) e
