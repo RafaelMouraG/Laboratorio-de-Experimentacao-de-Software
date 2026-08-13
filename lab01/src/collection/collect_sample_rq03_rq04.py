@@ -165,7 +165,7 @@ def print_by_language(df: pd.DataFrame) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n", type=int, default=10, help="quantidade de repositórios a buscar")
-    parser.add_argument("--out", default="data/amostra/rq03_rq04.csv")
+    parser.add_argument("--out", default="lab01/data/amostra/rq03_rq04.csv")
     args = parser.parse_args()
 
     load_dotenv()

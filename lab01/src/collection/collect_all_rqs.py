@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 
 GRAPHQL_URL = "https://api.github.com/graphql"
 
+RELEASES_CAP = 1000
+
 QUERY = """
 query ($searchQuery: String!, $first: Int!, $after: String) {
   rateLimit {
@@ -28,11 +30,12 @@ query ($searchQuery: String!, $first: Int!, $after: String) {
         nameWithOwner
         stargazerCount
         createdAt
+        pushedAt
         updatedAt
         primaryLanguage {
           name
         }
-        releases {
+        releases(orderBy: {field: CREATED_AT, direction: DESC}) {
           totalCount
         }
         pullRequests(states: MERGED) {
@@ -126,8 +129,11 @@ def to_rows(nodes: list[dict]) -> list[dict]:
         created_at = datetime.fromisoformat(repo["createdAt"].replace("Z", "+00:00"))
         age_years = (now - created_at).days / 365.25
 
+        # RQ04 usa pushedAt (último commit). updatedAt muda com star/label e infla a métrica.
+        pushed_at = datetime.fromisoformat(repo["pushedAt"].replace("Z", "+00:00"))
         updated_at = datetime.fromisoformat(repo["updatedAt"].replace("Z", "+00:00"))
-        days_since_update = (now - updated_at).days
+        days_since_last_push = (now - pushed_at).total_seconds() / 86400
+        days_since_last_update = (now - updated_at).total_seconds() / 86400
 
         primary_language = repo["primaryLanguage"]["name"] if repo.get("primaryLanguage") else "N/A"
         
@@ -142,9 +148,11 @@ def to_rows(nodes: list[dict]) -> list[dict]:
                 "created_at": repo["createdAt"],
                 "age_years": round(age_years, 2), # RQ01
                 "merged_pull_requests": repo["pullRequests"]["totalCount"], # RQ02
-                "total_releases": repo["releases"]["totalCount"], # RQ03
+                "releases": repo["releases"]["totalCount"], # RQ03
+                "pushed_at": repo["pushedAt"],
                 "updated_at": repo["updatedAt"],
-                "days_since_update": days_since_update, # RQ04
+                "days_since_last_push": round(days_since_last_push, 2), # RQ04
+                "days_since_last_update": round(days_since_last_update, 2),
                 "primary_language": primary_language, # RQ05
                 "total_issues": total_issues,
                 "closed_issues": closed_issues,
@@ -157,7 +165,7 @@ def to_rows(nodes: list[dict]) -> list[dict]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n", type=int, default=100, help="quantidade total de repositórios a buscar")
-    parser.add_argument("--out", default="data/sprint_s01/all_rqs.csv")
+    parser.add_argument("--out", default="lab01/data/sprint_s01/all_rqs.csv")
     args = parser.parse_args()
 
     load_dotenv()
@@ -179,6 +187,14 @@ def main() -> None:
             dict_writer.writerows(rows)
 
         print(f"\nSucesso! Salvos {len(rows)} repositórios em {args.out}")
+
+        truncados = [row["repo"] for row in rows if row["releases"] == RELEASES_CAP]
+        if truncados:
+            print(
+                f"  atenção: {len(truncados)} repositório(s) com exatamente {RELEASES_CAP} releases "
+                f"({', '.join(truncados)}). Confirme que o orderBy continua na query de releases: "
+                "sem ele a API trunca a contagem nesse valor."
+            )
     else:
         print("\nNenhum dado encontrado.")
 

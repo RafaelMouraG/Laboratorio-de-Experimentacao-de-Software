@@ -1,10 +1,11 @@
-"""Validação individual (RQ05 + RQ06)"""
+"""Validação individual (RQ01 + RQ02)"""
 
 import argparse
-import csv
 import os
 import sys
+from datetime import datetime, timezone
 
+import pandas as pd
 import requests
 from dotenv import load_dotenv
 
@@ -20,14 +21,9 @@ query ($searchQuery: String!, $n: Int!) {
     nodes {
       ... on Repository {
         nameWithOwner
+        createdAt
         stargazerCount
-        primaryLanguage {
-          name
-        }
-        issues {
-          totalCount
-        }
-        closedIssues: issues(states: CLOSED) {
+        pullRequests(states: MERGED) {
           totalCount
         }
       }
@@ -58,24 +54,18 @@ def fetch_sample(token: str, n: int) -> list[dict]:
 
 
 def to_rows(nodes: list[dict]) -> list[dict]:
+    now = datetime.now(timezone.utc)
     rows = []
     for repo in nodes:
-        primary_language = repo["primaryLanguage"]["name"] if repo.get("primaryLanguage") else "N/A"
-        total_issues = repo["issues"]["totalCount"]
-        closed_issues = repo["closedIssues"]["totalCount"]
-        
-        ratio = 0.0
-        if total_issues > 0:
-            ratio = closed_issues / total_issues
-
+        created_at = datetime.fromisoformat(repo["createdAt"].replace("Z", "+00:00"))
+        age_years = (now - created_at).days / 365.25
         rows.append(
             {
                 "repo": repo["nameWithOwner"],
                 "stars": repo["stargazerCount"],
-                "primary_language": primary_language,
-                "total_issues": total_issues,
-                "closed_issues": closed_issues,
-                "closed_issues_ratio": round(ratio, 4),
+                "created_at": repo["createdAt"],
+                "age_years": round(age_years, 2),
+                "merged_pull_requests": repo["pullRequests"]["totalCount"],
             }
         )
     return rows
@@ -84,7 +74,7 @@ def to_rows(nodes: list[dict]) -> list[dict]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n", type=int, default=10, help="quantidade de repositórios a buscar")
-    parser.add_argument("--out", default="data/amostra/rq05_rq06.csv")
+    parser.add_argument("--out", default="lab01/data/amostra/rq01_rq02_10.csv")
     args = parser.parse_args()
 
     load_dotenv()
@@ -95,16 +85,13 @@ def main() -> None:
     nodes = fetch_sample(token, args.n)
     rows = to_rows(nodes)
 
+    df = pd.DataFrame(rows)
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    
-    if rows:
-        keys = rows[0].keys()
-        with open(args.out, 'w', newline='', encoding='utf-8') as output_file:
-            dict_writer = csv.DictWriter(output_file, fieldnames=keys)
-            dict_writer.writeheader()
-            dict_writer.writerows(rows)
+    df.to_csv(args.out, index=False)
 
-        print(f"Salvos {len(rows)} repositórios em {args.out}")
+    print(df.to_string(index=False))
+    print(f"\nSalvo em {args.out}")
+    print("Valide manualmente 2-3 linhas contra github.com/<repo> (data de criação e aba Pull requests > Closed, filtrando merged).")
 
 
 if __name__ == "__main__":

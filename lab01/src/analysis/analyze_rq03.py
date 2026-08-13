@@ -75,10 +75,10 @@ def sem_release_por_linguagem(df: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rq01-rq02", default="data/sprint_s01/rq01_rq02.csv")
-    parser.add_argument("--rq03-rq04", default="data/sprint_s01/rq03_rq04_100.csv")
-    parser.add_argument("--out", default="data/sprint_s01/rq03_releases_por_ano.csv")
-    parser.add_argument("--out-resumo", default="data/sprint_s01/rq03_resumo.csv")
+    parser.add_argument("--rq01-rq02", default="lab01/data/sprint_s01/rq01_rq02.csv")
+    parser.add_argument("--rq03-rq04", default="lab01/data/sprint_s01/rq03_rq04_100.csv")
+    parser.add_argument("--out", default="lab01/data/sprint_s01/rq03_releases_por_ano.csv")
+    parser.add_argument("--out-resumo", default="lab01/data/sprint_s01/rq03_resumo.csv")
     parser.add_argument("--listar", type=int, default=15)
     args = parser.parse_args()
 
