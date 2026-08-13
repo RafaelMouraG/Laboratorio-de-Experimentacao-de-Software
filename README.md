@@ -103,11 +103,45 @@ Os resultados são salvos em `data/amostra/`. Use `--n` para definir a quantidad
 Amostra de teste (10 repositórios):
 ```bash
 python scripts/collect_sample_rq01_rq02.py --n 10 --out data/amostra/rq01_rq02_10.csv
+python scripts/collect_sample_rq03_rq04.py --n 10 --out data/amostra/rq03_rq04_10.csv
 python scripts/collect_sample_rq05_rq06.py --n 10 --out data/amostra/rq05_rq06_10.csv
 ```
 
 Amostra final (100 repositórios):
 ```bash
 python scripts/collect_sample_rq01_rq02.py --n 100 --out data/amostra/rq01_rq02_100.csv
+python scripts/collect_sample_rq03_rq04.py --n 100 --out data/amostra/rq03_rq04_100.csv
 python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_100.csv
 ```
+
+### Métricas por RQ
+
+| RQ | Métrica | Campo GraphQL | Coluna no CSV |
+|---|---|---|---|
+| RQ01 | idade do repositório | `createdAt` | `age_years` |
+| RQ02 | total de pull requests aceitas | `pullRequests(states: MERGED).totalCount` | `merged_pull_requests` |
+| RQ03 | total de releases | `releases(orderBy: CREATED_AT).totalCount` | `releases` |
+| RQ04 | tempo até a última atualização | `pushedAt` | `days_since_last_push` |
+| RQ05 | linguagem primária | `primaryLanguage.name` | `primary_language` |
+| RQ06 | razão issues fechadas / total | `issues.totalCount` e `issues(states: CLOSED).totalCount` | `closed_issues_ratio` |
+
+
+#### Limitações conhecidas da coleta
+
+1. **O `orderBy` em `releases` é obrigatório.** Sem ele a API trunca `totalCount` em 1000:
+   `vercel/next.js` retornava 1000 no lugar de 3799 e `ggml-org/llama.cpp`, 1000 no lugar de 6848.
+   Com `orderBy: {field: CREATED_AT, direction: DESC}` os 100 valores conferem com a API REST.
+   O erro é traiçoeiro porque repositórios com menos de 1000 releases dão o mesmo resultado das duas
+   formas (`kubernetes/kubernetes`: 810), então só aparece nos maiores. O script avisa se algum
+   repositório vier com exatamente 1000 releases, que é o sintoma da remoção acidental do `orderBy`.
+   **Isso não afeta RQ02 nem RQ06**: `pullRequests` e `issues` não truncam (no `kubernetes`, sem
+   nenhum `orderBy`, retornam 65.645 e 49.518).
+2. **`primary_language` usa a string `"N/A"`** quando o repositório não tem linguagem primária (mesma
+   convenção do script de RQ05/RQ06). O pandas lê `"N/A"` como `NaN` por padrão e o `groupby` descarta
+   essas linhas em silêncio — são 13 dos 100 repositórios. Ao analisar, leia com
+   `pd.read_csv(..., keep_default_na=False)`.
+3. **Paginação adaptativa.** A API pode responder 502 quando a página é cara demais — acontecia na
+   faixa 76-100, que junta `kubernetes`, `electron` e `llama.cpp`. O script começa com páginas de 25
+   e reduz pela metade até a API aceitar, então o número de requisições varia entre execuções.
+   Com o `orderBy` do item 1 a consulta ficou mais barata e as páginas de 25 passaram a ser aceitas,
+   mas a redução automática continua no código como proteção para os 1000 repositórios do Lab01S02.
