@@ -79,10 +79,21 @@ def fetch_all_repos(token: str, total_requested: int) -> list[dict]:
 
     while len(all_nodes) < total_requested and has_next_page:
         remaining_to_fetch = total_requested - len(all_nodes)
-        first = min(100, remaining_to_fetch)
+        first = min(25, remaining_to_fetch)
 
-        print(f"Buscando página (faltam {remaining_to_fetch} repositórios)...")
-        data = fetch_page(token, first, end_cursor)
+        success = False
+        while not success:
+            print(f"Buscando página de {first} (faltam {remaining_to_fetch} repositórios)...")
+            try:
+                data = fetch_page(token, first, end_cursor)
+                success = True
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code in (502, 504) and first > 1:
+                    first = max(1, first // 2)
+                    print(f"A API retornou erro {e.response.status_code}. Reduzindo lote para {first} e tentando novamente...")
+                    time.sleep(2)
+                else:
+                    raise
 
         rate_limit = data["rateLimit"]
         search_data = data["search"]
