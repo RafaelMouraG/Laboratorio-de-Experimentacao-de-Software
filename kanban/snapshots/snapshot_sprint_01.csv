@@ -1,5 +1,5 @@
 snapshot_date,sprint,issue,titulo,status,assignee,state,url
-2026-08-13,S01,10,Criar script GraphQL para Snapshot do Kanban (Fechamento de Sprints),To Do,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/10
+2026-08-13,S01,10,Criar script GraphQL para Snapshot do Kanban (Fechamento de Sprints),Doing,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/10
 2026-08-13,S01,11,Unificar consultas GraphQL em um script único (Amostra 100 repositórios),Doing,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/11
 2026-08-13,S01,6,RQ 05 Sistemas populares são escritos nas linguagens mais populares?,Review,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/6
 2026-08-13,S01,7,RQ 06 Sistemas populares possuem um alto percentual de issues fechadas?,Review,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/7

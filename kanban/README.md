@@ -22,8 +22,10 @@ O campo `Status` (single select) tem as cinco colunas exigidas pelo enunciado:
 
 `Backlog` → `To Do` → `Doing` → `Review` → `Done`
 
-**Limite de WIP em Doing:** `<preencher: número e justificativa>` (item 4 da Parte 2 do
-[enunciado do Lab01](../lab01/README.md)).
+**Limite de WIP em Doing: 3** — um cartão em andamento por integrante do trio. Passar disso
+significaria que alguém está com duas frentes abertas ao mesmo tempo, e como cada RQ é desenvolvida
+individualmente dentro da própria Issue, o gargalo real do grupo é pessoa, não tarefa
+(item 4 da Parte 2 do [enunciado do Lab01](../lab01/README.md)).
 
 Todo cartão é uma Issue de verdade do repositório, com Assignee — nada de draft issue solta, para
 que tudo seja rastreável pela API.
@@ -82,4 +84,7 @@ para acrescentá-la à constante `ORDEM_STATUS` e manter a ordenação correta.
 
 | Arquivo | Sprint | Data | Itens |
 |---|---|---|---|
-| `snapshots/snapshot_sprint_01.csv` | S01 | 13/08/2026 | 11 (Done 6, Review 3, Doing 1, To Do 1) |
+| `snapshots/snapshot_sprint_01.csv` | S01 | 13/08/2026 | 11 |
+
+A distribuição por coluna de cada snapshot sai do próprio CSV — o script imprime o resumo ao final
+da execução.
