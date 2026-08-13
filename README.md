@@ -92,10 +92,39 @@ Crie um arquivo `.env` na raiz do projeto com um Personal Access Token do GitHub
 GITHUB_TOKEN=ghp_seu_token_aqui
 ```
 
-### 2. Dependências
+### 2. Ambiente virtual e dependências
+
+Crie o ambiente uma vez, na raiz do projeto (`.venv/` já está no `.gitignore`, não vai pro repositório):
+
+```bash
+python3 -m venv .venv
+```
+
+Ative o ambiente — isso precisa ser feito **em cada terminal novo**, antes de rodar qualquer script:
+
+```bash
+source .venv/bin/activate        # macOS / Linux
+.venv\Scripts\activate           # Windows (PowerShell)
+```
+
+Com o ambiente ativo aparece `(.venv)` no início do prompt. Instale as dependências (só na primeira
+vez, ou quando o `requirements.txt` mudar):
+
 ```bash
 pip install -r requirements.txt
 ```
+
+Confira se deu certo:
+
+```bash
+python -c "import pandas, requests, dotenv; print('ok')"
+```
+
+Para sair do ambiente, `deactivate`. Se preferir não ativar, dá pra chamar o interpretador direto:
+`./.venv/bin/python scripts/analyze_rq07.py`.
+
+> Os comandos abaixo usam `python`, que com o ambiente ativo é o do `.venv`. Sem ativar, o `python3`
+> do sistema não enxerga o pandas e os scripts quebram com `ModuleNotFoundError: No module named 'pandas'`.
 
 ### 3. Coleta de dados
 Os resultados são salvos em `data/amostra/`. Use `--n` para definir a quantidade de repositórios.
@@ -114,6 +143,27 @@ python scripts/collect_sample_rq03_rq04.py --n 100 --out data/amostra/rq03_rq04_
 python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_100.csv
 ```
 
+### 4. Análise da RQ07 (bônus)
+
+A RQ07 não faz coleta nova: ela cruza, por repositório, a linguagem primária (RQ05) com as métricas
+das RQ02, RQ03 e RQ04. Rode depois de ter os três CSVs da sprint:
+
+```bash
+python scripts/analyze_rq07.py
+```
+
+Saídas em `data/sprint_s01/`: `rq07_por_linguagem.csv` (mediana das três métricas por linguagem) e
+`rq07_top_vs_demais.csv` (linguagens mais populares vs. demais). Os caminhos de entrada podem ser
+trocados com `--rq01-rq02`, `--rq03-rq04` e `--rq05-rq06` (ex.: para rodar sobre os 1000 repositórios
+do Lab01S02).
+
+**Fonte de "linguagens mais populares":** [GitHub Octoverse 2024](https://github.blog/news-insights/octoverse/octoverse-2024/),
+top 10 linguagens por número de desenvolvedores — Python, JavaScript, TypeScript, Java, C#, C++, PHP,
+Shell, C e Go. É a mesma referência usada na RQ05 e está na constante `TOP_LANGUAGES` do script.
+Repositórios sem linguagem primária (`N/A`) formam um terceiro grupo, separado das "demais
+linguagens": eles não são um contraexemplo de linguagem impopular, são um caso à parte (listas,
+documentação) e misturá-los com as demais puxaria as medianas para baixo.
+
 ### Métricas por RQ
 
 | RQ | Métrica | Campo GraphQL | Coluna no CSV |
@@ -124,6 +174,7 @@ python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_
 | RQ04 | tempo até a última atualização | `pushedAt` | `days_since_last_push` |
 | RQ05 | linguagem primária | `primaryLanguage.name` | `primary_language` |
 | RQ06 | razão issues fechadas / total | `issues.totalCount` e `issues(states: CLOSED).totalCount` | `closed_issues_ratio` |
+| RQ07 | RQ02/RQ03/RQ04 por linguagem | cruzamento dos CSVs acima (sem coleta nova) | `mediana_prs_aceitas`, `mediana_releases`, `mediana_dias_sem_push` |
 
 
 #### Limitações conhecidas da coleta
@@ -145,3 +196,13 @@ python scripts/collect_sample_rq05_rq06.py --n 100 --out data/amostra/rq05_rq06_
    e reduz pela metade até a API aceitar, então o número de requisições varia entre execuções.
    Com o `orderBy` do item 1 a consulta ficou mais barata e as páginas de 25 passaram a ser aceitas,
    mas a redução automática continua no código como proteção para os 1000 repositórios do Lab01S02.
+4. **A RQ07 depende de os três CSVs serem da mesma coleta.** O cruzamento é feito por `repo`; se os
+   arquivos vierem de execuções com conjuntos diferentes de repositórios, o script avisa quantas
+   linhas ficaram de fora. Nos 100 da `sprint_s01` os três arquivos têm exatamente os mesmos
+   repositórios, então nada é descartado. O script também compara a `primary_language` do CSV da
+   RQ05 com a do CSV da RQ03/RQ04 e avisa se divergirem.
+5. **Mediana por linguagem só é interpretável com repositórios suficientes.** Nos 100 repositórios,
+   Java, C# e Dart aparecem uma única vez cada — a "mediana" ali é o próprio repositório. Por isso a
+   resposta da RQ07 sai da tabela agrupada (top-10 vs. demais), e a tabela por linguagem traz a
+   coluna `repos` para deixar esse limite explícito. Com os 1000 do Lab01S02 o problema diminui, mas
+   não desaparece na cauda.
