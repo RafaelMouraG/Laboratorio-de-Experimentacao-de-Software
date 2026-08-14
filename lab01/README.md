@@ -140,6 +140,30 @@ Repositórios sem linguagem primária (`N/A`) formam um terceiro grupo, separado
 linguagens": eles não são um contraexemplo de linguagem impopular, são um caso à parte (listas,
 documentação) e misturá-los com as demais puxaria as medianas para baixo.
 
+### 4. Extra — idade explica o número de estrelas?
+
+Não faz parte das RQs obrigatórias. Surgiu de uma dúvida ao olhar os dados da RQ01: se sistemas
+populares tendem a ser antigos, os mais antigos deveriam ser também os mais estrelados.
+
+```bash
+python lab01/src/analysis/extra_idade_vs_popularidade.py
+```
+
+Nos 100 repositórios, **não deveriam**: a correlação entre idade e estrelas é 0,112 (Pearson) e
+0,003 (Spearman) — ou seja, praticamente nenhuma. Quebrando por faixa etária, a faixa com **menos de
+1 ano de vida tem a maior mediana de estrelas de todas** (195.075, contra 172.660 dos repositórios
+com mais de 10 anos). São 11 repositórios com menos de um ano na lista dos 100 mais estrelados do
+GitHub, quase todos ligados a IA e a ferramentas de agentes (`openclaw/openclaw` com 386k estrelas
+em 8 meses, `anthropics/skills`, `ultraworkers/claw-code`).
+
+A leitura para o relatório: a RQ01 responde que a *mediana* de idade é alta (8,3 anos), mas idade não
+é o que produz estrelas. Convivem duas populações diferentes na mesma lista — projetos maduros que
+acumularam estrelas ao longo de uma década e projetos virais recentes que chegaram lá em meses.
+A métrica de idade sozinha esconde esse segundo grupo.
+
+Saídas em `lab01/data/sprint_s01/`: `extra_idade_por_faixa.csv` e `extra_repos_jovens.csv`
+(controlado por `--listar`, padrão 10).
+
 ## Métricas por RQ
 
 | RQ | Métrica | Campo GraphQL | Coluna no CSV |
