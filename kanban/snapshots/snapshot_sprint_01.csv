@@ -1,12 +1,13 @@
 snapshot_date,sprint,issue,titulo,status,assignee,state,url
-2026-08-13,S01,10,Criar script GraphQL para Snapshot do Kanban (Fechamento de Sprints),Doing,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/10
-2026-08-13,S01,11,Unificar consultas GraphQL em um script único (Amostra 100 repositórios),Doing,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/11
-2026-08-13,S01,6,RQ 05 Sistemas populares são escritos nas linguagens mais populares?,Review,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/6
-2026-08-13,S01,7,RQ 06 Sistemas populares possuem um alto percentual de issues fechadas?,Review,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/7
-2026-08-13,S01,9,(Extra) RQ03: releases por ano e recorte dos repositórios sem release,Review,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/9
-2026-08-13,S01,1,Subir documentação do repo,Done,,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/1
-2026-08-13,S01,2,RQ 01 Sistemas populares são maduros/antigos?,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/2
-2026-08-13,S01,3,RQ 02 Sistemas populares recebem muita contribuição externa?,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/3
-2026-08-13,S01,4,RQ 03 Sistemas populares lançam releases com frequência?,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/4
-2026-08-13,S01,5,RQ 04 Sistemas populares são atualizados com frequência?,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/5
-2026-08-13,S01,8,Bônus (+1 ponto) — RQ 07,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/8
+2026-08-14,S01,1,Subir documentação do repo,Done,,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/1
+2026-08-14,S01,2,RQ 01 Sistemas populares são maduros/antigos?,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/2
+2026-08-14,S01,3,RQ 02 Sistemas populares recebem muita contribuição externa?,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/3
+2026-08-14,S01,4,RQ 03 Sistemas populares lançam releases com frequência?,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/4
+2026-08-14,S01,5,RQ 04 Sistemas populares são atualizados com frequência?,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/5
+2026-08-14,S01,6,RQ 05 Sistemas populares são escritos nas linguagens mais populares?,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/6
+2026-08-14,S01,7,RQ 06 Sistemas populares possuem um alto percentual de issues fechadas?,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/7
+2026-08-14,S01,8,Bônus (+1 ponto) — RQ 07,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/8
+2026-08-14,S01,9,(Extra) RQ03: releases por ano e recorte dos repositórios sem release,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/9
+2026-08-14,S01,10,Criar script GraphQL para Snapshot do Kanban (Fechamento de Sprints),Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/10
+2026-08-14,S01,11,Unificar consultas GraphQL em um script único (Amostra 100 repositórios),Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/11
+2026-08-14,S01,12,RQ Extra,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/12
