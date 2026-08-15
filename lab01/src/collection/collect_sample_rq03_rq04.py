@@ -3,14 +3,12 @@
 import argparse
 import os
 import sys
-import time
 from datetime import datetime, timezone
 
 import pandas as pd
-import requests
 from dotenv import load_dotenv
 
-GRAPHQL_URL = "https://api.github.com/graphql"
+from graphql_pagination import fetch_all_repos
 
 PAGE_SIZE = 25
 RELEASES_CAP = 1000
@@ -45,64 +43,8 @@ query ($searchQuery: String!, $pageSize: Int!, $after: String) {
 """
 
 
-def run_query(token: str, variables: dict) -> dict | None:
-    """Executa a query. Devolve None quando a API recusa a página (502/503)."""
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.post(
-        GRAPHQL_URL,
-        json={"query": QUERY, "variables": variables},
-        headers=headers,
-        timeout=30,
-    )
-    if response.status_code in (502, 503):
-        return None
-    response.raise_for_status()
-    payload = response.json()
-    if "errors" in payload:
-        raise RuntimeError(payload["errors"])
-    return payload["data"]
-
-
-def fetch_page(token: str, tamanho: int, cursor: str | None) -> dict:
-    """Busca uma página, reduzindo o tamanho até a API aceitar."""
-    while True:
-        variables = {
-            "searchQuery": "stars:>1 sort:stars-desc",
-            "pageSize": tamanho,
-            "after": cursor,
-        }
-        data = run_query(token, variables)
-        if data is not None:
-            return data
-
-        if tamanho == 1:
-            raise RuntimeError(f"a API recusou a consulta de 1 repositório (cursor {cursor})")
-
-        tamanho = max(1, tamanho // 2)
-        print(f"  página recusada pela API, reduzindo para {tamanho} repositórios")
-        time.sleep(2)
-
-
 def fetch_sample(token: str, n: int, page_size: int = PAGE_SIZE) -> list[dict]:
-    nodes: list[dict] = []
-    cursor = None
-
-    while len(nodes) < n:
-        data = fetch_page(token, min(page_size, n - len(nodes)), cursor)
-        search = data["search"]
-        nodes.extend(search["nodes"])
-
-        rate_limit = data["rateLimit"]
-        print(
-            f"{len(nodes)}/{n} repositórios | "
-            f"rate limit: {rate_limit['remaining']} restantes (reset {rate_limit['resetAt']})"
-        )
-
-        if not search["pageInfo"]["hasNextPage"]:
-            break
-        cursor = search["pageInfo"]["endCursor"]
-
-    return nodes
+    return fetch_all_repos(token, QUERY, n, page_size=page_size)
 
 
 def to_rows(nodes: list[dict]) -> list[dict]:

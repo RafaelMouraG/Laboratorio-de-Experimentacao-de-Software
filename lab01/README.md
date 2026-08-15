@@ -198,11 +198,16 @@ Métricas derivadas, calculadas a partir das acima e usadas no relatório:
    convenção do script de RQ05/RQ06). O pandas lê `"N/A"` como `NaN` por padrão e o `groupby` descarta
    essas linhas em silêncio — são 13 dos 100 repositórios. Ao analisar, leia com
    `pd.read_csv(..., keep_default_na=False)`.
-3. **Paginação adaptativa.** A API pode responder 502 quando a página é cara demais — acontecia na
-   faixa 76-100, que junta `kubernetes`, `electron` e `llama.cpp`. O script começa com páginas de 25
-   e reduz pela metade até a API aceitar, então o número de requisições varia entre execuções.
-   Com o `orderBy` do item 1 a consulta ficou mais barata e as páginas de 25 passaram a ser aceitas,
-   mas a redução automática continua no código como proteção para os 1000 repositórios do Lab01S02.
+3. **Paginação adaptativa.** A API pode responder 502/503/504 quando a página é cara demais —
+   acontecia na faixa 76-100, que junta `kubernetes`, `electron` e `llama.cpp`. A paginação começa
+   com páginas de 25 e reduz pela metade até a API aceitar, então o número de requisições varia entre
+   execuções. Com o `orderBy` do item 1 a consulta ficou mais barata e as páginas de 25 passaram a ser
+   aceitas, mas a redução automática continua como proteção para os 1000 repositórios do Lab01S02.
+   Essa lógica (retry + redução de página + pausa quando o rate limit está acabando) mora só em
+   `src/collection/graphql_pagination.py`, compartilhada por `collect_all_rqs.py` e
+   `collect_sample_rq03_rq04.py` — os dois únicos scripts que paginam sobre mais de uma página de
+   resultado. Ela tinha sido implementada em duplicidade nos dois scripts, com pequenas diferenças
+   entre si; unificar evita que um dos dois fique sem a correção quando um bug de paginação aparecer.
 4. **RQ03 e RQ07 leem de um único CSV consolidado (`all_rqs.csv`).** Os scripts de coleta por dupla de
    RQ (`collect_sample_rq01_rq02.py`, `collect_sample_rq03_rq04.py`, `collect_sample_rq05_rq06.py`)
    existem só para a validação individual de 5-10 repositórios de cada integrante (ver

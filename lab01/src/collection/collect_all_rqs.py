@@ -4,23 +4,21 @@ import argparse
 import csv
 import os
 import sys
-import time
 from datetime import datetime, timezone
 
-import requests
 from dotenv import load_dotenv
 
-GRAPHQL_URL = "https://api.github.com/graphql"
+from graphql_pagination import fetch_all_repos
 
 RELEASES_CAP = 1000
 
 QUERY = """
-query ($searchQuery: String!, $first: Int!, $after: String) {
+query ($searchQuery: String!, $pageSize: Int!, $after: String) {
   rateLimit {
     remaining
     resetAt
   }
-  search(query: $searchQuery, type: REPOSITORY, first: $first, after: $after) {
+  search(query: $searchQuery, type: REPOSITORY, first: $pageSize, after: $after) {
     pageInfo {
       hasNextPage
       endCursor
@@ -52,71 +50,6 @@ query ($searchQuery: String!, $first: Int!, $after: String) {
   }
 }
 """
-
-
-def fetch_page(token: str, first: int, after: str = None) -> dict:
-    headers = {"Authorization": f"Bearer {token}"}
-    variables = {
-        "searchQuery": "stars:>1 sort:stars-desc",
-        "first": first,
-        "after": after,
-    }
-    response = requests.post(
-        GRAPHQL_URL,
-        json={"query": QUERY, "variables": variables},
-        headers=headers,
-        timeout=30,
-    )
-    response.raise_for_status()
-    payload = response.json()
-    if "errors" in payload:
-        raise RuntimeError(payload["errors"])
-
-    return payload["data"]
-
-
-def fetch_all_repos(token: str, total_requested: int) -> list[dict]:
-    all_nodes = []
-    has_next_page = True
-    end_cursor = None
-
-    while len(all_nodes) < total_requested and has_next_page:
-        remaining_to_fetch = total_requested - len(all_nodes)
-        first = min(25, remaining_to_fetch)
-
-        success = False
-        while not success:
-            print(f"Buscando página de {first} (faltam {remaining_to_fetch} repositórios)...")
-            try:
-                data = fetch_page(token, first, end_cursor)
-                success = True
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code in (502, 504) and first > 1:
-                    first = max(1, first // 2)
-                    print(f"A API retornou erro {e.response.status_code}. Reduzindo lote para {first} e tentando novamente...")
-                    time.sleep(2)
-                else:
-                    raise
-
-        rate_limit = data["rateLimit"]
-        search_data = data["search"]
-
-        all_nodes.extend(search_data["nodes"])
-        
-        page_info = search_data["pageInfo"]
-        has_next_page = page_info["hasNextPage"]
-        end_cursor = page_info["endCursor"]
-
-        print(f"Rate limit: {rate_limit['remaining']} restantes (reset {rate_limit['resetAt']})")
-
-        if rate_limit["remaining"] < 5 and has_next_page:
-            reset_time = datetime.fromisoformat(rate_limit["resetAt"].replace("Z", "+00:00"))
-            sleep_seconds = (reset_time - datetime.now(timezone.utc)).total_seconds() + 10
-            if sleep_seconds > 0:
-                print(f"Rate limit próximo do fim. Pausando por {sleep_seconds:.0f} segundos...")
-                time.sleep(sleep_seconds)
-
-    return all_nodes
 
 
 def to_rows(nodes: list[dict]) -> list[dict]:
@@ -174,7 +107,7 @@ def main() -> None:
         sys.exit("GITHUB_TOKEN não definido. Copie .env.example para .env e preencha o token.")
 
     print(f"Iniciando coleta de {args.n} repositórios...")
-    nodes = fetch_all_repos(token, args.n)
+    nodes = fetch_all_repos(token, QUERY, args.n)
     rows = to_rows(nodes)
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
