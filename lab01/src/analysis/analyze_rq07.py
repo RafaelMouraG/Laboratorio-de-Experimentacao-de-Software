@@ -37,36 +37,11 @@ def carregar(caminho: str, colunas: list[str]) -> pd.DataFrame:
     return df[colunas]
 
 
-def checar_linguagem(rq03_rq04: str, linguagens: pd.DataFrame) -> None:
-    outra = carregar(rq03_rq04, ["repo", "primary_language"])
-    comparacao = linguagens.merge(outra, on="repo", suffixes=("_rq05", "_rq03"))
-    divergentes = comparacao[
-        comparacao["primary_language_rq05"] != comparacao["primary_language_rq03"]
-    ]
-    if not divergentes.empty:
-        print(
-            f"atenção: {len(divergentes)} repositório(s) com linguagem diferente entre as coletas "
-            "(vale usar a do CSV da RQ05, que é a fonte da métrica):"
-        )
-        print(divergentes.to_string(index=False))
-
-
-def juntar(rq01_rq02: str, rq03_rq04: str, rq05_rq06: str) -> pd.DataFrame:
-    prs = carregar(rq01_rq02, ["repo", "merged_pull_requests"])
-    releases = carregar(rq03_rq04, ["repo", "releases", "days_since_last_push"])
-    linguagens = carregar(rq05_rq06, ["repo", "primary_language"])
-
-    checar_linguagem(rq03_rq04, linguagens)
-
-    df = linguagens.merge(prs, on="repo", how="inner").merge(releases, on="repo", how="inner")
-
-    entrada = max(len(prs), len(releases), len(linguagens))
-    if len(df) < entrada:
-        print(
-            f"atenção: {entrada - len(df)} repositório(s) ficaram de fora do cruzamento. "
-            "Os três CSVs precisam ser da mesma coleta (mesmos repositórios)."
-        )
-
+def juntar(entrada: str) -> pd.DataFrame:
+    df = carregar(
+        entrada,
+        ["repo", "primary_language", "merged_pull_requests", "releases", "days_since_last_push"],
+    )
     return df.assign(grupo=df["primary_language"].map(classificar))
 
 
@@ -99,14 +74,12 @@ def por_grupo(df: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rq01-rq02", default="lab01/data/sprint_s01/rq01_rq02.csv")
-    parser.add_argument("--rq03-rq04", default="lab01/data/sprint_s01/rq03_rq04_100.csv")
-    parser.add_argument("--rq05-rq06", default="lab01/data/sprint_s01/rq05_rq06_100.csv")
+    parser.add_argument("--entrada", default="lab01/data/sprint_s01/all_rqs.csv")
     parser.add_argument("--out", default="lab01/data/sprint_s01/rq07_por_linguagem.csv")
     parser.add_argument("--out-grupos", default="lab01/data/sprint_s01/rq07_top_vs_demais.csv")
     args = parser.parse_args()
 
-    df = juntar(args.rq01_rq02, args.rq03_rq04, args.rq05_rq06)
+    df = juntar(args.entrada)
     print(f"{len(df)} repositórios cruzados, {df['primary_language'].nunique()} linguagens distintas")
     print(f"Linguagens mais populares (Octoverse 2024): {', '.join(TOP_LANGUAGES)}")
 

@@ -1,19 +1,19 @@
 primary_language,grupo,repos,mediana_prs_aceitas,mediana_releases,mediana_dias_sem_push
-Python,top-10 Octoverse,24,1881.0,54.5,0.41000000000000003
-TypeScript,top-10 Octoverse,17,6927.0,116.0,0.04
-N/A,sem linguagem primária,13,317.0,0.0,115.34
-JavaScript,top-10 Octoverse,10,1373.0,69.0,0.455
-C++,top-10 Octoverse,5,26473.0,471.0,0.0
-Rust,demais linguagens,5,4194.0,50.0,0.35
-Shell,top-10 Octoverse,5,222.0,7.0,2.3
-Go,top-10 Octoverse,4,3681.5,120.5,0.09999999999999999
-HTML,demais linguagens,3,315.0,0.0,0.6
-Markdown,demais linguagens,3,157.0,0.0,29.95
-C,top-10 Octoverse,3,153.0,52.0,0.06
-Jupyter Notebook,demais linguagens,2,307.0,0.0,7.859999999999999
-Dart,demais linguagens,1,49459.0,7.0,0.02
-MDX,demais linguagens,1,9475.0,94.0,0.61
-Swift,demais linguagens,1,1240.0,15.0,2.02
-Java,top-10 Octoverse,1,994.0,10.0,20.44
-C#,top-10 Octoverse,1,593.0,332.0,3.46
-Batchfile,demais linguagens,1,7.0,31.0,40.05
+Python,top-10 Octoverse,24,1883.0,54.5,0.22
+TypeScript,top-10 Octoverse,17,6984.0,117.0,0.17
+N/A,sem linguagem primária,13,317.0,0.0,115.53
+JavaScript,top-10 Octoverse,10,1375.0,69.0,0.245
+C++,top-10 Octoverse,5,26499.0,471.0,0.07
+Rust,demais linguagens,5,4198.0,50.0,0.18
+Shell,top-10 Octoverse,5,222.0,7.0,2.49
+Go,top-10 Octoverse,4,3690.5,120.5,0.065
+HTML,demais linguagens,3,315.0,0.0,0.8
+Markdown,demais linguagens,3,157.0,0.0,30.14
+C,top-10 Octoverse,3,153.0,52.0,0.26
+Jupyter Notebook,demais linguagens,2,307.0,0.0,8.06
+Dart,demais linguagens,1,49541.0,7.0,0.03
+MDX,demais linguagens,1,9481.0,94.0,0.8
+Swift,demais linguagens,1,1239.0,15.0,2.21
+Java,top-10 Octoverse,1,994.0,10.0,20.64
+C#,top-10 Octoverse,1,593.0,332.0,3.66
+Batchfile,demais linguagens,1,7.0,31.0,40.25
