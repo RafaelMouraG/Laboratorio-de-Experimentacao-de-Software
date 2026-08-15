@@ -1,5 +1,5 @@
 metrica,recorte,repos,mediana,q1,q3,media
-releases,todos os repositórios,100,15.0,0.0,170.25,249.67
-releases,apenas com release,60,136.5,34.0,254.0,416.12
-releases_por_ano,todos os repositórios,100,5.8,0.0,32.74,58.08
-releases_por_ano,apenas com release,60,22.24,8.8,60.72,96.81
+releases,todos os repositórios,100,15.0,0.0,170.25,249.79
+releases,apenas com release,60,136.5,34.0,254.0,416.32
+releases_por_ano,todos os repositórios,100,5.8,0.0,32.88,57.92
+releases_por_ano,apenas com release,60,22.44,8.8,60.58,96.54

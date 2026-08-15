@@ -99,7 +99,9 @@ python lab01/src/collection/collect_all_rqs.py --n 100
 
 ### 2. Análise da RQ03
 
-Sem coleta nova: cruza a idade do repositório (RQ01) com o total de releases (RQ03).
+Sem coleta nova: cruza a idade do repositório (RQ01) com o total de releases (RQ03), lendo direto de
+`lab01/data/sprint_s01/all_rqs.csv` (o CSV consolidado do passo 1, único ponto de entrada — evita que
+essa análise e a coleta bruta fiquem lendo de coletas diferentes e divergindo entre si).
 
 ```bash
 python lab01/src/analysis/analyze_rq03.py
@@ -122,16 +124,15 @@ Saídas: `lab01/data/sprint_s01/rq03_releases_por_ano.csv` (por repositório, co
 ### 3. Análise da RQ07 (bônus)
 
 A RQ07 não faz coleta nova: ela cruza, por repositório, a linguagem primária (RQ05) com as métricas
-das RQ02, RQ03 e RQ04. Rode depois de ter os três CSVs da sprint:
+das RQ02, RQ03 e RQ04, lendo do mesmo `all_rqs.csv` consolidado. Rode depois de ter o CSV do passo 1:
 
 ```bash
 python lab01/src/analysis/analyze_rq07.py
 ```
 
 Saídas em `lab01/data/sprint_s01/`: `rq07_por_linguagem.csv` (mediana das três métricas por
-linguagem) e `rq07_top_vs_demais.csv` (linguagens mais populares vs. demais). Os caminhos de entrada
-podem ser trocados com `--rq01-rq02`, `--rq03-rq04` e `--rq05-rq06` (ex.: para rodar sobre os 1000
-repositórios do Lab01S02).
+linguagem) e `rq07_top_vs_demais.csv` (linguagens mais populares vs. demais). O caminho de entrada
+pode ser trocado com `--entrada` (ex.: para rodar sobre os 1000 repositórios do Lab01S02).
 
 **Fonte de "linguagens mais populares":** [GitHub Octoverse 2024](https://github.blog/news-insights/octoverse/octoverse-2024/),
 top 10 linguagens por número de desenvolvedores — Python, JavaScript, TypeScript, Java, C#, C++, PHP,
@@ -202,17 +203,20 @@ Métricas derivadas, calculadas a partir das acima e usadas no relatório:
    e reduz pela metade até a API aceitar, então o número de requisições varia entre execuções.
    Com o `orderBy` do item 1 a consulta ficou mais barata e as páginas de 25 passaram a ser aceitas,
    mas a redução automática continua no código como proteção para os 1000 repositórios do Lab01S02.
-4. **A RQ07 depende de os três CSVs serem da mesma coleta.** O cruzamento é feito por `repo`; se os
-   arquivos vierem de execuções com conjuntos diferentes de repositórios, o script avisa quantas
-   linhas ficaram de fora. Nos 100 da `sprint_s01` os três arquivos têm exatamente os mesmos
-   repositórios, então nada é descartado. O script também compara a `primary_language` do CSV da
-   RQ05 com a do CSV da RQ03/RQ04 e avisa se divergirem.
+4. **RQ03 e RQ07 leem de um único CSV consolidado (`all_rqs.csv`).** Os scripts de coleta por dupla de
+   RQ (`collect_sample_rq01_rq02.py`, `collect_sample_rq03_rq04.py`, `collect_sample_rq05_rq06.py`)
+   existem só para a validação individual de 5-10 repositórios de cada integrante (ver
+   [`data/README.md`](data/README.md)) — a partir daí, toda análise usa o `all_rqs.csv` gerado por
+   `collect_all_rqs.py`. Antes disso, `analyze_rq03.py` e `analyze_rq07.py` liam cada um dos CSVs por
+   dupla de RQ separadamente, o que fazia os números divergirem do `all_rqs.csv` porque vinham de
+   coletas em momentos diferentes (releases novas apareciam entre uma coleta e outra). Ler de uma
+   fonte só elimina essa divergência.
 5. **Mediana por linguagem só é interpretável com repositórios suficientes.** Nos 100 repositórios,
    Java, C# e Dart aparecem uma única vez cada — a "mediana" ali é o próprio repositório. Por isso a
    resposta da RQ07 sai da tabela agrupada (top-10 vs. demais), e a tabela por linguagem traz a
    coluna `repos` para deixar esse limite explícito. Com os 1000 do Lab01S02 o problema diminui, mas
    não desaparece na cauda.
-6. **As contagens variam entre execuções.** São métricas vivas: entre a coleta dos CSVs por dupla de
-   RQ e a do `all_rqs.csv` já apareceram releases novas em 6 dos 100 repositórios (`vercel/next.js`
-   3799 → 3800, `ggml-org/llama.cpp` 6848 → 6855). Ao comparar dois CSVs, diferenças pequenas nesse
-   sentido são esperadas; diferenças grandes, ou um valor exatamente 1000, indicam problema de query.
+6. **As contagens variam entre execuções.** São métricas vivas: rodar `collect_all_rqs.py` de novo
+   pode trazer releases novas nos mesmos repositórios (ex.: `vercel/next.js` 3799 → 3800 entre duas
+   coletas). Pequenas diferenças entre execuções são esperadas; diferenças grandes, ou um valor
+   exatamente 1000 em `releases`, indicam problema de query (ver item 1).
