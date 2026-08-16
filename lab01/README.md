@@ -100,6 +100,24 @@ Execução de referência: 1min49s, 40 requisições (páginas de 25, sem nenhum
 sem nenhum repositório com exatamente 1000 releases (o sintoma de `orderBy` ausente do item 1 das
 limitações abaixo).
 
+**Validação de RQ01/RQ02 nos 1.000 (Lab01S02):** sem nulos ou zerados em `age_years` (mediana 7,73
+anos, contra 8,3 nos 100 da S01 — mesma forma de distribuição na escala maior). Em
+`merged_pull_requests`, 20 dos 1000 repositórios (2%) vêm com zero — não é dado ausente, é projeto
+que aceita contribuição fora do fluxo de PR do GitHub (`torvalds/linux`, `FFmpeg/FFmpeg`); ver item 7
+das limitações abaixo. Validação manual (API REST) em 3 linhas — `rails/rails` (`created_at` e
+`age_years` conferem), `torvalds/linux` (0 PRs merged confere) e
+`codecrafters-io/build-your-own-x` (157 no CSV vs. 153 pela busca no momento da validação, diferença
+pequena e esperada — ver item 6) — bateu com o CSV nas três.
+
+**Hipóteses informais:**
+- **RQ01:** repositórios populares devem ser majoritariamente maduros, mas com uma cauda de projetos
+  recentes que viralizaram rápido — como já apontava a análise extra dos 100 (issue #12), onde a
+  faixa com menos de 1 ano tinha a maior mediana de estrelas. A mediana de idade seguir próxima entre
+  100 e 1000 repositórios (8,3 → 7,7 anos) é consistente com essa hipótese de duas populações.
+- **RQ02:** espera-se volume alto de PRs aceitas na mediana, mas a métrica tem viés conhecido:
+  projetos que não usam PR do GitHub como fluxo principal aparecem com zero, o que não significa
+  baixa contribuição externa de fato.
+
 ### 2. Análise da RQ03
 
 Sem coleta nova: cruza a idade do repositório (RQ01) com o total de releases (RQ03), lendo direto de
@@ -228,3 +246,8 @@ Métricas derivadas, calculadas a partir das acima e usadas no relatório:
    pode trazer releases novas nos mesmos repositórios (ex.: `vercel/next.js` 3799 → 3800 entre duas
    coletas). Pequenas diferenças entre execuções são esperadas; diferenças grandes, ou um valor
    exatamente 1000 em `releases`, indicam problema de query (ver item 1).
+7. **`merged_pull_requests` não enxerga contribuição fora do fluxo de PR do GitHub.** 20 dos 1000
+   repositórios (2%) vêm com zero, mas não é ausência de contribuição externa: são projetos como
+   `torvalds/linux` e `FFmpeg/FFmpeg`, que aceitam patch por lista de e-mail em vez de Pull Request.
+   A métrica também não distingue autor externo de membro do core team — a API não expõe essa
+   informação por PR agregado. Os dois pontos valem como limitação da RQ02 no relatório.
