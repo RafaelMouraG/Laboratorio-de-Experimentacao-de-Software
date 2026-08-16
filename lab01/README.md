@@ -74,24 +74,18 @@ Documento com: (i) introdução com hipóteses informais sobre as RQs; (ii) meto
 
 ### 1. Coleta de dados
 
-Os resultados das validações individuais são salvos em `lab01/data/amostra/`. Use `--n` para definir
-a quantidade de repositórios.
+Os resultados das validações individuais (5-10 repositórios, uma por integrante, antes de integrar
+ao script único) são salvos em `lab01/data/amostra/`. Use `--n` para definir a quantidade:
 
-Amostra de teste (10 repositórios):
 ```bash
 python lab01/src/collection/collect_sample_rq01_rq02.py --n 10 --out lab01/data/amostra/rq01_rq02_10.csv
 python lab01/src/collection/collect_sample_rq03_rq04.py --n 10 --out lab01/data/amostra/rq03_rq04_10.csv
 python lab01/src/collection/collect_sample_rq05_rq06.py --n 10 --out lab01/data/amostra/rq05_rq06_10.csv
 ```
 
-Amostra final (100 repositórios):
-```bash
-python lab01/src/collection/collect_sample_rq01_rq02.py --n 100 --out lab01/data/amostra/rq01_rq02_100.csv
-python lab01/src/collection/collect_sample_rq03_rq04.py --n 100 --out lab01/data/amostra/rq03_rq04_100.csv
-python lab01/src/collection/collect_sample_rq05_rq06.py --n 100 --out lab01/data/amostra/rq05_rq06_100.csv
-```
-
-E para o script consolidado, que coleta todas as RQs de uma vez em
+Esses três scripts não são usados para gerar os dados finais (100 ou 1000 repositórios) — essa etapa
+é só validação individual. A partir daí, toda coleta e análise usa o script consolidado, que coleta
+todas as RQs de uma vez em
 `lab01/data/sprint_s01/all_rqs.csv`:
 ```bash
 python lab01/src/collection/collect_all_rqs.py --n 100
