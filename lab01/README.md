@@ -91,6 +91,15 @@ todas as RQs de uma vez em
 python lab01/src/collection/collect_all_rqs.py --n 100
 ```
 
+**Lab01S02 — os 1.000 repositórios:** mesmo script, teto da busca do GitHub (`search` não devolve
+mais que 1000 resultados):
+```bash
+python lab01/src/collection/collect_all_rqs.py --n 1000 --out lab01/data/sprint_s02/all_rqs.csv
+```
+Execução de referência: 1min49s, 40 requisições (páginas de 25, sem nenhuma reduzida por 502/504) e
+sem nenhum repositório com exatamente 1000 releases (o sintoma de `orderBy` ausente do item 1 das
+limitações abaixo).
+
 ### 2. Análise da RQ03
 
 Sem coleta nova: cruza a idade do repositório (RQ01) com o total de releases (RQ03), lendo direto de
