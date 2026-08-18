@@ -109,6 +109,8 @@ das limitações abaixo. Validação manual (API REST) em 3 linhas — `rails/ra
 `codecrafters-io/build-your-own-x` (157 no CSV vs. 153 pela busca no momento da validação, diferença
 pequena e esperada — ver item 6) — bateu com o CSV nas três.
 
+**Validação de RQ05/RQ06 nos 1.000 (Lab01S02):** não foram encontrados dados corrompidos. O destaque na análise de linguagens vai para a forte presença do ecossistema de dados e web (Python com 229, TypeScript com 174) e uma aparição expressiva da linguagem Rust (57), indicando forte tração da comunidade open-source. Temos também 87 repositórios (8,7%) sem linguagem principal definida ("N/A"), que formarão um recorte próprio na RQ07. Na validação de issues, constatamos que 43 repositórios não utilizam a ferramenta do GitHub (0 issues abertas/fechadas). Eles devem ser descartados do cálculo final da RQ06 para não distorcer a métrica; com esse tratamento, a mediana de resolução salta para excelentes 89,28%.
+
 **Hipóteses informais:**
 - **RQ01:** repositórios populares devem ser majoritariamente maduros, mas com uma cauda de projetos
   recentes que viralizaram rápido — como já apontava a análise extra dos 100 (issue #12), onde a
@@ -117,6 +119,9 @@ pequena e esperada — ver item 6) — bateu com o CSV nas três.
 - **RQ02:** espera-se volume alto de PRs aceitas na mediana, mas a métrica tem viés conhecido:
   projetos que não usam PR do GitHub como fluxo principal aparecem com zero, o que não significa
   baixa contribuição externa de fato.
+- **RQ05:** espera-se que os projetos de maior sucesso sejam desenvolvidos predominantemente nas linguagens que dominam o mercado (tendo como referência o TIOBE Index 2026). A justificativa é estrutural: linguagens populares oferecem os maiores ecossistemas de bibliotecas e uma vasta massa de desenvolvedores aptos a contribuir.
+- **RQ06:** espera-se encontrar uma altíssima taxa de issues fechadas (mediana > 80%). A saúde de um grande projeto open-source depende da manutenção ativa; uma alta taxa de resolução comprova que os mantenedores engajam com a comunidade e não deixam bugs se acumularem, o que é vital para manter a popularidade.
+
 
 ### 2. Análise da RQ03
 
@@ -155,9 +160,9 @@ Saídas em `lab01/data/sprint_s01/`: `rq07_por_linguagem.csv` (mediana das três
 linguagem) e `rq07_top_vs_demais.csv` (linguagens mais populares vs. demais). O caminho de entrada
 pode ser trocado com `--entrada` (ex.: para rodar sobre os 1000 repositórios do Lab01S02).
 
-**Fonte de "linguagens mais populares":** [GitHub Octoverse 2024](https://github.blog/news-insights/octoverse/octoverse-2024/),
-top 10 linguagens por número de desenvolvedores — Python, JavaScript, TypeScript, Java, C#, C++, PHP,
-Shell, C e Go. É a mesma referência usada na RQ05 e está na constante `TOP_LANGUAGES` do script.
+**Fonte de "linguagens mais populares":** [TIOBE Index 2026](https://www.tiobe.com/tiobe-index/),
+top 10 linguagens de programação — Python, C, C++, Java, C#, JavaScript, Visual Basic, SQL,
+R e Rust. É a mesma referência usada na RQ05 e está na constante `TOP_LANGUAGES` do script.
 Repositórios sem linguagem primária (`N/A`) formam um terceiro grupo, separado das "demais
 linguagens": eles não são um contraexemplo de linguagem impopular, são um caso à parte (listas,
 documentação) e misturá-los com as demais puxaria as medianas para baixo.

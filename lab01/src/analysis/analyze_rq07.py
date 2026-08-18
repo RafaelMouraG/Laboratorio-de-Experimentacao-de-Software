@@ -8,15 +8,15 @@ import pandas as pd
 
 TOP_LANGUAGES = [
     "Python",
-    "JavaScript",
-    "TypeScript",
+    "C",
+    "C++",
     "Java",
     "C#",
-    "C++",
-    "PHP",
-    "Shell",
-    "C",
-    "Go",
+    "JavaScript",
+    "Visual Basic",
+    "SQL",
+    "R",
+    "Rust",
 ]
 
 SEM_LINGUAGEM = "N/A"
@@ -81,7 +81,7 @@ def main() -> None:
 
     df = juntar(args.entrada)
     print(f"{len(df)} repositórios cruzados, {df['primary_language'].nunique()} linguagens distintas")
-    print(f"Linguagens mais populares (Octoverse 2024): {', '.join(TOP_LANGUAGES)}")
+    print(f"Linguagens mais populares (TIOBE Index 2026): {', '.join(TOP_LANGUAGES)}")
 
     tabela_linguagem = por_linguagem(df)
     tabela_grupo = por_grupo(df)
