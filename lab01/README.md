@@ -111,6 +111,43 @@ pequena e esperada — ver item 6) — bateu com o CSV nas três.
 
 **Validação de RQ05/RQ06 nos 1.000 (Lab01S02):** não foram encontrados dados corrompidos. O destaque na análise de linguagens vai para a forte presença do ecossistema de dados e web (Python com 229, TypeScript com 174) e uma aparição expressiva da linguagem Rust (57), indicando forte tração da comunidade open-source. Temos também 87 repositórios (8,7%) sem linguagem principal definida ("N/A"), que formarão um recorte próprio na RQ07. Na validação de issues, constatamos que 43 repositórios não utilizam a ferramenta do GitHub (0 issues abertas/fechadas). Eles devem ser descartados do cálculo final da RQ06 para não distorcer a métrica; com esse tratamento, a mediana de resolução salta para excelentes 89,28%.
 
+**Validação de RQ03/RQ04 nos 1.000 (Lab01S02):** roda sem coleta nova, direto sobre o CSV da S02:
+```bash
+python lab01/src/analysis/validate_rq03_rq04.py
+```
+Saída: `lab01/data/sprint_s02/rq04_faixas_push.csv`, com a distribuição do último push em faixas
+acumuladas. É o único CSV derivado da RQ04 — as saídas do `analyze_rq03.py` trazem só as colunas de
+release, e `days_since_last_push` fica no `all_rqs.csv` — então é dele que a S03 parte para a
+visualização da RQ04. O resto da validação é relatório impresso, não vira arquivo.
+
+Nenhum valor ausente — 1000 linhas, 1000 repositórios distintos, sem célula vazia, valor não numérico
+ou negativo em `releases`, `age_years`, `days_since_last_push` e `days_since_last_update`. Em
+`releases`, mediana 40,5 (Q1 0, Q3 153, máx. 6.878 em `ggml-org/llama.cpp`); pela métrica principal da
+RQ03, `releases_por_ano` fica em 6,78 considerando todos e 14,94 entre os 725 que publicam release. Em
+`days_since_last_push`, mediana de 3,02 dias (Q1 0,45, Q3 52,10, máx. 2.448 em
+`exacity/deeplearningbook-chinese`): 60,6% dos repositórios tiveram push na última semana, 72% no
+último mês e 11,4% estão parados há mais de um ano. Os outliers pelo critério de Tukey (90 em
+`releases`, 120 em `releases_por_ano`, 186 em `days_since_last_push`) são cauda longa real, não erro de
+coleta — a lista mistura projeto com release diária e repositório de conteúdo parado há anos. Nenhum
+repositório veio com exatamente 1000 releases (a sentinela do `orderBy`, item 1 das limitações) e 22
+passam de 1000, então o `totalCount` não está truncado.
+
+**O recorte "sem release" caiu de 40% para 27,5%.** São 275 dos 1000, contra 40 dos 100 da S01 — e a
+queda muda a leitura da RQ03 no relatório, que não pode mais afirmar que "40% dos repositórios
+populares não publicam release" sem dizer sobre qual amostra. Não é inconsistência de coleta: quanto
+mais alto o corte de popularidade, maior a concentração de repositório de conteúdo (listas *awesome*,
+livros, roadmaps), que não publica release por não ser software; a cauda dos 1.000 traz proporcional-
+mente mais biblioteca e ferramenta, que publica. Isso aparece na quebra por linguagem, onde o
+percentual sem release vai de 90,9% em HTML, 87,5% em Jupyter Notebook e 85,1% em `N/A` até 8,0% em
+TypeScript e 5,3% em Go e Rust. O percentual sempre deve ser citado junto com o tamanho da amostra.
+
+**`pushedAt` vs. `updatedAt` na RQ04:** a mediana de `days_since_last_update` é de 0,03 dia (cerca de
+43 minutos) contra 3,02 dias de `pushedAt`, e 921 dos 1000 repositórios têm `updatedAt` mais recente
+que `pushedAt` — 280 divergem em mais de 30 dias e 114 em mais de um ano. Usar `updatedAt` faria quase
+todo repositório da lista parecer ativo hoje, inclusive os abandonados, porque o campo muda com star,
+label e edição de descrição. Por isso a RQ04 é medida por `pushedAt`; `days_since_last_update` fica no
+CSV só como material dessa comparação.
+
 **Hipóteses informais:**
 - **RQ01:** repositórios populares devem ser majoritariamente maduros, mas com uma cauda de projetos
   recentes que viralizaram rápido — como já apontava a análise extra dos 100 (issue #12), onde a
@@ -119,6 +156,18 @@ pequena e esperada — ver item 6) — bateu com o CSV nas três.
 - **RQ02:** espera-se volume alto de PRs aceitas na mediana, mas a métrica tem viés conhecido:
   projetos que não usam PR do GitHub como fluxo principal aparecem com zero, o que não significa
   baixa contribuição externa de fato.
+- **RQ03:** espera-se que sistemas populares lancem releases com frequência, mas a métrica deve ser
+  bimodal em vez de ter um valor típico único: um grupo grande não usa *GitHub Releases* de jeito
+  nenhum (27,5% nos 1.000) — ou porque não é software, ou porque versiona por tag, como
+  `torvalds/linux` e `golang/go` — e, entre os que usam, a cadência deve ser alta. A validação é
+  consistente com isso: nenhuma release em um quarto da amostra e ~15 releases por ano na mediana
+  dos 725 que publicam. Por isso a resposta sai de `releases_por_ano` com os dois recortes
+  declarados, e não do total bruto, que favorece repositório antigo.
+- **RQ04:** espera-se que sistemas populares sejam atualizados com muita frequência — mediana de
+  poucos dias desde o último push — com uma cauda de projetos arquivados que continuam estrelados
+  por reputação acumulada (`atom/atom`, `adobe/brackets`). Mediana de 3 dias e 11,4% parados há mais
+  de um ano sustentam as duas partes. A hipótese só é testável com `pushedAt`: por `updatedAt` a
+  mediana cai para 43 minutos e a cauda de abandonados desaparece do gráfico.
 - **RQ05:** espera-se que os projetos de maior sucesso sejam desenvolvidos predominantemente nas linguagens que dominam o mercado (tendo como referência o TIOBE Index 2026). A justificativa é estrutural: linguagens populares oferecem os maiores ecossistemas de bibliotecas e uma vasta massa de desenvolvedores aptos a contribuir.
 - **RQ06:** espera-se encontrar uma altíssima taxa de issues fechadas (mediana > 80%). A saúde de um grande projeto open-source depende da manutenção ativa; uma alta taxa de resolução comprova que os mantenedores engajam com a comunidade e não deixam bugs se acumularem, o que é vital para manter a popularidade.
 
@@ -133,19 +182,29 @@ essa análise e a coleta bruta fiquem lendo de coletas diferentes e divergindo e
 python lab01/src/analysis/analyze_rq03.py
 ```
 
+Para os 1.000 da Lab01S02, mesmo script trocando entrada e saídas:
+```bash
+python lab01/src/analysis/analyze_rq03.py \
+  --entrada lab01/data/sprint_s02/all_rqs.csv \
+  --out lab01/data/sprint_s02/rq03_releases_por_ano.csv \
+  --out-resumo lab01/data/sprint_s02/rq03_resumo.csv
+```
+
 Faz duas coisas que o total bruto de releases não responde sozinho:
 
 1. **Releases por ano** (`releases / age_years`) como métrica principal — o total acumulado favorece
    repositório antigo, e a normalização corrige isso. O total bruto continua no CSV como métrica
    secundária.
-2. **Separa os repositórios sem release.** São 40 dos 100, e incluí-los ou não muda a mediana de
-   136,5 para 15 (ou de 22,2 para 5,8 releases por ano). O script reporta os dois recortes com
+2. **Separa os repositórios sem release.** São 40 dos 100 na S01 e 275 dos 1000 na S02, e incluí-los
+   ou não muda a mediana de 136,5 para 15 nos 100 (ou de 22,2 para 5,8 releases por ano) e de 95 para
+   40,5 nos 1000 (de 14,94 para 6,78 releases por ano). O script reporta os dois recortes com
    mediana, quartis e média, mostra o percentual de repositórios sem release por linguagem e lista
    os maiores para classificação manual no relatório — entre eles estão `torvalds/linux` e
    `golang/go`, que versionam por tag em vez de publicar em *GitHub Releases*.
 
-Saídas: `lab01/data/sprint_s01/rq03_releases_por_ano.csv` (por repositório, com a coluna
-`sem_release`) e `lab01/data/sprint_s01/rq03_resumo.csv` (o comparativo com e sem os zeros).
+Saídas: `rq03_releases_por_ano.csv` (por repositório, com a coluna `sem_release`) e
+`rq03_resumo.csv` (o comparativo com e sem os zeros), na pasta da sprint correspondente
+(`lab01/data/sprint_s01/` e `lab01/data/sprint_s02/`).
 
 ### 3. Análise da RQ07 (bônus)
 
