@@ -1,4 +1,4 @@
 grupo,repos,mediana_prs_aceitas,mediana_releases,mediana_dias_sem_push
-top-10 Octoverse,70,2027.5,69.5,0.20500000000000002
-demais linguagens,17,440.0,0.0,0.8
+top-10 TIOBE,49,1875.0,71.0,0.2
+demais linguagens,38,1679.0,9.5,0.385
 sem linguagem primária,13,317.0,0.0,115.53

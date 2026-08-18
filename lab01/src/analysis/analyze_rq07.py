@@ -21,7 +21,7 @@ TOP_LANGUAGES = [
 
 SEM_LINGUAGEM = "N/A"
 
-GRUPO_TOP = "top-10 Octoverse"
+GRUPO_TOP = "top-10 TIOBE"
 GRUPO_DEMAIS = "demais linguagens"
 GRUPO_NENHUMA = "sem linguagem primária"
 
