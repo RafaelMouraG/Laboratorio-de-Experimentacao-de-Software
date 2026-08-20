@@ -1,0 +1,32 @@
+snapshot_date,sprint,issue,titulo,status,assignee,state,url
+2026-08-20,S02,24,Infraestrutura de gráficos: módulo comum e pasta de figuras,Backlog,mateusdsoc,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/24
+2026-08-20,S02,25,RQ01: visualização e resultado da idade dos repositórios,Backlog,mateusdsoc,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/25
+2026-08-20,S02,26,RQ02: visualização e resultado das pull requests aceitas,Backlog,mateusdsoc,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/26
+2026-08-20,S02,27,RQ03: visualização e resultado da frequência de releases,Backlog,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/27
+2026-08-20,S02,28,RQ04: visualização e resultado do tempo até a última atualização,Backlog,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/28
+2026-08-20,S02,29,RQ05: visualização e resultado das linguagens primárias,Backlog,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/29
+2026-08-20,S02,30,RQ06: visualização e resultado do percentual de issues fechadas,Backlog,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/30
+2026-08-20,S02,31,Consolidar a seção 3 (Resultados) do relatório,Backlog,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/31
+2026-08-20,S02,32,Consolidar a seção 4 (Discussão: hipótese × resultado),Backlog,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/32
+2026-08-20,S02,33,Snapshot de fechamento da sprint S03,Backlog,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/33
+2026-08-20,S02,18,Atualizar board e exportar snapshot de fechamento da S02,Doing,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/18
+2026-08-20,S02,1,Subir documentação do repo,Done,,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/1
+2026-08-20,S02,2,RQ 01 Sistemas populares são maduros/antigos?,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/2
+2026-08-20,S02,3,RQ 02 Sistemas populares recebem muita contribuição externa?,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/3
+2026-08-20,S02,4,RQ 03 Sistemas populares lançam releases com frequência?,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/4
+2026-08-20,S02,5,RQ 04 Sistemas populares são atualizados com frequência?,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/5
+2026-08-20,S02,6,RQ 05 Sistemas populares são escritos nas linguagens mais populares?,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/6
+2026-08-20,S02,7,RQ 06 Sistemas populares possuem um alto percentual de issues fechadas?,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/7
+2026-08-20,S02,8,Bônus (+1 ponto) — RQ 07,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/8
+2026-08-20,S02,9,(Extra) RQ03: releases por ano e recorte dos repositórios sem release,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/9
+2026-08-20,S02,10,Criar script GraphQL para Snapshot do Kanban (Fechamento de Sprints),Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/10
+2026-08-20,S02,11,Unificar consultas GraphQL em um script único (Amostra 100 repositórios),Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/11
+2026-08-20,S02,12,RQ Extra,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/12
+2026-08-20,S02,13,Paginação: coleta dos 1000 repositórios mais estrelados,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/13
+2026-08-20,S02,14,Validar consistência de RQ01/RQ02 nos 1000 e escrever hipótese informal,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/14
+2026-08-20,S02,15,Validar consistência de RQ03/RQ04 nos 1000 e escrever hipótese informal,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/15
+2026-08-20,S02,16,Validar consistência de RQ05/RQ06 nos 1000 e escrever hipótese informal,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/16
+2026-08-20,S02,17,Primeira versão do relatório com hipóteses informais,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/17
+2026-08-20,S02,19,Corrigir linhas de coletas paralelas,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/19
+2026-08-20,S02,20,Corrigir lógica de paginação e retry,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/20
+2026-08-20,S02,23,[Bônus GQM] Analisar a correlação entre engajamento de código e resolução de problemas,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/23
