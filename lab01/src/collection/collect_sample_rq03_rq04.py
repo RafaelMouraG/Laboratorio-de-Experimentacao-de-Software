@@ -90,7 +90,7 @@ def print_pushed_vs_updated(df: pd.DataFrame, gap_dias: int = 180) -> None:
 
 
 def print_by_language(df: pd.DataFrame) -> None:
-    """RQ07 (bônus): RQ03 e RQ04 agrupados por linguagem primária."""
+    """RQ07: RQ03 e RQ04 agrupados por linguagem primária."""
     grouped = (
         df.groupby("primary_language")
         .agg(

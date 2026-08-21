@@ -29,7 +29,7 @@ Métrica: linguagem primária de cada repositório
 **RQ 06.** Sistemas populares possuem um alto percentual de issues fechadas?
 Métrica: razão entre issues fechadas e total de issues
 
-**Bônus (+1 ponto) — RQ 07:** Sistemas escritos em linguagens mais populares recebem mais contribuição externa, lançam mais releases e são atualizados com mais frequência? (divida os resultados das RQs 02, 03 e 04 por linguagem)
+**RQ 07.** Sistemas escritos em linguagens mais populares recebem mais contribuição externa, lançam mais releases e são atualizados com mais frequência? (divida os resultados das RQs 02, 03 e 04 por linguagem)
 
 ## Parte 2 — Setup do GitHub Projects do grupo
 
@@ -54,13 +54,13 @@ Documento com: (i) introdução com hipóteses informais sobre as RQs; (ii) meto
 
 **Lab01S01** (4 pontos): Consulta GraphQL para 100 repositórios (todos os dados/métricas necessários) + requisição automática + GitHub Projects criado, com colunas (Status) e limite de WIP definidos e primeiras Issues em uso.
 
-*Divisão sugerida por integrante (desde esta sprint, para viabilizar desenvolvimento individual semanal em um trio):* distribua as RQs em 3 partes, uma por integrante (ex.: A → RQ01+RQ02; B → RQ03+RQ04; C → RQ05+RQ06+bônus). Cada integrante implementa e testa, em Issue própria, a extração e uma validação rápida (numa amostra de 5-10 repositórios) dos campos/métricas da sua parte, antes de integrar ao script único de consulta do grupo.
+*Divisão sugerida por integrante (desde esta sprint, para viabilizar desenvolvimento individual semanal em um trio):* distribua as RQs em 3 partes, uma por integrante (ex.: A → RQ01+RQ02; B → RQ03+RQ04; C → RQ05+RQ06+RQ07). Cada integrante implementa e testa, em Issue própria, a extração e uma validação rápida (numa amostra de 5-10 repositórios) dos campos/métricas da sua parte, antes de integrar ao script único de consulta do grupo.
 
 **Lab01S02** (4 pontos): Paginação (consulta 1000 repositórios) + dados em .csv + primeira versão do relatório com hipóteses informais + board atualizado e primeiro snapshot exportado, refletindo o fluxo real de trabalho do grupo em S01 e S02.
 
 *Divisão sugerida por integrante:* a paginação em si (tarefa mecânica) pode ficar com qualquer integrante, mas cada integrante deve validar individualmente, para a sua parte de RQs, a consistência dos dados nos 1000 repositórios (distribuição, outliers, valores ausentes) e escrever, em Issue própria, a hipótese informal correspondente.
 
-**Lab01S03** (4 pontos): Análise e visualização de dados para as 6 RQs (+ bônus).
+**Lab01S03** (4 pontos): Análise e visualização de dados para as 7 RQs.
 
 **Relatório Final** (3 pontos): elaboração do documento final (ver seção "Relatório Final" acima), incluindo o anexo com print do board mostrando o fluxo completo do Lab01 e a política de WIP em uso.
 
@@ -206,7 +206,7 @@ Saídas: `rq03_releases_por_ano.csv` (por repositório, com a coluna `sem_releas
 `rq03_resumo.csv` (o comparativo com e sem os zeros), na pasta da sprint correspondente
 (`lab01/data/sprint_s01/` e `lab01/data/sprint_s02/`).
 
-### 3. Análise da RQ07 (bônus)
+### 3. Análise da RQ07
 
 A RQ07 não faz coleta nova: ela cruza, por repositório, a linguagem primária (RQ05) com as métricas
 das RQ02, RQ03 e RQ04, lendo do mesmo `all_rqs.csv` consolidado. Rode depois de ter o CSV do passo 1:
