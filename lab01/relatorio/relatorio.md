@@ -28,7 +28,23 @@ Algumas particularidades dos dados já foram mapeadas nas amostras iniciais e s�
 
 ## 3. Resultados
 
-*[PENDENTE - Fechamento na S03]*
+### RQ01 — Idade dos repositórios
+
+Nos 1.000 repositórios coletados, a idade mediana é de **7,72 anos** (Q1 3,51, Q3 11,34, mínimo
+0,01, máximo 18,35). O histograma (`lab01/relatorio/figuras/rq01_histograma_idade.png`) confirma a
+cauda de projetos recentes prevista na hipótese: 81 dos 1.000 repositórios (8,1%) têm menos de um
+ano de vida, contra 345 (34,5%) com mais de dez anos. A distribuição por faixa etária
+(`lab01/relatorio/figuras/rq01_faixas_idade.png`) é:
+
+| Faixa | Repositórios | % de 1.000 |
+|---|---|---|
+| < 1 ano | 81 | 8,1% |
+| 1-3 anos | 109 | 10,9% |
+| 3-5 anos | 133 | 13,3% |
+| 5-10 anos | 332 | 33,2% |
+| > 10 anos | 345 | 34,5% |
+
+*[PENDENTE - demais RQs, fechamento na S03]*
 
 ## 4. Discussão (Hipótese vs Resultado)
 
