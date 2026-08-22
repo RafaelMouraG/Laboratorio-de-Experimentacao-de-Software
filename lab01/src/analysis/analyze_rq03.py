@@ -2,26 +2,16 @@
 
 import argparse
 import os
-import sys
 
 import pandas as pd
+
+from viz_common import carregar_dados
 
 METRICAS = ["releases", "releases_por_ano"]
 
 
-def carregar(caminho: str, colunas: list[str]) -> pd.DataFrame:
-    if not os.path.exists(caminho):
-        sys.exit(f"{caminho} não encontrado. Rode antes os scripts de coleta das RQ01-RQ06.")
-
-    df = pd.read_csv(caminho, keep_default_na=False)
-    faltando = [coluna for coluna in colunas if coluna not in df.columns]
-    if faltando:
-        sys.exit(f"{caminho}: colunas ausentes {faltando}")
-    return df[colunas]
-
-
 def juntar(entrada: str) -> pd.DataFrame:
-    df = carregar(entrada, ["repo", "stars", "primary_language", "releases", "age_years"])
+    df = carregar_dados(entrada, ["repo", "stars", "primary_language", "releases", "age_years"])
 
     return df.assign(
         releases_por_ano=(df["releases"] / df["age_years"]).round(2),

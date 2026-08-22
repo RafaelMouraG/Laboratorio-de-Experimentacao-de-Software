@@ -2,9 +2,10 @@
 
 import argparse
 import os
-import sys
 
 import pandas as pd
+
+from viz_common import carregar_dados
 
 TOP_LANGUAGES = [
     "Python",
@@ -26,19 +27,8 @@ GRUPO_DEMAIS = "demais linguagens"
 GRUPO_NENHUMA = "sem linguagem primária"
 
 
-def carregar(caminho: str, colunas: list[str]) -> pd.DataFrame:
-    if not os.path.exists(caminho):
-        sys.exit(f"{caminho} não encontrado. Rode antes os scripts de coleta das RQ01-RQ06.")
-
-    df = pd.read_csv(caminho, keep_default_na=False)
-    faltando = [coluna for coluna in colunas if coluna not in df.columns]
-    if faltando:
-        sys.exit(f"{caminho}: colunas ausentes {faltando}")
-    return df[colunas]
-
-
 def juntar(entrada: str) -> pd.DataFrame:
-    df = carregar(
+    df = carregar_dados(
         entrada,
         ["repo", "primary_language", "merged_pull_requests", "releases", "days_since_last_push"],
     )

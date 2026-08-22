@@ -1,20 +1,10 @@
 """RQ05 e RQ06: Linguagens populares e Razão de Issues fechadas"""
 
 import argparse
-import os
-import sys
 
 import pandas as pd
 
-def carregar(caminho: str, colunas: list[str]) -> pd.DataFrame:
-    if not os.path.exists(caminho):
-        sys.exit(f"{caminho} não encontrado. Rode antes os scripts de coleta das RQ01-RQ06.")
-
-    df = pd.read_csv(caminho, keep_default_na=False)
-    faltando = [coluna for coluna in colunas if coluna not in df.columns]
-    if faltando:
-        sys.exit(f"{caminho}: colunas ausentes {faltando}")
-    return df[colunas]
+from viz_common import carregar_dados
 
 def analisar_rq05(df: pd.DataFrame) -> None:
     print("\n" + "="*40)
@@ -57,7 +47,7 @@ def main() -> None:
     parser.add_argument("--entrada", default="lab01/data/sprint_s02/all_rqs.csv")
     args = parser.parse_args()
 
-    df = carregar(args.entrada, ["repo", "primary_language", "total_issues", "closed_issues_ratio"])
+    df = carregar_dados(args.entrada, ["repo", "primary_language", "total_issues", "closed_issues_ratio"])
     
     analisar_rq05(df)
     analisar_rq06(df)

@@ -28,7 +28,39 @@ Algumas particularidades dos dados já foram mapeadas nas amostras iniciais e s�
 
 ## 3. Resultados
 
-*[PENDENTE - Fechamento na S03]*
+### RQ01 — Idade dos repositórios
+
+Nos 1.000 repositórios coletados, a idade mediana é de **7,72 anos** (Q1 3,51, Q3 11,34, mínimo
+0,01, máximo 18,35). O histograma (`lab01/relatorio/figuras/rq01_histograma_idade.png`) confirma a
+cauda de projetos recentes prevista na hipótese: 81 dos 1.000 repositórios (8,1%) têm menos de um
+ano de vida, contra 345 (34,5%) com mais de dez anos. A distribuição por faixa etária
+(`lab01/relatorio/figuras/rq01_faixas_idade.png`) é:
+
+| Faixa | Repositórios | % de 1.000 |
+|---|---|---|
+| < 1 ano | 81 | 8,1% |
+| 1-3 anos | 109 | 10,9% |
+| 3-5 anos | 133 | 13,3% |
+| 5-10 anos | 332 | 33,2% |
+| > 10 anos | 345 | 34,5% |
+
+### RQ02 — Pull requests aceitas
+
+Nos 1.000 repositórios, 20 (2%) têm **zero pull requests aceitas** — recorte declarado, não dado
+ausente: são projetos como `torvalds/linux` que aceitam contribuição fora do fluxo de PR do GitHub
+(patch por lista de e-mail), então zero não significa baixa contribuição externa de fato. A métrica
+`merged_pull_requests` também não distingue autor externo de membro do core team — a API não expõe
+essa informação por PR agregado.
+
+Considerando todos os 1.000 repositórios, a mediana é de **765,5 PRs aceitas** (Q1 175, Q3 3.390);
+excluindo os 20 com zero, a mediana sobe para **811 PRs aceitas** (Q1 191,75, Q3 3.485,25) — a
+diferença é pequena porque os zeros são só 2% da amostra. O histograma em escala log
+(`lab01/relatorio/figuras/rq02_histograma_prs_log.png`) mostra volume alto na mediana com cauda
+longa nos dois sentidos; o boxplot em escala log
+(`lab01/relatorio/figuras/rq02_boxplot_prs.png`, sem os zeros) evidencia os outliers acima de ~8 mil
+PRs aceitas.
+
+*[PENDENTE - demais RQs, fechamento na S03]*
 
 ## 4. Discussão (Hipótese vs Resultado)
 
