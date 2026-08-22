@@ -44,6 +44,22 @@ ano de vida, contra 345 (34,5%) com mais de dez anos. A distribuição por faixa
 | 5-10 anos | 332 | 33,2% |
 | > 10 anos | 345 | 34,5% |
 
+### RQ02 — Pull requests aceitas
+
+Nos 1.000 repositórios, 20 (2%) têm **zero pull requests aceitas** — recorte declarado, não dado
+ausente: são projetos como `torvalds/linux` que aceitam contribuição fora do fluxo de PR do GitHub
+(patch por lista de e-mail), então zero não significa baixa contribuição externa de fato. A métrica
+`merged_pull_requests` também não distingue autor externo de membro do core team — a API não expõe
+essa informação por PR agregado.
+
+Considerando todos os 1.000 repositórios, a mediana é de **765,5 PRs aceitas** (Q1 175, Q3 3.390);
+excluindo os 20 com zero, a mediana sobe para **811 PRs aceitas** (Q1 191,75, Q3 3.485,25) — a
+diferença é pequena porque os zeros são só 2% da amostra. O histograma em escala log
+(`lab01/relatorio/figuras/rq02_histograma_prs_log.png`) mostra volume alto na mediana com cauda
+longa nos dois sentidos; o boxplot em escala log
+(`lab01/relatorio/figuras/rq02_boxplot_prs.png`, sem os zeros) evidencia os outliers acima de ~8 mil
+PRs aceitas.
+
 *[PENDENTE - demais RQs, fechamento na S03]*
 
 ## 4. Discussão (Hipótese vs Resultado)
