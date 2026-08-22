@@ -12,7 +12,8 @@ import os
 
 import pandas as pd
 
-from analyze_rq03 import carregar, juntar
+from analyze_rq03 import juntar
+from viz_common import carregar_dados
 
 RELEASES_CAP = 1000
 
@@ -47,7 +48,7 @@ def ausentes(caminho: str, colunas: list[str]) -> pd.DataFrame:
     `read_csv` converter a coluna, um campo vazio já viraria NaN e um lixo textual quebraria a
     leitura, então a contagem seria feita em cima de um dado que o pandas já mexeu.
     """
-    bruto = carregar(caminho, ["repo"] + colunas)
+    bruto = carregar_dados(caminho, ["repo"] + colunas)
     linhas = []
     for coluna in colunas:
         texto = bruto[coluna].astype(str).str.strip()
@@ -111,7 +112,7 @@ def main() -> None:
     args = parser.parse_args()
 
     df = juntar(args.entrada)
-    push = carregar(args.entrada, ["repo", "days_since_last_push", "days_since_last_update"])
+    push = carregar_dados(args.entrada, ["repo", "days_since_last_push", "days_since_last_update"])
     df = df.merge(push, on="repo")
 
     print(f"{len(df)} linhas, {df['repo'].nunique()} repositórios distintos em {args.entrada}")

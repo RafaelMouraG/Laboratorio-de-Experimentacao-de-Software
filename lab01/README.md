@@ -250,6 +250,30 @@ A métrica de idade sozinha esconde esse segundo grupo.
 Saídas em `lab01/data/sprint_s01/`: `extra_idade_por_faixa.csv` e `extra_repos_jovens.csv`
 (controlado por `--listar`, padrão 10).
 
+### 5. Infraestrutura de gráficos (`viz_common.py`)
+
+Antes de cada RQ ganhar seu script de visualização (Lab01S03), `lab01/src/analysis/viz_common.py`
+centraliza o que toda análise com gráfico precisa, para manter estilo visual único no relatório e
+não duplicar leitura de CSV entre scripts:
+
+- `carregar_dados(caminho, colunas=None)` — mesma leitura usada em toda a coleta
+  (`keep_default_na=False`, ver limitação 2), com validação das colunas pedidas. Substitui a função
+  `carregar` que antes era reimplementada em cada script de análise.
+- `setup_estilo()` — aplica fonte, grid e paleta únicos a todos os gráficos (chamar uma vez no
+  início do script, antes de criar qualquer figura).
+- `marcar_mediana(ax, valor, rotulo=None, eixo="x")` — desenha a mediana como linha tracejada com
+  rótulo, no eixo x (padrão) ou y.
+- `salvar(fig, nome)` — salva a figura em `lab01/relatorio/figuras/<nome>.png` a 150 dpi.
+
+Exemplo de uso completo (histograma da idade da RQ01) em
+`lab01/src/analysis/example_viz_idade.py`:
+
+```bash
+python lab01/src/analysis/example_viz_idade.py
+```
+
+Nenhum script de RQ deve chamar `pd.read_csv` diretamente — sempre via `carregar_dados`.
+
 ## Métricas por RQ
 
 | RQ | Métrica | Campo GraphQL | Coluna no CSV |

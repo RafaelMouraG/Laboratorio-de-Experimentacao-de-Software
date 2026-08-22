@@ -2,25 +2,15 @@
 
 import argparse
 import os
-import sys
 
 import pandas as pd
+
+from viz_common import carregar_dados
 
 COLUNAS = ["repo", "stars", "age_years", "primary_language"]
 
 FAIXAS = [0, 1, 3, 5, 10, 100]
 ROTULOS = ["menos de 1 ano", "1 a 3 anos", "3 a 5 anos", "5 a 10 anos", "mais de 10 anos"]
-
-
-def carregar(caminho: str) -> pd.DataFrame:
-    if not os.path.exists(caminho):
-        sys.exit(f"{caminho} não encontrado. Rode antes lab01/src/collection/collect_all_rqs.py.")
-
-    df = pd.read_csv(caminho, keep_default_na=False)
-    faltando = [coluna for coluna in COLUNAS if coluna not in df.columns]
-    if faltando:
-        sys.exit(f"{caminho}: colunas ausentes {faltando}")
-    return df[COLUNAS]
 
 
 def correlacoes(df: pd.DataFrame) -> pd.DataFrame:
@@ -55,7 +45,7 @@ def main() -> None:
     parser.add_argument("--listar", type=int, default=10)
     args = parser.parse_args()
 
-    df = carregar(args.entrada)
+    df = carregar_dados(args.entrada, COLUNAS)
     jovens = df.nsmallest(args.listar, "age_years").sort_values("stars", ascending=False)
 
     print(f"{len(df)} repositórios | idade mediana de {df['age_years'].median()} anos")
