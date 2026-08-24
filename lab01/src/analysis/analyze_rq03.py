@@ -42,7 +42,15 @@ def resumo(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(linhas)
 
 
-def sem_release_por_linguagem(df: pd.DataFrame) -> pd.DataFrame:
+def sem_release_por_linguagem(df: pd.DataFrame, min_repos: int = 0) -> pd.DataFrame:
+    """Percentual de repositórios sem release por linguagem primária.
+
+    Com `min_repos=0` (padrão) devolve o recorte por contagem absoluta: toda linguagem com pelo
+    menos um repositório sem release, ordenada por quantos são. É o que interessa para conferir de
+    onde vêm os 275 zeros. Com `min_repos > 0` devolve só as linguagens com massa crítica,
+    ordenadas por percentual — a leitura que o gráfico precisa, porque uma linguagem com um único
+    repositório sem release aparece como barra de 100% e domina o eixo sem significar nada.
+    """
     tabela = df.groupby("primary_language").agg(
         repos=("repo", "count"),
         sem_release=("sem_release", "sum"),
@@ -50,6 +58,10 @@ def sem_release_por_linguagem(df: pd.DataFrame) -> pd.DataFrame:
     tabela = tabela.assign(
         percentual_sem_release=(100 * tabela["sem_release"] / tabela["repos"]).round(1)
     )
+    if min_repos:
+        return tabela[tabela["repos"] >= min_repos].sort_values(
+            "percentual_sem_release", ascending=False
+        )
     return tabela[tabela["sem_release"] > 0].sort_values(
         ["sem_release", "repos"], ascending=False
     )
