@@ -115,6 +115,44 @@ Rust são quase só biblioteca e ferramenta, com versionamento publicado. O grup
 inclui software que versiona por tag em vez de publicar em *GitHub Releases*, como `torvalds/linux`
 e `golang/go` — ou seja, zero release não significa ausência de versionamento.
 
+### RQ04 — Frequência de atualização
+
+Os 1.000 repositórios são atualizados com frequência alta na maior parte da amostra: a mediana é de
+**3,02 dias desde o último push** (Q1 0,45, Q3 52,1). A curva acumulada
+(`lab01/relatorio/figuras/rq04_curva_acumulada_push.png`) detalha o ritmo:
+
+| Último push até | Repositórios | % acumulado |
+|---|---|---|
+| 1 dia | 325 | 32,5% |
+| 7 dias | 606 | **60,6%** |
+| 30 dias | 720 | **72,0%** |
+| 90 dias | 789 | 78,9% |
+| 180 dias | 837 | 83,7% |
+| 365 dias | 886 | 88,6% |
+| 730 dias | 934 | 93,4% |
+
+Quase um terço da amostra recebeu push nas últimas 24 horas e **60,6% na última semana**, o que
+sustenta a primeira metade da hipótese. A segunda metade está no que a curva **não** cobre: ela para
+em 93,4%, e o que falta para 100% é a cauda de projetos abandonados. São **114 repositórios (11,4%)
+sem push há mais de um ano** e 66 (6,6%) há mais de dois anos — o extremo é
+`exacity/deeplearningbook-chinese`, parado há 2.448 dias com 37 mil estrelas. A cauda aparece
+destacada à direita no histograma em escala log
+(`lab01/relatorio/figuras/rq04_histograma_dias_push_log.png`), com um agrupamento visível entre 700
+e 1.000 dias que reúne projetos como `atom/atom` (1.321 dias, 60,8 mil estrelas) e `adobe/brackets`
+(1.526 dias, 33 mil estrelas): editores descontinuados que seguem estrelados por reputação
+acumulada, não por atividade. A escala log é necessária porque a métrica cobre mais de cinco ordens
+de grandeza, de 0,01 a 2.448 dias; os 18 repositórios com 0,0 dia (push no momento da coleta) ficam
+fora do histograma, porque log(0) é indefinido.
+
+**A métrica é `pushedAt`, não `updatedAt`**, e a escolha decide o resultado da RQ04. `updatedAt` muda
+com qualquer alteração no repositório — receber estrela, mudar label, editar a descrição — e não só
+com desenvolvimento. Medido nos mesmos 1.000: 921 têm `updatedAt` mais recente que `pushedAt`, 280
+divergem em mais de 30 dias, e a mediana cairia de 3,02 dias para **0,03 dia (cerca de 43 minutos)**.
+O efeito decisivo é sobre a cauda: por `pushedAt` são 114 repositórios parados há mais de um ano, e
+por `updatedAt` seriam **zero**. Ou seja, `updatedAt` faria todo repositório da lista parecer ativo
+hoje, inclusive os abandonados, e apagaria justamente a metade da hipótese que o gráfico precisa
+mostrar. `days_since_last_update` fica no CSV apenas como material dessa comparação.
+
 *[PENDENTE - demais RQs, fechamento na S03]*
 
 ## 4. Discussão (Hipótese vs Resultado)
