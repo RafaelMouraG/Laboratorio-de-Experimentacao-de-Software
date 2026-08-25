@@ -8,7 +8,7 @@ Este documento consolida a primeira etapa do laboratório para analisar os 1.000
 - **RQ02:** Espera-se volume alto de PRs aceitas na mediana, mas a métrica tem viés conhecido: projetos que não usam PR do GitHub como fluxo principal aparecem com zero, o que não significa baixa contribuição externa de fato.
 - **RQ03:** Espera-se que sistemas populares lancem releases com frequência, mas a métrica deve ser bimodal em vez de ter um valor típico único: um grupo grande não usa *GitHub Releases* de jeito nenhum (27,5% nos 1.000), ou porque não é software, ou porque versiona por tag, como `torvalds/linux` e `golang/go`. Entre os que usam, a cadência deve ser alta. A validação é consistente com isso: nenhuma release em um quarto da amostra e ~15 releases por ano na mediana dos 725 que publicam. Por isso a resposta sai de `releases_por_ano` com os dois recortes declarados, e não do total bruto, que favorece repositório antigo.
 - **RQ04:** Espera-se que sistemas populares sejam atualizados com muita frequência, com mediana de poucos dias desde o último push, com uma cauda de projetos arquivados que continuam estrelados por reputação acumulada (`atom/atom`, `adobe/brackets`). Mediana de 3 dias e 11,4% parados há mais de um ano sustentam as duas partes. A hipótese só é testável com `pushedAt`: por `updatedAt` a mediana cai para 43 minutos e a cauda de abandonados desaparece do gráfico.
-- **RQ05:** Espera-se que os projetos de maior sucesso sejam desenvolvidos predominantemente nas linguagens que dominam o mercado (tendo como referência o Octoverse 2026, o TIOBE Index Oficial e o Artigo Caiena). A justificativa é estrutural: linguagens populares oferecem os maiores ecossistemas de bibliotecas e uma vasta massa de desenvolvedores aptos a contribuir.
+- **RQ05:** Espera-se que os projetos de maior sucesso sejam desenvolvidos predominantemente nas linguagens que dominam o mercado (tendo como referência o TIOBE Index Oficial). A justificativa é estrutural: linguagens populares oferecem os maiores ecossistemas de bibliotecas e uma vasta massa de desenvolvedores aptos a contribuir.
 - **RQ06:** Espera-se encontrar uma altíssima taxa de issues fechadas (mediana > 80%). A saúde de um grande projeto open-source depende da manutenção ativa; uma alta taxa de resolução comprova que os mantenedores engajam com a comunidade e não deixam bugs se acumularem, o que é vital para manter a popularidade.
 
 ## 2. Metodologia
@@ -19,7 +19,7 @@ A coleta utiliza a API GraphQL do GitHub. A query usa o filtro `search(type: REP
 
 Algumas particularidades dos dados já foram mapeadas nas amostras iniciais e são tratadas na análise:
 
-- **Fonte de "Linguagens Mais Populares" (RQ05):** Fixamos como fontes oficiais o Octoverse 2026, o [TIOBE Index Oficial](https://www.tiobe.com/tiobe-index/) e o [Artigo Caiena](https://www.caiena.net/blog/linguagens-de-programacao-mais-usadas).
+- **Fonte de "Linguagens Mais Populares" (RQ05):** Fixamos como fonte oficial o [TIOBE Index Oficial](https://www.tiobe.com/tiobe-index/), mantendo a mesma referência ao longo de todo o laboratório.
 - **Taxa de Pull Requests Fechados (RQ02):** A API conta os PRs integrados de qualquer autor na métrica `merged_pull_requests`. Ela não diferencia a contribuição do core team da contribuição de um desenvolvedor externo.
 - **Linguagem Principal "N/A" (RQ05):** Alguns projetos não têm a linguagem preenchida. Para que o Pandas não os descarte como dados faltantes, é obrigatório ler o CSV com `keep_default_na=False`.
 - **`pushedAt` vs `updatedAt` (RQ04):** Adotamos a data do último envio (`pushedAt`) porque o campo `updatedAt` sofre alteração com qualquer mudança básica (receber estrela, mudar label) e mascara repositórios já abandonados.
@@ -152,6 +152,10 @@ O efeito decisivo é sobre a cauda: por `pushedAt` são 114 repositórios parado
 por `updatedAt` seriam **zero**. Ou seja, `updatedAt` faria todo repositório da lista parecer ativo
 hoje, inclusive os abandonados, e apagaria justamente a metade da hipótese que o gráfico precisa
 mostrar. `days_since_last_update` fica no CSV apenas como material dessa comparação.
+
+### RQ05 — Linguagens mais populares
+
+Nos 1.000 repositórios coletados, a linguagem Python lidera com 229 repositórios (22,9%), seguida por TypeScript com 174 (17,4%) e Rust com 57 (5,7%). Agrupando pela popularidade no mercado (tendo como referência o TIOBE Index), pouco mais da metade da amostra, 506 repositórios (50,6%), utiliza alguma das linguagens do Top 10 do TIOBE. O restante divide-se entre 407 repositórios (40,7%) em outras linguagens fora do Top 10 e 87 repositórios (8,7%) sem linguagem primária preenchida ("N/A"). A categoria "N/A" aparece isolada no gráfico (`lab01/relatorio/figuras/rq05_top15_linguagens.png`), não sendo somada às "demais", para manter a transparência dos dados.
 
 *[PENDENTE - demais RQs, fechamento na S03]*
 
