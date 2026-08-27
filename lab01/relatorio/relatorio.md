@@ -60,6 +60,99 @@ longa nos dois sentidos; o boxplot em escala log
 (`lab01/relatorio/figuras/rq02_boxplot_prs.png`, sem os zeros) evidencia os outliers acima de ~8 mil
 PRs aceitas.
 
+### RQ03 — Releases
+
+A distribuição de releases é bimodal, então a RQ03 não tem um valor típico único. Dos 1.000
+repositórios, **275 (27,5%) não publicam nenhuma release** e 725 publicam
+(`lab01/relatorio/figuras/rq03_com_vs_sem_release.png`). Esse recorte encolheu conforme a amostra
+cresceu: eram **40 dos 100 repositórios da S01 (40%)** e são **27,5% nos 1.000** — o percentual só
+tem leitura junto com o tamanho da amostra sobre a qual foi medido. A queda não é inconsistência de
+coleta: quanto mais alto o corte de popularidade, maior a concentração de repositório de conteúdo
+(listas *awesome*, livros, roadmaps), que não publica release por não ser software; a cauda dos
+1.000 traz proporcionalmente mais biblioteca e ferramenta, que publica.
+
+Pela métrica principal, `releases_por_ano`, a mediana é de **6,78 releases por ano** considerando
+todos os 1.000 repositórios e de **14,94** entre os 725 que publicam (Q1 4,91, Q3 38,24). Os dois
+recortes valem juntos e respondem a perguntas diferentes: o primeiro dá a cadência do repositório
+popular médio, incluindo quem nunca publica; o segundo, a cadência de quem de fato usa *GitHub
+Releases*. O histograma em escala log (`lab01/relatorio/figuras/rq03_histograma_releases_por_ano.png`,
+apenas os 725 que publicam) mostra a massa concentrada entre uma e algumas dezenas de releases por
+ano, com cauda longa até 2.214 releases por ano — a escala log é necessária porque a cadência vai de
+0,06 a esse extremo.
+
+O **total de releases é métrica secundária** (mediana 40,5 com todos, 95,0 entre os que publicam)
+porque mede tempo de vida acumulado, não frequência: entre os 725 que publicam, a mediana de
+`releases` sobe de 60,5 nos repositórios com menos de 5 anos para 106,5 nos com mais de 10, enquanto
+a cadência cai de 30,8 para 8,34 releases por ano no mesmo sentido. O acumulado premia justamente o
+repositório antigo, onde a frequência é menor, e por isso a resposta da RQ03 sai de
+`releases_por_ano`.
+
+A ausência de release se concentra por linguagem
+(`lab01/relatorio/figuras/rq03_sem_release_por_linguagem.png`). Entre as 14 linguagens com pelo
+menos 10 repositórios na amostra, o percentual sem release vai de 90,9% em HTML a 5,3% em Go e Rust:
+
+| Linguagem | Repositórios | Sem release | % sem release |
+|---|---|---|---|
+| HTML | 11 | 10 | 90,9% |
+| Jupyter Notebook | 24 | 21 | 87,5% |
+| `N/A` | 87 | 74 | 85,1% |
+| Shell | 20 | 8 | 40,0% |
+| Ruby | 13 | 4 | 30,8% |
+| C | 21 | 6 | 28,6% |
+| JavaScript | 110 | 31 | 28,2% |
+| Python | 229 | 60 | 26,2% |
+| Java | 41 | 9 | 22,0% |
+| C++ | 40 | 6 | 15,0% |
+| Swift | 10 | 1 | 10,0% |
+| TypeScript | 174 | 14 | 8,0% |
+| Go | 76 | 4 | 5,3% |
+| Rust | 57 | 3 | 5,3% |
+
+O corte de 10 repositórios evita que uma linguagem com um único projeto sem release apareça como
+barra de 100%. O gradiente é de conteúdo contra software, não de disciplina de release entre
+comunidades: HTML, Jupyter Notebook e `N/A` concentram material que não é software, enquanto Go e
+Rust são quase só biblioteca e ferramenta, com versionamento publicado. O grupo sem release ainda
+inclui software que versiona por tag em vez de publicar em *GitHub Releases*, como `torvalds/linux`
+e `golang/go` — ou seja, zero release não significa ausência de versionamento.
+
+### RQ04 — Frequência de atualização
+
+Os 1.000 repositórios são atualizados com frequência alta na maior parte da amostra: a mediana é de
+**3,02 dias desde o último push** (Q1 0,45, Q3 52,1). A curva acumulada
+(`lab01/relatorio/figuras/rq04_curva_acumulada_push.png`) detalha o ritmo:
+
+| Último push até | Repositórios | % acumulado |
+|---|---|---|
+| 1 dia | 325 | 32,5% |
+| 7 dias | 606 | **60,6%** |
+| 30 dias | 720 | **72,0%** |
+| 90 dias | 789 | 78,9% |
+| 180 dias | 837 | 83,7% |
+| 365 dias | 886 | 88,6% |
+| 730 dias | 934 | 93,4% |
+
+Quase um terço da amostra recebeu push nas últimas 24 horas e **60,6% na última semana**, o que
+sustenta a primeira metade da hipótese. A segunda metade está no que a curva **não** cobre: ela para
+em 93,4%, e o que falta para 100% é a cauda de projetos abandonados. São **114 repositórios (11,4%)
+sem push há mais de um ano** e 66 (6,6%) há mais de dois anos — o extremo é
+`exacity/deeplearningbook-chinese`, parado há 2.448 dias com 37 mil estrelas. A cauda aparece
+destacada à direita no histograma em escala log
+(`lab01/relatorio/figuras/rq04_histograma_dias_push_log.png`), com um agrupamento visível entre 700
+e 1.000 dias que reúne projetos como `atom/atom` (1.321 dias, 60,8 mil estrelas) e `adobe/brackets`
+(1.526 dias, 33 mil estrelas): editores descontinuados que seguem estrelados por reputação
+acumulada, não por atividade. A escala log é necessária porque a métrica cobre mais de cinco ordens
+de grandeza, de 0,01 a 2.448 dias; os 18 repositórios com 0,0 dia (push no momento da coleta) ficam
+fora do histograma, porque log(0) é indefinido.
+
+**A métrica é `pushedAt`, não `updatedAt`**, e a escolha decide o resultado da RQ04. `updatedAt` muda
+com qualquer alteração no repositório — receber estrela, mudar label, editar a descrição — e não só
+com desenvolvimento. Medido nos mesmos 1.000: 921 têm `updatedAt` mais recente que `pushedAt`, 280
+divergem em mais de 30 dias, e a mediana cairia de 3,02 dias para **0,03 dia (cerca de 43 minutos)**.
+O efeito decisivo é sobre a cauda: por `pushedAt` são 114 repositórios parados há mais de um ano, e
+por `updatedAt` seriam **zero**. Ou seja, `updatedAt` faria todo repositório da lista parecer ativo
+hoje, inclusive os abandonados, e apagaria justamente a metade da hipótese que o gráfico precisa
+mostrar. `days_since_last_update` fica no CSV apenas como material dessa comparação.
+
 ### RQ05 — Linguagens mais populares
 
 Nos 1.000 repositórios coletados, a linguagem Python lidera com 229 repositórios (22,9%), seguida por TypeScript com 174 (17,4%) e Rust com 57 (5,7%). Agrupando pela popularidade no mercado (tendo como referência o TIOBE Index), pouco mais da metade da amostra, 506 repositórios (50,6%), utiliza alguma das linguagens do Top 10 do TIOBE. O restante divide-se entre 407 repositórios (40,7%) em outras linguagens fora do Top 10 e 87 repositórios (8,7%) sem linguagem primária preenchida ("N/A"). A categoria "N/A" aparece isolada no gráfico (`lab01/relatorio/figuras/rq05_top15_linguagens.png`), não sendo somada às "demais", para manter a transparência dos dados.

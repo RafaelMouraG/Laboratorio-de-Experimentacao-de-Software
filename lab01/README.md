@@ -274,6 +274,13 @@ python lab01/src/analysis/example_viz_idade.py
 
 Nenhum script de RQ deve chamar `pd.read_csv` diretamente — sempre via `carregar_dados`.
 
+**TODO — bin final dos histogramas em escala log.** Nos gráficos que montam os bins com
+`np.logspace(np.log10(min), np.log10(max), 30)` (`viz_rq02.py` e `viz_rq03.py`), a borda final
+sai um fio abaixo do máximo real por arredondamento de ponto flutuante (2214,2899999999995
+contra 2214,29 na RQ03), e o repositório de maior valor fica de fora do último bin — a RQ03
+plota 724 dos 725. Não afeta número nenhum do relatório, porque mediana e quartis saem da série
+e não do histograma. Arrumar depois nos dois scripts, com `np.nextafter` na borda final.
+
 ## Métricas por RQ
 
 | RQ | Métrica | Campo GraphQL | Coluna no CSV |
