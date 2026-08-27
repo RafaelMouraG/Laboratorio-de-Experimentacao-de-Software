@@ -1,19 +1,19 @@
-primary_language,grupo,repos,mediana_prs_aceitas,mediana_releases,mediana_dias_sem_push
-Python,top-10 TIOBE,24,1883.0,54.5,0.22
-TypeScript,demais linguagens,17,6984.0,117.0,0.17
-N/A,sem linguagem primária,13,317.0,0.0,115.53
-JavaScript,top-10 TIOBE,10,1375.0,69.0,0.245
-C++,top-10 TIOBE,5,26499.0,471.0,0.07
-Rust,top-10 TIOBE,5,4198.0,50.0,0.18
-Shell,demais linguagens,5,222.0,7.0,2.49
-Go,demais linguagens,4,3690.5,120.5,0.065
-HTML,demais linguagens,3,315.0,0.0,0.8
-Markdown,demais linguagens,3,157.0,0.0,30.14
-C,top-10 TIOBE,3,153.0,52.0,0.26
-Jupyter Notebook,demais linguagens,2,307.0,0.0,8.06
-Dart,demais linguagens,1,49541.0,7.0,0.03
-MDX,demais linguagens,1,9481.0,94.0,0.8
-Swift,demais linguagens,1,1239.0,15.0,2.21
-Java,top-10 TIOBE,1,994.0,10.0,20.64
-C#,top-10 TIOBE,1,593.0,332.0,3.66
-Batchfile,demais linguagens,1,7.0,31.0,40.25
+primary_language,grupo,repos,mediana_prs_aceitas,mediana_releases_por_ano,mediana_releases,mediana_dias_sem_push,mediana_idade_anos
+Python,top-10 TIOBE,24,1883.0,22.44,54.5,0.22,3.7
+TypeScript,demais linguagens,17,6984.0,19.1,117.0,0.17,6.61
+N/A,sem linguagem primária,13,317.0,0.0,0.0,115.53,10.37
+JavaScript,top-10 TIOBE,10,1375.0,10.12,69.0,0.245,10.78
+C++,top-10 TIOBE,5,26499.0,40.64,471.0,0.07,11.59
+Rust,top-10 TIOBE,5,4198.0,9.47,50.0,0.18,5.87
+Shell,demais linguagens,5,222.0,12.22,7.0,2.49,0.84
+Go,demais linguagens,4,3690.5,33.25,120.5,0.065,12.04
+HTML,demais linguagens,3,315.0,0.0,0.0,0.8,11.41
+Markdown,demais linguagens,3,157.0,0.0,0.0,30.14,6.48
+C,top-10 TIOBE,3,153.0,5.96,52.0,0.26,8.73
+Jupyter Notebook,demais linguagens,2,307.0,0.0,0.0,8.06,5.8
+Dart,demais linguagens,1,49541.0,0.61,7.0,0.03,11.44
+MDX,demais linguagens,1,9481.0,6.25,94.0,0.8,15.04
+Swift,demais linguagens,1,1239.0,1.49,15.0,2.21,10.07
+Java,top-10 TIOBE,1,994.0,2.65,10.0,20.64,3.77
+C#,top-10 TIOBE,1,593.0,47.16,332.0,3.66,7.04
+Batchfile,demais linguagens,1,7.0,4.71,31.0,40.25,6.58

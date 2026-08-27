@@ -148,6 +148,40 @@ todo repositório da lista parecer ativo hoje, inclusive os abandonados, porque 
 label e edição de descrição. Por isso a RQ04 é medida por `pushedAt`; `days_since_last_update` fica no
 CSV só como material dessa comparação.
 
+**Validação de RQ07 nos 1.000 (Lab01S02):** é a última RQ a passar por validação — as issues
+#14, #15 e #16 cobriram RQ01/RQ02, RQ03/RQ04 e RQ05/RQ06, e até aqui os CSVs da RQ07 só existiam
+para os 100 da S01. Também não faz coleta nova, roda direto sobre o CSV da S02:
+```bash
+python lab01/src/analysis/analyze_rq07.py \
+  --entrada lab01/data/sprint_s02/all_rqs.csv \
+  --out lab01/data/sprint_s02/rq07_por_linguagem.csv \
+  --out-grupos lab01/data/sprint_s02/rq07_top_vs_demais.csv \
+  --min-repos 10
+```
+Nenhum dado corrompido: os 1.000 repositórios se distribuem em 506 no top-10 TIOBE, 407 nas demais
+linguagens e 87 sem linguagem primária, batendo com a contagem da RQ05, e nenhuma das três métricas
+tem célula vazia ou negativa. A tabela por grupo:
+
+| Grupo | Repos | Mediana PRs aceitas | Mediana releases/ano | Mediana dias sem push | Idade mediana |
+|---|---|---|---|---|---|
+| top-10 TIOBE | 506 | 758,5 | 6,51 | 2,77 | 7,69 |
+| demais linguagens | 407 | 1.076 | 14,36 | 2,09 | 7,55 |
+| sem linguagem primária | 87 | 129 | 0 | 173,99 | 8,98 |
+
+**A resposta da RQ07 é negativa nos 1.000** — o grupo "demais linguagens" ganha nas três métricas —
+e a hipótese informal abaixo já registra isso, junto com a causa (composição do grupo "demais") e a
+verificação de que não é efeito de idade. O grupo sem linguagem primária continua separado dos
+"demais" pelo motivo da S01, e os números da S02 reforçam: 0 release por ano e 173,99 dias sem push
+contra 2,09 das demais, ou seja, misturá-los puxaria a comparação inteira para baixo.
+
+**Releases por ano na RQ07.** A agregação passou a trazer `mediana_releases_por_ano` ao lado da
+`mediana_releases` que já existia, pelo mesmo motivo da RQ03: o total bruto mede tempo de vida
+acumulado e favorece repositório antigo. Na RQ07 isso pesa mais, porque a comparação é entre grupos
+de idades diferentes — Ruby tem idade mediana de 12,11 anos contra 3,93 de Python — e sem a métrica
+normalizada a tabela por linguagem mediria idade junto com cadência. O total bruto fica como métrica
+secundária, mesmo tratamento da RQ03, e `mediana_idade_anos` entra na tabela para deixar a idade de
+cada grupo conferível ali mesmo.
+
 **Hipóteses informais:**
 - **RQ01:** repositórios populares devem ser majoritariamente maduros, mas com uma cauda de projetos
   recentes que viralizaram rápido — como já apontava a análise extra dos 100 (issue #12), onde a
@@ -170,6 +204,24 @@ CSV só como material dessa comparação.
   mediana cai para 43 minutos e a cauda de abandonados desaparece do gráfico.
 - **RQ05:** espera-se que os projetos de maior sucesso sejam desenvolvidos predominantemente nas linguagens que dominam o mercado (tendo como referência o TIOBE Index 2026). A justificativa é estrutural: linguagens populares oferecem os maiores ecossistemas de bibliotecas e uma vasta massa de desenvolvedores aptos a contribuir.
 - **RQ06:** espera-se encontrar uma altíssima taxa de issues fechadas (mediana > 80%). A saúde de um grande projeto open-source depende da manutenção ativa; uma alta taxa de resolução comprova que os mantenedores engajam com a comunidade e não deixam bugs se acumularem, o que é vital para manter a popularidade.
+- **RQ07:** a leitura natural da pergunta é que sim — linguagem popular teria o maior ecossistema de
+  bibliotecas e a maior massa de desenvolvedores aptos a contribuir (o mesmo argumento estrutural da
+  RQ05), e isso deveria puxar as três métricas para cima. Nos 1.000 a resposta é **negativa**: o
+  grupo "demais linguagens" ganha nas três — 1.076 PRs aceitas contra 758,5, 14,36 releases por ano
+  contra 6,51 e 2,09 dias sem push contra 2,77 (aqui menor é melhor). **Não é efeito de idade:** os
+  dois grupos têm idade mediana praticamente igual (7,55 contra 7,69 anos), então a diferença não
+  vem de um ser mais velho que o outro — a verificação precisa estar escrita porque é a explicação
+  que primeiro ocorre e os dados não a sustentam. A causa é a **composição do grupo "demais"**:
+  TypeScript (174 repositórios) e Go (76) são 250 dos 407 do grupo, e nenhuma das duas está no
+  top-10 do TIOBE. Tirando as duas, "demais" cai para 157 repositórios com mediana de 455 PRs
+  aceitas, 0,61 release por ano e 6,12 dias sem push — abaixo do top-10 TIOBE nas três. Na direção
+  oposta, tirando Python (229 repositórios) o top-10 sobe de 758,5 para 915 PRs aceitas e de 6,51
+  para 7,53 releases por ano. Ou seja, o corte "top-10 TIOBE vs. demais" separa linguagem de
+  engenharia de software moderna do resto, não linguagem popular de linguagem impopular. Isso expõe
+  uma limitação da fonte: 3 das 10 linguagens do top-10 TIOBE (Visual Basic, SQL e R) não aparecem
+  em nenhum dos 1.000 repositórios e C# aparece em 8. O TIOBE mede uso na indústria, incluindo
+  código fechado, e o recorte aqui é dos repositórios open-source mais estrelados — as duas
+  populações não são a mesma, e é isso que a RQ07 acaba medindo.
 
 
 ### 2. Análise da RQ03
@@ -215,9 +267,28 @@ das RQ02, RQ03 e RQ04, lendo do mesmo `all_rqs.csv` consolidado. Rode depois de 
 python lab01/src/analysis/analyze_rq07.py
 ```
 
-Saídas em `lab01/data/sprint_s01/`: `rq07_por_linguagem.csv` (mediana das três métricas por
-linguagem) e `rq07_top_vs_demais.csv` (linguagens mais populares vs. demais). O caminho de entrada
-pode ser trocado com `--entrada` (ex.: para rodar sobre os 1000 repositórios do Lab01S02).
+Para os 1.000 da Lab01S02, mesmo script trocando entrada e saídas:
+```bash
+python lab01/src/analysis/analyze_rq07.py \
+  --entrada lab01/data/sprint_s02/all_rqs.csv \
+  --out lab01/data/sprint_s02/rq07_por_linguagem.csv \
+  --out-grupos lab01/data/sprint_s02/rq07_top_vs_demais.csv \
+  --min-repos 10
+```
+
+Saídas: `rq07_por_linguagem.csv` (mediana das três métricas por linguagem) e
+`rq07_top_vs_demais.csv` (linguagens mais populares vs. demais), na pasta da sprint correspondente
+(`lab01/data/sprint_s01/` e `lab01/data/sprint_s02/`). Ambas trazem, por grupo ou linguagem:
+`mediana_prs_aceitas` (RQ02), `mediana_releases_por_ano` e `mediana_releases` (RQ03),
+`mediana_dias_sem_push` (RQ04) e `mediana_idade_anos` (RQ01, para conferir se uma diferença entre
+grupos não é só diferença de idade).
+
+**`--min-repos` corta a cauda de linguagens raras** na tabela por linguagem — mesmo padrão do
+`sem_release_por_linguagem(df, min_repos=...)` da RQ03. O padrão é `0` (sem corte, o comportamento
+da S01). Nos 1.000, `--min-repos 10` deixa 14 linguagens, que cobrem 913 dos 1.000 repositórios; as
+outras 30 cobrem 87 repositórios e 11 delas têm um único repositório, onde a "mediana" é o próprio
+repositório (limitação 5 abaixo). A tabela por grupo nunca é filtrada: ela é a resposta da RQ07 e
+precisa dos 1.000.
 
 **Fonte de "linguagens mais populares":** [TIOBE Index 2026](https://www.tiobe.com/tiobe-index/),
 top 10 linguagens de programação — Python, C, C++, Java, C#, JavaScript, Visual Basic, SQL,
@@ -291,7 +362,7 @@ e não do histograma. Arrumar depois nos dois scripts, com `np.nextafter` na bor
 | RQ04 | tempo até a última atualização | `pushedAt` | `days_since_last_push` |
 | RQ05 | linguagem primária | `primaryLanguage.name` | `primary_language` |
 | RQ06 | razão issues fechadas / total | `issues.totalCount` e `issues(states: CLOSED).totalCount` | `closed_issues_ratio` |
-| RQ07 | RQ02/RQ03/RQ04 por linguagem | cruzamento dos CSVs acima (sem coleta nova) | `mediana_prs_aceitas`, `mediana_releases`, `mediana_dias_sem_push` |
+| RQ07 | RQ02/RQ03/RQ04 por linguagem | cruzamento dos CSVs acima (sem coleta nova) | `mediana_prs_aceitas`, `mediana_releases_por_ano`, `mediana_releases`, `mediana_dias_sem_push`, `mediana_idade_anos` |
 
 Métricas derivadas, calculadas a partir das acima e usadas no relatório:
 
@@ -299,6 +370,7 @@ Métricas derivadas, calculadas a partir das acima e usadas no relatório:
 |---|---|---|---|
 | RQ03 | releases por ano | `releases / age_years` | `releases_por_ano` |
 | RQ03 | repositório sem release | `releases == 0` | `sem_release` |
+| RQ07 | grupo de popularidade da linguagem | top-10 TIOBE / demais / sem linguagem primária | `grupo` |
 
 ## Limitações conhecidas da coleta
 
@@ -336,7 +408,10 @@ Métricas derivadas, calculadas a partir das acima e usadas no relatório:
    Java, C# e Dart aparecem uma única vez cada — a "mediana" ali é o próprio repositório. Por isso a
    resposta da RQ07 sai da tabela agrupada (top-10 vs. demais), e a tabela por linguagem traz a
    coluna `repos` para deixar esse limite explícito. Com os 1000 do Lab01S02 o problema diminui, mas
-   não desaparece na cauda.
+   não desaparece na cauda: das 44 linguagens, 11 ainda aparecem com um único repositório, e as 30
+   abaixo de 10 repositórios somam 87 dos 1.000. Daí o `--min-repos` do `analyze_rq07.py` (e o
+   `min_repos` do `analyze_rq03.py`): com corte em 10, sobram 14 linguagens que cobrem os outros 913.
+   A tabela por grupo não é filtrada, porque é ela que responde a RQ07.
 6. **As contagens variam entre execuções.** São métricas vivas: rodar `collect_all_rqs.py` de novo
    pode trazer releases novas nos mesmos repositórios (ex.: `vercel/next.js` 3799 → 3800 entre duas
    coletas). Pequenas diferenças entre execuções são esperadas; diferenças grandes, ou um valor
@@ -346,3 +421,9 @@ Métricas derivadas, calculadas a partir das acima e usadas no relatório:
    `torvalds/linux` e `FFmpeg/FFmpeg`, que aceitam patch por lista de e-mail em vez de Pull Request.
    A métrica também não distingue autor externo de membro do core team — a API não expõe essa
    informação por PR agregado. Os dois pontos valem como limitação da RQ02 no relatório.
+8. **O top-10 TIOBE não é o top-10 do GitHub.** Das 10 linguagens da fonte adotada na RQ05, 3
+   (Visual Basic, SQL e R) não aparecem em nenhum dos 1.000 repositórios e C# aparece em 8, enquanto
+   TypeScript (174) e Go (76) — fora do top-10 — são o segundo e o quinto maiores grupos da amostra.
+   O TIOBE mede uso na indústria, incluindo código fechado; o recorte aqui é dos repositórios
+   open-source mais estrelados. As duas populações não são a mesma, e é essa diferença que a RQ07
+   acaba medindo quando compara "top-10 TIOBE" com "demais linguagens".

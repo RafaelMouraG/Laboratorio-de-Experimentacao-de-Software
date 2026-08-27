@@ -2,7 +2,7 @@
 
 ## 1. Introdução
 
-Este documento consolida a primeira etapa do laboratório para analisar os 1.000 repositórios mais populares do GitHub. Abaixo estão as hipóteses informais escritas pelos integrantes para as seis RQs do projeto:
+Este documento consolida a primeira etapa do laboratório para analisar os 1.000 repositórios mais populares do GitHub. Abaixo estão as hipóteses informais escritas pelos integrantes para as sete RQs do projeto:
 
 - **RQ01:** Repositórios populares devem ser majoritariamente maduros, mas com uma cauda de projetos recentes que viralizaram rápido, como já apontava a análise extra dos 100, onde a faixa com menos de 1 ano tinha a maior mediana de estrelas. A mediana de idade seguir próxima entre 100 e 1000 repositórios (8,3 → 7,7 anos) é consistente com essa hipótese de duas populações.
 - **RQ02:** Espera-se volume alto de PRs aceitas na mediana, mas a métrica tem viés conhecido: projetos que não usam PR do GitHub como fluxo principal aparecem com zero, o que não significa baixa contribuição externa.
@@ -10,6 +10,7 @@ Este documento consolida a primeira etapa do laboratório para analisar os 1.000
 - **RQ04:** Espera-se que sistemas populares sejam atualizados com muita frequência, com mediana de poucos dias desde o último push, com uma cauda de projetos arquivados que continuam estrelados por reputação acumulada (`atom/atom`, `adobe/brackets`). Mediana de 3 dias e 11,4% parados há mais de um ano sustentam as duas partes. A hipótese só é testável com `pushedAt`: por `updatedAt` a mediana cai para 43 minutos e a cauda de abandonados desaparece do gráfico.
 - **RQ05:** Espera-se que os projetos de maior sucesso sejam desenvolvidos predominantemente nas linguagens que dominam o mercado (tendo como referência o TIOBE Index Oficial). A justificativa é estrutural: linguagens populares oferecem os maiores ecossistemas de bibliotecas e uma vasta massa de desenvolvedores aptos a contribuir.
 - **RQ06:** Espera-se encontrar uma altíssima taxa de issues fechadas (mediana > 80%). A saúde de um grande projeto open-source depende da manutenção ativa; uma alta taxa de resolução comprova que os mantenedores engajam com a comunidade e não deixam bugs se acumularem, o que é vital para manter a popularidade.
+- **RQ07:** A leitura natural da pergunta é que sim: linguagem popular teria o maior ecossistema de bibliotecas e a maior massa de desenvolvedores aptos a contribuir (o mesmo argumento estrutural da RQ05), e isso deveria puxar as três métricas para cima. Nos 1.000 repositórios a resposta é **negativa**, e o grupo `demais linguagens` ganha nas três: 1.076 PRs aceitas contra 758,5, 14,36 releases por ano contra 6,51 e 2,09 dias sem push contra 2,77 (aqui menor é melhor). **Não é efeito de idade**: os dois grupos têm idade mediana praticamente igual, 7,55 contra 7,69 anos, então a diferença não vem de um grupo ser mais velho que o outro — a verificação precisa estar escrita porque essa é a explicação que primeiro ocorre, ainda mais depois da RQ03, e os dados não a sustentam. A causa é a **composição do grupo `demais`**: TypeScript (174 repositórios) e Go (76) são 250 dos 407 do grupo, e nenhuma das duas está no top-10 do TIOBE. Tirando as duas, `demais` cai para 157 repositórios com mediana de 455 PRs aceitas, 0,61 release por ano e 6,12 dias sem push — abaixo do top-10 TIOBE nas três. Na direção oposta, tirando Python (229 repositórios) o top-10 sobe de 758,5 para 915 PRs aceitas e de 6,51 para 7,53 releases por ano. Ou seja, o corte `top-10 TIOBE vs. demais` separa linguagem de engenharia de software moderna do resto, e não linguagem popular de linguagem impopular. Isso expõe uma limitação da fonte: 3 das 10 linguagens do top-10 TIOBE (Visual Basic, SQL e R) não aparecem em nenhum dos 1.000 repositórios e C# aparece em 8. O TIOBE mede uso na indústria, incluindo código fechado, e o recorte aqui é dos repositórios open-source mais estrelados — as duas populações não são a mesma, e é essa diferença que a RQ07 acaba medindo.
 
 ## 2. Metodologia
 
@@ -156,6 +157,79 @@ inclusive os abandonados, e apagaria a metade da hipótese que o gráfico precis
 
 Nos 1.000 repositórios coletados, a linguagem Python lidera com 229 repositórios (22,9%), seguida por TypeScript com 174 (17,4%) e Rust com 57 (5,7%). Agrupando pela popularidade no mercado (tendo como referência o TIOBE Index), pouco mais da metade da amostra, 506 repositórios (50,6%), utiliza alguma das linguagens do Top 10 do TIOBE. O restante divide-se entre 407 repositórios (40,7%) em outras linguagens fora do Top 10 e 87 repositórios (8,7%) sem linguagem primária preenchida ("N/A"). A categoria "N/A" aparece isolada no gráfico (`lab01/relatorio/figuras/rq05_top15_linguagens.png`), não sendo somada às "demais", para manter a transparência dos dados.
 
+### RQ07 — Contribuição, releases e atualização por linguagem
+
+**A resposta é não.** Nos 1.000 repositórios, o grupo das linguagens de fora do top-10 do TIOBE
+ganha nas três métricas ao mesmo tempo: **1.076 contra 758,5 PRs aceitas**, **14,36 contra 6,51
+releases por ano** e **2,09 contra 2,77 dias desde o último push** — nessa última menor é melhor,
+porque mede há quanto tempo o repositório não recebe push. A comparação está em
+`lab01/relatorio/figuras/rq07_grupos_tres_metricas.png`, com um painel por métrica: as escalas não
+são comparáveis (PRs na casa do milhar, releases por ano na dezena, dias na unidade), e o painel da
+RQ04 usa escala log com o sentido invertido escrito no eixo, para o leitor não ler o resultado ao
+contrário.
+
+**A explicação não é idade.** Essa é a hipótese que ocorre primeiro, ainda mais depois da RQ03 ter
+mostrado que o total bruto de releases favorece repositório antigo — por isso a comparação aqui usa
+`releases_por_ano`, e não o total. Mas os dados não sustentam a explicação: a idade mediana dos dois
+grupos é praticamente a mesma, **7,69 anos no top-10 TIOBE contra 7,55 nas demais**. A diferença nas
+três métricas não vem de um grupo ser mais velho que o outro.
+
+**A causa é a composição do grupo "demais linguagens".** TypeScript (174 repositórios) e Go (76) são
+250 dos 407 do grupo, e nenhuma das duas está no top-10 do TIOBE. Tirando as duas, "demais" cai para
+157 repositórios com mediana de **455 PRs aceitas e 0,61 release por ano** (e 6,12 dias sem push) —
+abaixo do top-10 TIOBE nas três métricas. Na direção oposta, tirando Python (229 repositórios, a
+maior fatia da amostra) o top-10 sobe de 758,5 para 915 PRs aceitas e de 6,51 para 7,53 releases por
+ano. Ou seja, o corte "top-10 TIOBE vs. demais" acaba separando linguagem de engenharia de software
+moderna do resto, e não linguagem popular de linguagem impopular. Isso é uma limitação da fonte, não
+dos dados: 3 das 10 linguagens do top-10 TIOBE (Visual Basic, SQL e R) não aparecem em nenhum dos
+1.000 repositórios e C# aparece em 8, porque o TIOBE mede uso na indústria, incluindo código
+fechado, enquanto o recorte aqui é dos repositórios open-source mais estrelados.
+
+A tabela por linguagem confirma a leitura. Ela traz **apenas as linguagens com ao menos 10
+repositórios** — são 14, que cobrem 913 dos 1.000; as outras 30 somam 87 repositórios e 11 delas têm
+um único repositório, onde a "mediana" seria o próprio repositório (limitação 5 do
+[`lab01/README.md`](../README.md)). Ordenada por PRs aceitas
+(`lab01/relatorio/figuras/rq07_medianas_por_linguagem.png`, com a barra colorida por grupo):
+
+| Linguagem | Grupo | Repos | Mediana PRs aceitas | Mediana releases/ano | Mediana dias sem push | Idade mediana |
+|---|---|---|---|---|---|---|
+| Ruby | demais linguagens | 13 | 6.234 | 6,29 | 0,89 | 12,11 |
+| Rust | top-10 TIOBE | 57 | 2.491 | 15,61 | 1,36 | 5,95 |
+| TypeScript | demais linguagens | 174 | 1.993,5 | 25,24 | 1,71 | 6,6 |
+| Go | demais linguagens | 76 | 1.690 | 22,38 | 1,74 | 8,41 |
+| C++ | top-10 TIOBE | 40 | 1.121 | 6,68 | 1,14 | 10,14 |
+| Java | top-10 TIOBE | 41 | 939 | 4,5 | 2,61 | 10,61 |
+| Swift | demais linguagens | 10 | 702 | 7,64 | 2,42 | 9,28 |
+| JavaScript | top-10 TIOBE | 110 | 630,5 | 4,91 | 7,71 | 10,02 |
+| Python | top-10 TIOBE | 229 | 560 | 5,26 | 3,16 | 3,93 |
+| Shell | demais linguagens | 20 | 389,5 | 4,44 | 11,56 | 7,82 |
+| C | top-10 TIOBE | 21 | 294 | 5,91 | 2,04 | 13,2 |
+| HTML | demais linguagens | 11 | 232 | 0 | 28,07 | 7,36 |
+| `N/A` | sem linguagem primária | 87 | 129 | 0 | 173,99 | 8,98 |
+| Jupyter Notebook | demais linguagens | 24 | 78 | 0 | 23,05 | 3,71 |
+
+**Os dois grupos se intercalam em vez de se separarem**, e é isso que sustenta a resposta negativa.
+Quem lidera em contribuição externa é **Ruby, com 6.234 PRs aceitas** — fora do top-10 TIOBE, com
+apenas 13 repositórios e a maior idade mediana da tabela depois de C (12,11 anos), o que a torna um
+caso de poucos projetos muito antigos e muito movimentados (`discourse/discourse` com 37.142 PRs
+aceitas, `rails/rails` com 26.837), não uma tendência da linguagem. Depois dela vêm **Rust (2.491, top-10 TIOBE)**, **TypeScript (1.993,5, fora
+do top-10)** e **Go (1.690, fora do top-10)**. Enquanto isso, **Python — a primeira colocada do
+TIOBE e a maior da amostra, com 229 repositórios — fica em 560 PRs aceitas e 5,26 releases por
+ano**, atrás de todas as quatro. Nenhuma das duas cores do gráfico ocupa um bloco contínuo: elas se
+alternam de cima a baixo, nos três painéis.
+
+**O grupo sem linguagem primária é um recorte próprio, não uma linguagem impopular**, e por isso
+aparece separado das "demais" aqui, como já aparecia na RQ03 e na RQ05. São **87 repositórios com
+mediana de 0 releases e 173,99 dias sem push**, contra cerca de 2 dias dos outros dois grupos — duas
+ordens de grandeza de diferença. É a mesma população que a RQ03 identificou como origem dos 275
+repositórios sem release: listas *awesome*, livros e roadmaps, conteúdo em vez de software, que não
+publica release por não ter o que versionar e recebe commit esporádico. Somá-los às "demais"
+apagaria a comparação em vez de informá-la: o grupo fundido (494 repositórios) cairia para 778 PRs
+aceitas contra 758,5 e 7,37 releases por ano contra 6,51 — margens quase nulas — e inverteria o
+resultado da RQ04, com 3,29 dias sem push contra 2,77 do top-10 TIOBE. O que a comparação estaria
+medindo aí seria a proporção de conteúdo dentro de cada grupo, não a linguagem.
+
+*[PENDENTE - RQ06, fechamento na S03]*
 ### RQ06: Issues fechadas
 
 Dos 1.000 repositórios coletados, **957 entraram no cálculo**: os 43 com `total_issues == 0` foram
