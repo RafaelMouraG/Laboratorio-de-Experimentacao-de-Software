@@ -56,7 +56,8 @@ O `GITHUB_TOKEN` do `.env` precisa do escopo `read:project`.
 | `--sprint` | `S01` | rótulo gravado na coluna `sprint` do CSV |
 | `--out` | `kanban/snapshots/snapshot_sprint_01.csv` | arquivo de saída |
 
-Nas próximas sprints, mude os dois: `--sprint S02 --out kanban/snapshots/snapshot_sprint_02.csv`.
+A cada sprint mudam os dois juntos — foi assim que saiu a última:
+`--sprint S03 --out kanban/snapshots/snapshot_sprint_03.csv`.
 Um arquivo por sprint, todos versionados — é o acúmulo que forma a série histórica.
 
 ### Formato do CSV
@@ -84,7 +85,9 @@ para acrescentá-la à constante `ORDEM_STATUS` e manter a ordenação correta.
 
 | Arquivo | Sprint | Data | Itens |
 |---|---|---|---|
-| `snapshots/snapshot_sprint_01.csv` | S01 | 13/08/2026 | 11 |
+| `snapshots/snapshot_sprint_01.csv` | S01 | 14/08/2026 | 12 |
+| `snapshots/snapshot_sprint_02.csv` | S02 | 20/08/2026 | 31 |
+| `snapshots/snapshot_sprint_03.csv` | S03 | 27/08/2026 | 33 |
 
 A distribuição por coluna de cada snapshot sai do próprio CSV — o script imprime o resumo ao final
 da execução.
