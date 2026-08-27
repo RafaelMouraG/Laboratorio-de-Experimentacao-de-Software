@@ -1,0 +1,15 @@
+primary_language,grupo,repos,mediana_prs_aceitas,mediana_releases_por_ano,mediana_releases,mediana_dias_sem_push,mediana_idade_anos
+Python,top-10 TIOBE,229,560.0,5.26,20.0,3.16,3.93
+TypeScript,demais linguagens,174,1993.5,25.24,156.5,1.705,6.6
+JavaScript,top-10 TIOBE,110,630.5,4.91,39.0,7.715,10.02
+N/A,sem linguagem primária,87,129.0,0.0,0.0,173.99,8.98
+Go,demais linguagens,76,1690.0,22.38,139.0,1.7349999999999999,8.41
+Rust,top-10 TIOBE,57,2491.0,15.61,102.0,1.36,5.95
+Java,top-10 TIOBE,41,939.0,4.5,54.0,2.61,10.61
+C++,top-10 TIOBE,40,1121.0,6.68,50.5,1.1400000000000001,10.14
+Jupyter Notebook,demais linguagens,24,78.0,0.0,0.0,23.055,3.71
+C,top-10 TIOBE,21,294.0,5.91,43.0,2.04,13.2
+Shell,demais linguagens,20,389.5,4.44,9.5,11.56,7.82
+Ruby,demais linguagens,13,6234.0,6.29,28.0,0.89,12.11
+HTML,demais linguagens,11,232.0,0.0,0.0,28.07,7.36
+Swift,demais linguagens,10,702.0,7.64,38.5,2.42,9.28

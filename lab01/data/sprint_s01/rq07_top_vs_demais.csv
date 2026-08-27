@@ -1,4 +1,4 @@
-grupo,repos,mediana_prs_aceitas,mediana_releases,mediana_dias_sem_push
-top-10 TIOBE,49,1875.0,71.0,0.2
-demais linguagens,38,1679.0,9.5,0.385
-sem linguagem primária,13,317.0,0.0,115.53
+grupo,repos,mediana_prs_aceitas,mediana_releases_por_ano,mediana_releases,mediana_dias_sem_push,mediana_idade_anos
+top-10 TIOBE,49,1875.0,11.43,71.0,0.2,7.79
+demais linguagens,38,1679.0,1.88,9.5,0.385,7.44
+sem linguagem primária,13,317.0,0.0,0.0,115.53,10.37
