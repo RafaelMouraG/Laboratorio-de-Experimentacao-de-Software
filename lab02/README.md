@@ -137,12 +137,64 @@ contrato entre as duas tarefas.
 
 ### Instalação das ferramentas
 
-`radon` entra no `requirements.txt` da raiz (feito na Issue #41). O `jscpd` é um pacote Node, instalado
-à parte:
+`radon` e `pytest` entram no `requirements.txt` da raiz (feito na Issue #41) — reinstale as
+dependências se seu ambiente é anterior a essa Issue:
+
+```bash
+pip install -r requirements.txt
+```
+
+O `jscpd` é um pacote Node, instalado à parte:
 
 ```bash
 npm install -g jscpd
 ```
+
+Sem o `jscpd` o script de métricas ainda roda: ele avisa e deixa apenas `duplicacao_pct` vazia.
+
+### Como rodar os scripts de coleta
+
+**Durante o trial — cronometragem (RQ1, Issue #40).** O script roda a suíte do kata em intervalos
+regulares e para no *green* ou no time-box:
+
+```bash
+python lab02/src/cronometragem.py \
+    --integrante mateusdsoc --kata k1 --tratamento com_ia --ordem 1 \
+    --kata-dir lab02/trials/mateusdsoc/k1/com_ia
+```
+
+Isso grava a linha do trial em `lab02/data/trials.csv` com as colunas de tempo e testes.
+
+**Depois do trial — métricas estáticas (RQ3, Issue #41).** O código final de cada trial é arquivado
+em `lab02/trials/<integrante>/<kata>/<tratamento>/` (ver [`trials/README.md`](trials/README.md)), e o
+runner mede todos de uma vez:
+
+```bash
+python lab02/src/metricas_estaticas.py --lote
+```
+
+Para medir um trial isolado:
+
+```bash
+python lab02/src/metricas_estaticas.py \
+    --integrante mateusdsoc --kata k1 --tratamento com_ia \
+    --kata-dir lab02/trials/mateusdsoc/k1/com_ia
+```
+
+O script **atualiza a linha que a cronometragem já criou** (casando por
+`integrante` + `kata` + `tratamento`), preenchendo `cc_media`, `loc`, `duplicacao_pct` e `mi` — não
+cria uma segunda linha, e rodar de novo sobre o mesmo trial apenas sobrescreve os mesmos valores. Se
+não achar a linha, ele cria uma com as colunas de tempo vazias e avisa: é sinal de que a cronometragem
+daquele trial não foi registrada.
+
+Só o código escrito no trial é medido — `test_*.py`, `*_test.py`, `conftest.py` e diretórios `tests/`
+ficam de fora, porque os testes de aceitação vêm prontos com o kata e não são produto do trial.
+
+**Decisões de medição**, fixas para todos os trials (documentadas também no
+[`schema.md`](data/schema.md)): `cc_media` é a média sobre funções, métodos e closures (o agregado da
+classe é ignorado, já que é a soma dos métodos); `loc` é o `sloc` do `radon raw`; `mi` é a média por
+arquivo ponderada por `sloc`; e o `jscpd` roda com `--min-lines 5 --min-tokens 30`, abaixo do padrão
+de 50 tokens, que não enxergaria clones em soluções curtas como as de kata.
 
 ## Processo de Desenvolvimento
 
