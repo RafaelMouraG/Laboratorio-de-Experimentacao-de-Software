@@ -20,11 +20,31 @@ O arquivo consolidado da execução (Lab02S02) fica em `lab02/data/trials.csv`.
 | `testes_total` | inteiro | contagem | RQ2 | #40 | Número total de testes de aceitação do kata. |
 | `testes_passando` | inteiro | contagem | RQ2 | #40 | Número de testes passando ao final do trial. |
 | `taxa_sucesso` | decimal | 0.0–1.0 | RQ2 | #40 | `testes_passando / testes_total`. Métrica primária da RQ2 (normaliza katas com nº de testes diferente). |
-| `cc_media` | decimal | complexidade | RQ3 | #41 | Complexidade ciclomática média por função (`radon cc`). |
-| `loc` | inteiro | linhas | RQ3 | #41 | Linhas de código do código final (`radon raw`). Controle **obrigatório** junto de `cc_media`/`duplicacao_pct`. |
+| `cc_media` | decimal | complexidade | RQ3 | #41 | Complexidade ciclomática média por função/método (`radon cc`). |
+| `loc` | inteiro | linhas | RQ3 | #41 | Linhas de código do código final: o `sloc` do `radon raw`. Controle **obrigatório** junto de `cc_media`/`duplicacao_pct`. |
 | `duplicacao_pct` | decimal | 0.0–100.0 | RQ3 | #41 | Percentual de linhas duplicadas (`jscpd`). |
 | `mi` | decimal | 0–100 | RQ3 | #41 | Índice de manutenibilidade (`radon mi`). Opcional/aprofundamento. |
 | `num_prompts` | inteiro | contagem | RQ1 (exploratória) | #40 | Nº de prompts/interações com o assistente de IA. Só faz sentido em `com_ia`; vazio em `sem_ia`. Não obrigatória. |
+
+## Como as colunas da RQ3 são medidas
+
+Escolhas do script de métricas estáticas (Issue #41, `lab02/src/metricas_estaticas.py`), as mesmas em
+todos os trials — sem isso as colunas da RQ3 não seriam comparáveis entre si:
+
+- **Escopo:** só o código escrito no trial. Os testes de aceitação vêm prontos com o kata, então
+  `test_*.py`, `*_test.py`, `conftest.py` e diretórios `tests/` ficam fora das quatro colunas.
+- **`cc_media`:** média sobre funções, métodos e closures. O bloco agregado da classe é ignorado — sua
+  complexidade é a soma dos métodos, que já entram na conta à parte, e contar os dois duplicaria.
+- **`loc`:** `sloc` do `radon raw` (linhas de código de fato, sem linhas em branco nem comentários),
+  somado sobre os arquivos de solução — e não o campo `loc` do radon, que conta o arquivo inteiro.
+- **`mi`:** o MI é calculado por arquivo; a coluna é a média ponderada por `sloc`, para um arquivo
+  minúsculo não pesar igual ao arquivo principal.
+- **`duplicacao_pct`:** `jscpd` com `--min-lines 5 --min-tokens 30`. O padrão de 50 tokens foi baixado
+  porque soluções de kata são curtas demais para um clone real atingir esse tamanho.
+
+Quando uma ferramenta não consegue medir (ex.: código final com erro de sintaxe, ou `jscpd` não
+instalado), a coluna correspondente fica **vazia** e o script avisa no terminal — melhor um vazio
+explícito do que um `0` que a análise leria como "sem complexidade" ou "sem duplicação".
 
 ## Convenções
 
