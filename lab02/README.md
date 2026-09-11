@@ -115,8 +115,9 @@ Decisões do grupo para o experimento (Passos 1-2), fixadas na Issue #39.
 exige Java; para Python usamos o Radon —, conforme o Passo 2 do enunciado. Todos os katas e os testes
 de aceitação são em Python.
 
-**Assistente de IA:** o mesmo em todos os trials (definir a ferramenta e a versão exatas no desenho do
-experimento, Issue #42, para que o tratamento seja comparável).
+**Assistente de IA: Claude (Anthropic)**, o mesmo em todos os trials, para que o tratamento seja
+comparável. O modelo e a interface exatos usados na execução (S02) e a data ficam registrados no
+Relatório Final — ver §3 e §7.3 do [desenho do experimento](desenho_experimento.md).
 
 **Testes de aceitação:** `pytest`, um conjunto por kata.
 
