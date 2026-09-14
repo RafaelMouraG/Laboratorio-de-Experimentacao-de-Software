@@ -1,0 +1,3 @@
+integrante,kata,tratamento,ordem,tempo_s,censurado_35min,testes_total,testes_passando,taxa_sucesso,cc_media,loc,duplicacao_pct,mi,num_prompts
+mateusdsoc,k1,com_ia,1,17,false,6,6,1.0,,,,,2
+mateusdsoc,k3,com_ia,3,22,false,7,7,1.0,,,,,1
