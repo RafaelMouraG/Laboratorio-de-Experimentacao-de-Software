@@ -168,12 +168,15 @@ def indice_manutenibilidade(alvo: Path, brutas: dict[str, dict], avisos: list[st
 
 def duplicacao_pct(alvo: Path, avisos: list[str], min_lines: int, min_tokens: int) -> float | None:
     """% de linhas duplicadas (`jscpd`). Devolve None — e avisa — se o jscpd não existir."""
-    if shutil.which("jscpd") is None:
+    jscpd_bin = shutil.which("jscpd")
+    if jscpd_bin is None:
         avisos.append("jscpd não encontrado (npm install -g jscpd) — duplicacao_pct fica vazia")
         return None
     with tempfile.TemporaryDirectory() as tmp:
         proc = subprocess.run(
-            ["jscpd", str(alvo), "--reporters", "json", "--output", tmp, "--silent",
+            # Caminho resolvido (não a string "jscpd"): no Windows o global install é um
+            # .CMD, e o subprocess sem shell=True não sabe resolver PATH+PATHEXT sozinho.
+            [jscpd_bin, str(alvo), "--reporters", "json", "--output", tmp, "--silent",
              "--min-lines", str(min_lines), "--min-tokens", str(min_tokens)],
             capture_output=True, text=True, check=False,
         )
