@@ -168,6 +168,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"--timebox não pode ser maior que {TIMEBOX_PADRAO}s (regra do enunciado).")
     if not args.kata_dir.is_dir():
         parser.error(f"--kata-dir não é um diretório: {args.kata_dir}")
+    # O pytest roda com cwd=kata_dir; um caminho relativo seria resolvido de novo a partir
+    # dele e não acharia nenhum teste (0/0), censurando o trial mesmo em green.
+    args.kata_dir = args.kata_dir.resolve()
 
     colunas = carregar_colunas()
     print(f"Cronometrando {args.kata} · {args.tratamento} · {args.integrante} "
