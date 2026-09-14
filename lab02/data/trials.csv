@@ -1,4 +1,5 @@
 integrante,kata,tratamento,ordem,tempo_s,censurado_35min,testes_total,testes_passando,taxa_sucesso,cc_media,loc,duplicacao_pct,mi,num_prompts
 mateusdsoc,k1,com_ia,1,17,false,6,6,1.0,,,,,2
 mateusdsoc,k3,com_ia,3,22,false,7,7,1.0,,,,,1
-mateusdsoc,k2,sem_ia,2,314,false,8,8,1.0,,,,,
+mateusdsoc,k2,sem_ia,2,314,false,8,8,1.0,3.0,10,0.0,92.5919,
+mateusdsoc,k4,sem_ia,4,489,false,8,8,1.0,2.0,7,0.0,100.0,
