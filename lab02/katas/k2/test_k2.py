@@ -16,7 +16,7 @@ def test_dois_arquivos_nao_cabem():
 def test_exemplo_enunciado_1():
     assert minimos_lotes([3, 2, 2, 1], 3) == 3
 
-def test_exemplo_enunciado_2():
+def test_multiplos_arquivos_capacidade_5():
     assert minimos_lotes([3, 5, 3, 4], 5) == 4
 
 def test_arquivos_pequenos():
