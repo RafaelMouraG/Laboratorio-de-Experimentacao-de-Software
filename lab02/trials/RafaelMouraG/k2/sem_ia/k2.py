@@ -6,4 +6,17 @@ def minimos_lotes(tamanhos: list[int], capacidade: int) -> int:
     - Um lote pode conter no máximo 2 arquivos.
     - A soma dos tamanhos não pode exceder a capacidade máxima estipulada.
     """
-    pass
+    tamanhos.sort()
+
+    menor =0 
+    maior = len(tamanhos)-1
+    lotes = 0
+
+    while(menor <=maior):
+        if (menor != maior) and ((tamanhos[menor] + tamanhos[maior]) <= capacidade):
+            menor +=1
+
+        maior -=1
+        lotes +=1
+
+    return lotes
