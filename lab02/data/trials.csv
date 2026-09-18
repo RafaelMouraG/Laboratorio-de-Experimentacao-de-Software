@@ -1,12 +1,13 @@
 integrante,kata,tratamento,ordem,tempo_s,censurado_35min,testes_total,testes_passando,taxa_sucesso,cc_media,loc,duplicacao_pct,mi,num_prompts
-mateusdsoc,k1,com_ia,1,17,false,6,6,1.0,,,,,2
-mateusdsoc,k3,com_ia,3,22,false,7,7,1.0,,,,,1
+mateusdsoc,k1,com_ia,1,17,false,6,6,1.0,5.0,16,0.0,89.8107,2
+mateusdsoc,k3,com_ia,3,22,false,7,7,1.0,10.0,16,0.0,84.9903,1
 mateusdsoc,k2,sem_ia,2,514,false,8,8,1.0,3.0,10,0.0,92.5919,
 mateusdsoc,k4,sem_ia,4,489,false,8,8,1.0,2.0,7,0.0,100.0,
 RafaelMouraG,k1,com_ia,1,5,false,6,6,1.0,4.0,11,0.0,93.7255,1
 RafaelMouraG,k3,com_ia,3,20,false,7,7,1.0,9.0,16,0.0,85.1248,1
 Athoosz,k2,com_ia,1,11,false,8,8,1.0,4.0,10,0.0,88.1493,1
 Athoosz,k4,com_ia,3,5,false,8,8,1.0,4.0,13,0.0,90.9676,1
-Athoosz,k1,sem_ia,2,298,false,6,6,1.0,8.0,23,,80.9741,
-Athoosz,k3,sem_ia,4,268,false,7,7,1.0,12.0,22,,80.4993,
+Athoosz,k1,sem_ia,2,298,false,6,6,1.0,8.0,23,0.0,80.9741,
+Athoosz,k3,sem_ia,4,268,false,7,7,1.0,12.0,22,0.0,80.4993,
 RafaelMouraG,k2,sem_ia,2,991,false,8,8,1.0,4.0,11,0.0,90.8239,
+RafaelMouraG,k4,sem_ia,4,928,false,8,8,1.0,4.0,15,0.0,86.455,
