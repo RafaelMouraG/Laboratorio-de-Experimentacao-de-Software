@@ -1,0 +1,9 @@
+kata,tratamento,n,mediana,iqr
+k1,com_ia,2,38.0,6.0
+k1,sem_ia,1,298.0,0.0
+k2,com_ia,1,38.0,0.0
+k2,sem_ia,2,960.0,31.0
+k3,com_ia,2,48.0,1.0
+k3,sem_ia,1,268.0,0.0
+k4,com_ia,1,32.0,0.0
+k4,sem_ia,2,1056.0,128.0
