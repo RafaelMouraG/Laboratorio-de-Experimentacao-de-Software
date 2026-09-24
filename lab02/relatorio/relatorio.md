@@ -42,7 +42,7 @@ Como base teórica, as métricas deste estudo foram modeladas seguindo a abordag
 ### 3.1 Principais Desafios
 Durante a fase de execução (Sprint 02), três grandes desafios e desvios (#60) afetaram a fluidez e precisão do laboratório:
 1. **Sensibilidade do Parser de Duplicação:** A ferramenta de duplicação (`jscpd`) não obteve volume de *tokens* ou linhas o suficiente para encontrar clones, dado que as respostas aos *katas* foram curtas (10 a 20 linhas).
-2. **Tempo Viciado por Extração "One-Shot":** Os tempos capturados na abordagem "com IA" foram irrealisticamente baixos (mediana ~41s), pois a interação resumiu-se ao desenvolvedor copiar e colar o problema inteiro para a IA, e em seguida colar a solução *one-shot* de volta no editor. 
+2. **Tempo Viciado por Extração "One-Shot":** Os tempos capturados na abordagem "com IA" foram irrealisticamente baixos (mediana ~41s), pois a interação resumiu-se ao desenvolvedor, pelo terminal (Claude Code), passar o enunciado inteiro do kata ao agente, que gerava a solução *one-shot* diretamente no arquivo, sem iteração incremental. 
 3. **Correção de Teste de Aceitação:** Encontrou-se uma falha/ambiguidade estrutural no Kata 2 durante o processo de execução manual, que demandou correção extra, aumentando artificialmente a carga horária deste trial em específico.
 
 ### 3.2 Tomadas de Decisão
@@ -67,7 +67,7 @@ A divisão de tarefas obedeceu ao pareamento no GitHub Projects. Uma visão das 
 - **Linguagem / IDE:** Python 3 (ambientes de edição configurados sem extensões de IA intrusivas nos cenários sem IA).
 - **Testes:** `pytest` integrado ao script de cronometragem `src/cronometragem.py`.
 - **Métricas Estáticas:** `radon` (complexidade `cc`, raw `loc` e maintainability index `mi`) e `jscpd` (duplicação).
-- **IA Generativa:** Claude (Anthropic). *(Interface e versão utilizadas: [Preencher modelo e interface])*
+- **IA Generativa:** Claude (Anthropic). *(Interface: Claude Code, via terminal/CLI. Modelo: [Preencher modelo])*
 - **Análise Estatística:** Scripts em Python, utilizando validação do teste exato de Wilcoxon.
 - **Gestão:** GitHub Projects (v2).
 
@@ -112,7 +112,7 @@ Todos os *trials* foram finalizados antes do limite de tempo (0 censurados). Um 
 
 A métrica inovadora (Índice de Manutenibilidade) manteve a mediana estática (88.98 com IA vs 88.63 sem IA). Isso nos provou que, dentro de Katas algorítmicos compactos, a diferença arquitetônica ou de clareza inserida pela IA não superou a margem de erro ou a competência estrutural padrão dos próprios pesquisadores em regime manual.
 
-Quanto às **ameaças à validade**, os desvios registrados (#60) foram vitais. O contrabalanceamento incompleto concentrou possíveis benefícios de aprendizagem (Athoosz iterou primeiro duas vezes com IA, depois sem IA, criando fadiga invertida). Além disso, o tempo aferido de 41s na IA configura uma falha de construto: mensuramos não o processo de "desenvolver em dupla com a máquina", e sim a "velocidade de copiar *prompts* e transferir arquivos". A validade externa permanece restrita a projetos acadêmicos e katas *one-shot*.
+Quanto às **ameaças à validade**, os desvios registrados (#60) foram vitais. O contrabalanceamento incompleto concentrou possíveis benefícios de aprendizagem (Athoosz iterou primeiro duas vezes com IA, depois sem IA, criando fadiga invertida). Além disso, o tempo aferido de 41s na IA configura uma falha de construto: mensuramos não o processo de "desenvolver em dupla com a máquina", e sim a "velocidade de delegar o kata inteiro ao agente no terminal e aguardar a geração do arquivo". A validade externa permanece restrita a projetos acadêmicos e katas *one-shot*.
 
 ## 5. Conclusão
 
@@ -122,7 +122,7 @@ Funcional e estruturalmente, as métricas de qualidade (testes, complexidade e o
 
 Como recomendações para o aprofundamento do estudo (futuro):
 1. Expandir o objeto experimental para Katas com múltiplos arquivos ou domínios de arquitetura (e não puramente algoritmos de um único arquivo Python).
-2. Substituir a IA como portal externo (Claude) por um copiloto inline, medindo de forma transparente a velocidade de predição e *pair-programming* sem a barreira do "copiar-colar" *one-shot*.
+2. Restringir o uso do agente no terminal (Claude Code) a interações incrementais, ou compará-lo a um copiloto inline, medindo de forma transparente a velocidade de predição e *pair-programming* em vez da delegação *one-shot* do kata inteiro.
 
 ## 6. Referências
 * BASILI, Victor; CALDIERA, Gianluigi; ROMBACH, H. Dieter. The goal question metric approach. 1994.
