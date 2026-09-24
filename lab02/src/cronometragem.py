@@ -134,6 +134,28 @@ def cronometrar(kata_dir: Path, timebox: int, poll: float) -> dict:
         time.sleep(min(poll, restante))
 
 
+def mesmo_trial(linha: dict, dados: dict) -> bool:
+    return all(linha[c] == str(dados[c]) for c in ("integrante", "kata", "tratamento"))
+
+
+def trial_existe(saida: Path, dados: dict) -> bool:
+    if not saida.exists():
+        return False
+    with saida.open(encoding="utf-8") as fh:
+        return any(mesmo_trial(linha, dados) for linha in csv.DictReader(fh))
+
+
+def pre_checar(kata_dir: Path, saida: Path, dados: dict, refazer: bool) -> str | None:
+    if not refazer and trial_existe(saida, dados):
+        return f"esse trial já está no {saida.name}, usa --refazer se quiser rodar de novo e trocar o tempo."
+    total, passando = rodar_testes(kata_dir)
+    if total == 0:
+        return "nenhum teste encontrado no --kata-dir."
+    if passando == total:
+        return "os testes já estão passando antes de começar, a solução não pode estar pronta."
+    return None
+
+
 def gravar_linha(saida: Path, colunas: list[str], dados: dict) -> None:
     """Anexa uma linha ao CSV de coleta, criando o cabeçalho se o arquivo não existir."""
     saida.parent.mkdir(parents=True, exist_ok=True)
@@ -146,6 +168,17 @@ def gravar_linha(saida: Path, colunas: list[str], dados: dict) -> None:
         # Colunas não preenchidas por este script (métricas do #41) saem vazias.
         linha = {c: dados.get(c, "") for c in colunas}
         escritor.writerow(linha)
+
+
+def substituir_linha(saida: Path, colunas: list[str], dados: dict) -> None:
+    with saida.open(encoding="utf-8") as fh:
+        linhas = list(csv.DictReader(fh))
+    nova = {c: dados.get(c, "") for c in colunas}
+    linhas = [nova if mesmo_trial(l, dados) else l for l in linhas]
+    with saida.open("w", newline="", encoding="utf-8") as fh:
+        escritor = csv.DictWriter(fh, fieldnames=colunas, extrasaction="ignore", lineterminator="\n")
+        escritor.writeheader()
+        escritor.writerows(linhas)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -162,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--num-prompts", type=int, default=None,
                         help="nº de prompts/interações com a IA (opcional; só em com_ia)")
     parser.add_argument("--out", type=Path, default=SAIDA_PADRAO, help="CSV de coleta de saída")
+    parser.add_argument("--refazer", action="store_true",
+                        help="roda de novo um trial que já está no CSV e troca a linha antiga")
     args = parser.parse_args(argv)
 
     if args.timebox > TIMEBOX_PADRAO:
@@ -171,6 +206,12 @@ def main(argv: list[str] | None = None) -> int:
     # O pytest roda com cwd=kata_dir; um caminho relativo seria resolvido de novo a partir
     # dele e não acharia nenhum teste (0/0), censurando o trial mesmo em green.
     args.kata_dir = args.kata_dir.resolve()
+
+    chave = {"integrante": args.integrante, "kata": args.kata, "tratamento": args.tratamento}
+    erro = pre_checar(args.kata_dir, args.out, chave, args.refazer)
+    if erro:
+        print(f"Pré-checagem falhou: {erro}", file=sys.stderr)
+        return 1
 
     colunas = carregar_colunas()
     print(f"Cronometrando {args.kata} · {args.tratamento} · {args.integrante} "
@@ -191,7 +232,10 @@ def main(argv: list[str] | None = None) -> int:
         "taxa_sucesso": taxa,
         "num_prompts": args.num_prompts if args.num_prompts is not None else "",
     }
-    gravar_linha(args.out, colunas, dados)
+    if args.refazer and trial_existe(args.out, dados):
+        substituir_linha(args.out, colunas, dados)
+    else:
+        gravar_linha(args.out, colunas, dados)
 
     estado = f"CENSURADO no time-box ({r['tempo_s']}s)" if r["censurado"] else f"green em {r['tempo_s']}s"
     print(f"  {estado} — {r['passando']}/{r['total']} testes (taxa {taxa}). Linha gravada em {args.out}.")
