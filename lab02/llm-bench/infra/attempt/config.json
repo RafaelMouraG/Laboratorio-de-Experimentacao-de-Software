@@ -1,0 +1,66 @@
+{
+  "_nota": "Parâmetros do runner da coleta (scripts/run-attempt.py). Valores 'provisório — calibrar' ou 'provisório — decidir' não estão congelados; nenhum resultado é oficial enquanto o protocolo não for congelado.",
+  "image": "llm-bench-runtime:20260924",
+  "timeout_seconds": {"value": 1800, "status": "decidido por Rafael em 24/09/2026", "nota": "Prazo por tentativa (C3, 'Prazo por tentativa'). No piloto com a tarefa real, as entregas aceitas levaram de 197 s a 602 s; 1800 s dá três vezes de folga sobre a mais lenta"},
+  "kill_after_seconds": {"value": 10, "status": "provisório — calibrar", "nota": "Tolerância entre SIGTERM e SIGKILL ao estourar o prazo, como no piloto"},
+  "resources": {
+    "memory": "4g",
+    "cpus": 2,
+    "pids": 512,
+    "tmpfs_tmp": "1g",
+    "tmpfs_home": "2g",
+    "tmpfs_workspace": "1g",
+    "status": "provisório — calibrar",
+    "nota": "O piloto sintético usou 2 GiB; a validação da imagem pediu home de 1 GiB para caches de Go, npm e Maven. A memória de tmpfs conta no limite do container."
+  },
+  "prompt": {
+    "status": "provisório — decidir",
+    "preamble": "Você vai executar uma tarefa de programação de forma autônoma, sem interação humana: ninguém vai responder perguntas durante a tentativa. O enunciado completo está abaixo. O diretório de trabalho fornecido é /workspace; ao final, o conteúdo dele é a entrega. Quando concluir, encerre.",
+    "placeholders": {
+      "O prazo para isso é de `[A DEFINIR]` segundos": {"from": "evaluator/config.json:contrato.readiness_seconds", "template": "O prazo para isso é de {value} segundos"}
+    }
+  },
+  "participants": {
+    "opus": {
+      "harness": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "provider_hosts": ["api.anthropic.com", "claude.ai", "platform.claude.com"],
+      "tools": "Bash,Read,Write,Edit,Glob,Grep",
+      "status": "provisório — decidir",
+      "nota": "Ferramentas sem Web*, subagentes, skills e MCP. Nomes inexistentes são ignorados em silêncio (TodoWrite não existe no 2.1.281); o runner registra as ferramentas efetivas do evento init. A paridade de ferramentas entre harnesses é uma decisão pendente."
+    },
+    "muse": {
+      "harness": "opencode",
+      "model": "opencode/muse-spark-1.3-contributor-free",
+      "effort": "xhigh",
+      "provider_hosts": ["opencode.ai", "models.opencode.ai", "models.dev", "registry.npmjs.org"],
+      "permission": {"*": "deny", "bash": "allow", "read": "allow", "edit": "allow", "glob": "allow", "grep": "allow", "list": "allow", "todowrite": "allow", "todoread": "allow"},
+      "status": "provisório — decidir"
+    },
+    "sol": {
+      "harness": "codex",
+      "model": "gpt-6-sol",
+      "effort": "high",
+      "provider_hosts": ["chatgpt.com", "api.openai.com", "auth.openai.com"],
+      "status": "provisório — decidir",
+      "nota": "Executar por último para preservar a cota"
+    },
+    "astra": {
+      "harness": "codex",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "provider_hosts": ["chatgpt.com", "api.openai.com", "auth.openai.com"],
+      "status": "provisório — decidir",
+      "nota": "Incluído por Rafael em 24/09/2026 no piloto com a tarefa real e, depois, na coleta oficial. Mesma credencial e mesmo harness do Sol; gpt-6-astra/high é a configuração global do Codex de Rafael (docs/verificacao-ambiente.md)"
+    },
+    "simulado": {
+      "harness": "simulated",
+      "model": null,
+      "effort": null,
+      "provider_hosts": [],
+      "source": "evaluator/reference",
+      "nota": "Sem modelo: copia a implementação de referência para /workspace. Serve só para validar o runner de ponta a ponta sem gastar cota."
+    }
+  }
+}

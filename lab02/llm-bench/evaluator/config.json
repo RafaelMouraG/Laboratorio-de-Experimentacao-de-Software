@@ -1,0 +1,59 @@
+{
+  "_nota": "Único arquivo de parâmetros do avaliador. 'contrato' = valores [A DEFINIR] no contrato v0.1; 'operacional' = limites que o contrato não prevê e que o avaliador precisa ter. Nenhum valor aqui está congelado; o contrato não foi alterado.",
+  "image": "llm-bench-runtime:20260924",
+  "registries": [
+    "pypi.org",
+    "files.pythonhosted.org",
+    "registry.npmjs.org",
+    "proxy.golang.org",
+    "sum.golang.org",
+    "repo.maven.apache.org"
+  ],
+  "base_url": "http://encurtador.test:9090",
+  "contrato": {
+    "readiness_seconds": {"value": 60, "status": "provisório — calibrar", "onde": "A2, RNF02", "nota": "Inclui a partida da JVM; medir com entregas reais no piloto"},
+    "expiry_seconds": {"value": 4, "status": "provisório — calibrar", "onde": "RF09", "nota": "Expiração posta este número de segundos à frente, arredondada para cima ao segundo inteiro"},
+    "concurrency_n_visits": {"value": 50, "status": "provisório — calibrar", "onde": "RNF06"},
+    "concurrency_m_alias": {"value": 20, "status": "provisório — calibrar", "onde": "RNF07"},
+    "concurrency_p_codes": {"value": 50, "status": "provisório — calibrar", "onde": "RNF08"},
+    "sigterm_tolerance_seconds": {"value": 10, "status": "provisório — calibrar", "onde": "RNF10 (diagnóstico)", "nota": "Espera após SIGTERM antes do SIGKILL; o tempo medido só é registrado, sem veredito"}
+  },
+  "operacional": {
+    "build_timeout_seconds": {"value": 3600, "status": "teto operacional", "nota": "Rafael decidiu em 24/09/2026 que build.sh não tem prazo no contrato; o teto só evita travar o avaliador, e estourá-lo deixa RNF01 como U"},
+    "request_timeout_seconds": {"value": 10, "status": "provisório — calibrar"},
+    "clock_tolerance_seconds": {"value": 10, "status": "provisório — calibrar", "nota": "Folga ao comparar created_at com o relógio do cliente"},
+    "expiry_margin_seconds": {"value": 1.5, "status": "provisório — calibrar", "nota": "Espera extra depois do instante de expiração antes de pedir o 410"},
+    "redirects_k": {"value": 3, "status": "provisório — calibrar", "onde": "RF05"},
+    "generated_code_samples": {"value": 20, "status": "provisório — calibrar", "onde": "RF02"},
+    "phase_timeout_seconds": {"value": 300, "status": "provisório — calibrar", "nota": "Limite de cada fase de checks no cliente"},
+    "resources": {
+      "app_memory": "4g",
+      "app_cpus": "2",
+      "app_pids": 512,
+      "client_memory": "1g",
+      "tmpfs_workspace": "1g",
+      "tmpfs_home": "1g",
+      "tmpfs_tmp": "512m",
+      "tmpfs_data": "256m",
+      "tmpfs_evaluator": "2g",
+      "status": "provisório — calibrar",
+      "nota": "Memória de tmpfs conta no limite do container; o snapshot pós-build fica em /evaluator"
+    }
+  },
+  "rnf11_perfil_carga": {
+    "status": "adotado por Rafael em 24/09/2026 (Q9 da GQM); valores numéricos a revisar",
+    "nota": "Perfil de carga do diagnóstico de latência (RNF11, M16), usado só por evaluator/latency.py. O contrato deixa o perfil [A DEFINIR]; o contrato não foi alterado. Não afeta a aceitação nem evaluate.py, que ignora esta seção.",
+    "seed_links": 1000,
+    "open": {"rate": 500, "warmup_s": 5, "duration_s": 30, "max_inflight": 256,
+             "nota": "Taxa fixa abaixo da capacidade da entrega mais lenta do piloto (cerca de 2.200 POST/s); latência contada do instante agendado"},
+    "closed": {"concurrency": 32, "warmup_s": 2, "duration_s": 10, "max_requests": 300000,
+               "nota": "Saturação; o teto de requisições limita o crescimento de DATA_DIR e da memória em servidores rápidos"},
+    "request_timeout_ms": 10000,
+    "phase_timeout_seconds": 900,
+    "app_cpuset": "2-3",
+    "client_cpuset": "8-11",
+    "client_cpus": 4,
+    "data_dir": {"value": "disk", "status": "decidido por Rafael em 24/09/2026",
+                 "nota": "Volume Docker no SSD do host, para que o custo de fsync de cada entrega apareça; 'tmpfs' repete o ambiente do avaliador"}
+  }
+}

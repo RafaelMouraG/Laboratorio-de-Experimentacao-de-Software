@@ -1,0 +1,29 @@
+{
+  "_nota": "Binários dos harnesses da imagem da coleta. O build só aceita arquivos com estes hashes (scripts/build-pilot.py --harness-dir). Gerado por scripts/save-harness-binaries.py.",
+  "extracted_from": {
+    "image": "llm-bench-runtime:20260924",
+    "image_id": "sha256:838a7837a0ecddd0d8e1d02f25b5e2e181828061301123102b3f6e047c3d01c6",
+    "date_utc": "2026-09-24T20:44:33+00:00"
+  },
+  "binaries": {
+    "claude": {
+      "sha256": "56fe3da88458465fb27d7e9299dddb3fead55750fb9c2de795f233b5eea6dce1",
+      "bytes": 237375560,
+      "version": "2.1.281 (Claude Code)"
+    },
+    "codex": {
+      "sha256": "0b2e9301d6100dddda3b9d5c80ebaeaa3a2f1962388f2f36f6b96a9f08b1f33f",
+      "bytes": 284479848,
+      "version": "codex-cli 0.156.1"
+    },
+    "codex-code-mode-host": {
+      "sha256": "45ba654b0e145406f3316be4729b886980ce811aa2e3b6ed4e033dd41ab524f1",
+      "bytes": 70603664
+    },
+    "opencode": {
+      "sha256": "513f500a1a5ea1dc7d865547ac87b32a8936334e8d5abd5b3ff585c45a170080",
+      "bytes": 185165952,
+      "version": "1.18.32"
+    }
+  }
+}
