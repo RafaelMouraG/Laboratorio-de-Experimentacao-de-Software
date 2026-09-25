@@ -149,14 +149,29 @@ Em paralelo a este laboratório, foi conduzido, na mesma disciplina, o piloto de
 
 ### 6.1 Desenho do Estudo
 
-Cada agente recebeu o mesmo enunciado: implementar do zero uma API HTTP de encurtar URLs (5 operações, persistência, concorrência e durabilidade), com stack livre.
+Cada agente recebeu o mesmo enunciado: implementar do zero uma API HTTP de encurtar URLs. A linguagem, o framework e a persistência eram livres, entre as ferramentas do ambiente (Python, Node.js, Go e Java). A API tinha cinco operações:
 
-| Configuração | Modelo | Harness |
+| Operação | O que faz | Sucesso / erros |
 |---|---|---|
-| Opus | claude-opus-5-5 | Claude Code |
-| Sol | gpt-6-sol | Codex |
-| Astra | gpt-6-astra | Codex |
-| Muse | muse-spark-1.3 | OpenCode |
+| `GET /health` | Indica que o serviço está pronto | 200 |
+| `POST /api/links` | Cria um link curto a partir de uma URL, com alias e expiração opcionais | 201 / 400, 409, 422 |
+| `GET /{code}` | Redireciona para a URL original e conta uma visita | 302 / 404, 410 |
+| `GET /api/links/{code}` | Consulta o link, sem contar visita | 200 / 404 |
+| `DELETE /api/links/{code}` | Exclui o link; o código não pode ser reutilizado | 204 / 404 |
+
+O enunciado também fixava as regras de entrega e de comportamento:
+- **Entrega:** um `build.sh` e um `start.sh`, que o avaliador executa num container novo, sem rede externa, com o servidor na porta 8080.
+- **Persistência:** somente no diretório `DATA_DIR`, sem serviços externos; banco embutido ou arquivos são permitidos.
+- **Validação:** URL absoluta `http` ou `https` de até 2048 caracteres, alias de 3 a 32 caracteres, expiração no futuro e erros em JSON com código padronizado.
+- **Concorrência e durabilidade:** requisições simultâneas não podem perder visitas nem repetir códigos ou aliases, e tudo o que foi confirmado deve sobreviver a um encerramento (SIGTERM) e reinício.
+- **Fora do escopo:** autenticação, listagem, edição de links e interface web.
+
+| Configuração | Modelo · effort | Harness |
+|---|---|---|
+| Opus | claude-opus-5-5 · high | Claude Code |
+| Sol | gpt-6-sol · high | Codex |
+| Astra | gpt-6-astra · high | Codex |
+| Muse | muse-spark-1.3 · xhigh | OpenCode |
 
 | Etapa | Como funciona |
 |---|---|
@@ -166,16 +181,6 @@ Cada agente recebeu o mesmo enunciado: implementar do zero uma API HTTP de encur
 | Desempenho | Latência e vazão da API sob carga (500 req/s e 32 conexões simultâneas) |
 
 ### 6.2 Resultados
-
-| | Opus | Sol | Astra | Muse |
-|---|---|---|---|---|
-| Requisitos | 35/35 | 35/35 | 35/35 | 35/35 |
-| Tempo | 197 s | 374 s | 367 s | 602 s |
-| Chamadas de ferramenta | 13 | 12 | 10 | 45 |
-| Custo estimado | US$ 0,65 | US$ 0,28 | US$ 0,95 | US$ 0,63 |
-| Stack | Go | Python + SQLite | Python + SQLite | Python + SQLite |
-| GET em carga normal (p50) | 0,04 ms | 1,32 ms | 1,51 ms | 1,50 ms |
-| POST em carga normal (p50) | 0,05 ms | 42,3 ms | 1,62 ms | 1,57 ms |
 
 <img src="../llm-bench/docs/img/piloto-aceitacao.png" width="800"/>
 
