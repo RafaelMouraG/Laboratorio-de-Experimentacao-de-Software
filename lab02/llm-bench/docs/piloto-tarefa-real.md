@@ -38,7 +38,7 @@ Gerados a partir de `summary.json` e dos resultados da latência 0.2, com a medi
 
 ![Tokens por tentativa](img/piloto-tokens.png)
 
-**Q5, custo estimado (M9).** Tokens vezes o preço público de API de cada modelo (§2.1). Não é o valor pago.
+**Q5, custo estimado (M9).** Tokens vezes o preço público de API de cada modelo (§2.1). Não é o valor pago. Cada barra é dividida em entrada nova (inclui a escrita de cache), cache lido e saída mais raciocínio: a saída é a maior parte em Opus, Sol e Astra, e o cache lido, no Muse.
 
 ![Custo estimado por tentativa](img/piloto-custo-estimado.png)
 

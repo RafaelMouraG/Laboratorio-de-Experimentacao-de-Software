@@ -191,7 +191,7 @@ Cada agente recebeu o mesmo enunciado: implementar do zero uma API HTTP de encur
 
 <img src="../llm-bench/docs/img/piloto-custo-estimado.png" width="800"/>
 
-*Figura 9 – Custo estimado pelo preço público de API, de US$ 0,28 (Sol) a US$ 0,95 (Astra).*
+*Figura 9 – Custo estimado pelo preço público de API, de US$ 0,28 (Sol) a US$ 0,95 (Astra), dividido por componente. A saída pesa mais em Opus, Sol e Astra; no Muse, o cache lido.*
 
 <img src="../llm-bench/docs/img/piloto-stack.png" width="800"/>
 
