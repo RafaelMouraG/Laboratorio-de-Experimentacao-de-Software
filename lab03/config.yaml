@@ -1,0 +1,16 @@
+# Configuração do pipeline do Lab03. Caminhos relativos à raiz do repositório.
+
+janela:
+  inicio:   # AAAA-MM-DD, definido pelo professor
+  fim:      # AAAA-MM-DD
+
+limite_repos: 100
+pasta_cache: lab03/data/cache
+coletar_tags: false
+
+# Fatias da busca: cada consulta do /search devolve no máximo 1.000 repositórios.
+faixas_estrelas:
+  - "1000..2000"
+  - "2000..5000"
+  - "5000..10000"
+  - ">10000"
