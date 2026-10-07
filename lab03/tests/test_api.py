@@ -80,6 +80,15 @@ def test_paginacao_junta_tres_paginas(tmp_path, esperas):
     assert sessao.pedidos[2][1] == {"per_page": "2", "page": "3"}
 
 
+def test_paginas_seguintes_ficam_na_pasta_do_repo(tmp_path, esperas):
+    # o GitHub devolve o next com o id numérico do repo, não com owner/repo
+    proxima = {"Link": '<https://api.github.com/repositories/41881900/releases?per_page=100&page=2>; rel="next"'}
+    api, sessao = cliente(tmp_path, esperas, resposta(corpo=[1], cabecalhos=proxima), resposta(corpo=[2]))
+    assert api.paginar("/repos/microsoft/vscode/releases") == [1, 2]
+    assert sessao.pedidos[1][0] == "https://api.github.com/repos/microsoft/vscode/releases"
+    assert {p.parent.name for p in tmp_path.rglob("*.json")} == {"microsoft__vscode"}
+
+
 def test_paginacao_retoma_da_pagina_que_faltou(tmp_path, esperas):
     base = "https://api.github.com/repos/o/r/releases"
     proxima = {"Link": f'<{base}?per_page=100&page=2>; rel="next"'}
