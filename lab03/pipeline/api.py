@@ -110,7 +110,9 @@ class GitHubAPI:
             proxima = links(resp["link"]).get("next")
             if not proxima:
                 return itens
-            caminho, params = _separar_url(proxima)
+            # o Link aponta para /repositories/<id>/...; manter o caminho original deixa todas as
+            # páginas na pasta do repo. A query do Link já traz todos os filtros + `page`.
+            params = _separar_url(proxima)[1]
 
     def ultima_pagina(self, caminho: str, params: Optional[dict] = None) -> int:
         """Número da última página. Com `per_page=1`, é o total de itens sem baixar a lista."""
