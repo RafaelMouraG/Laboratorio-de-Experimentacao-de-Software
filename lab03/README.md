@@ -1,5 +1,7 @@
 # Lab03 — Mineração de Métricas DORA
 
+[![Testes](https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/actions/workflows/testes.yml/badge.svg?branch=main)](https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/actions/workflows/testes.yml)
+
 > Setup do ambiente (`.env`, `.venv`, dependências) está no [README da raiz](../README.md).
 > Todos os comandos abaixo rodam **a partir da raiz do repositório**.
 
