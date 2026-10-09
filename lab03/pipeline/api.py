@@ -2,6 +2,9 @@
 
 Toda resposta (inclusive 404/409) vira um JSON em `pasta_cache`. Rodar o pipeline de novo lê do
 disco em vez da rede, então um Ctrl+C ou uma cota estourada custam no máximo a página corrente.
+
+Pode ser usada por várias threads ao mesmo tempo: a cota anotada fica atrás de uma trava, e a
+decisão de esperar o reset depois de um 403/429 sai do cabeçalho da própria resposta.
 """
 
 from __future__ import annotations
@@ -11,6 +14,7 @@ import json
 import logging
 import os
 import re
+import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -23,8 +27,12 @@ BASE = "https://api.github.com"
 MAX_TENTATIVAS = 5
 FOLGA_RESET_S = 5
 STATUS_AUSENTE = (404, 409)  # tag apagada no compare / repositório vazio
+# ChunkedEncodingError: a conexão caiu no meio do corpo, depois do status já ter chegado
+ERROS_DE_REDE = (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError)
 
 log = logging.getLogger(__name__)
+
+Enxugar = Callable[[Any], Any]
 
 
 class RecursoAusente(Exception):
@@ -81,6 +89,7 @@ class GitHubAPI:
         self.restante: Optional[int] = None
         self.reset_em: Optional[float] = None
         self.chamadas_rede = 0
+        self._trava = threading.Lock()
 
     @classmethod
     def do_ambiente(cls, pasta_cache: str | Path, **kwargs) -> "GitHubAPI":
@@ -92,19 +101,27 @@ class GitHubAPI:
 
     # ---------- interface usada pelo pipeline ----------
 
-    def get(self, caminho: str, params: Optional[dict] = None) -> Any:
-        return self._resposta(caminho, params)["corpo"]
+    def get(self, caminho: str, params: Optional[dict] = None, enxugar: Optional[Enxugar] = None) -> Any:
+        return self._resposta(caminho, params, enxugar)["corpo"]
 
-    def paginar(self, caminho: str, params: Optional[dict] = None, chave: Optional[str] = None) -> list:
+    def paginar(
+        self,
+        caminho: str,
+        params: Optional[dict] = None,
+        chave: Optional[str] = None,
+        enxugar: Optional[Enxugar] = None,
+    ) -> list:
         """Junta todas as páginas seguindo `Link rel="next"`.
 
         `chave` diz qual campo tem a lista quando ela vem embrulhada
         (`items` no /search, `workflow_runs` no /actions/runs, `workflows` no /actions/workflows).
+        `enxugar` recebe o corpo de cada página e devolve só o que interessa; é isso que vai para o
+        cache.
         """
         params = {"per_page": 100, **(params or {})}
         itens: list = []
         while True:
-            resp = self._resposta(caminho, params)
+            resp = self._resposta(caminho, params, enxugar)
             corpo = resp["corpo"]
             itens.extend(corpo[chave] if chave else corpo)
             proxima = links(resp["link"]).get("next")
@@ -155,16 +172,23 @@ class GitHubAPI:
 
     def _gravar_cache(self, arquivo: Path, conteudo: dict) -> None:
         arquivo.parent.mkdir(parents=True, exist_ok=True)
-        tmp = arquivo.with_suffix(".tmp")
+        tmp = arquivo.with_name(f"{arquivo.name}.{threading.get_ident()}.tmp")
         tmp.write_text(json.dumps(conteudo, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, arquivo)
 
-    def _resposta(self, caminho: str, params: Optional[dict]) -> dict:
+    def _resposta(self, caminho: str, params: Optional[dict], enxugar: Optional[Enxugar] = None) -> dict:
         arquivo = self.arquivo_cache(caminho, params)
         resp = self._ler_cache(arquivo)
         if resp is None:
             resp = self._buscar(caminho, params)
+            if enxugar and resp["corpo"] is not None:
+                resp["corpo"] = enxugar(resp["corpo"])
             self._gravar_cache(arquivo, resp)
+        elif enxugar and resp["corpo"] is not None:
+            enxuto = enxugar(resp["corpo"])
+            if enxuto != resp["corpo"]:  # cache de antes do enxugar, gravado inteiro: regrava menor
+                resp["corpo"] = enxuto
+                self._gravar_cache(arquivo, resp)
         if resp["status"] in STATUS_AUSENTE:
             raise RecursoAusente(caminho, resp["status"])
         return resp
@@ -177,10 +201,9 @@ class GitHubAPI:
             self._esperar_cota()
             try:
                 r = self.sessao.get(BASE + caminho, params=params, timeout=30)
-            except (requests.ConnectionError, requests.Timeout) as erro:
+            except ERROS_DE_REDE as erro:
                 tentativa = self._backoff(caminho, tentativa, str(erro))
                 continue
-            self.chamadas_rede += 1
             self._anotar_cota(r)
 
             if r.status_code in (403, 429) and self._eh_rate_limit(r):
@@ -204,10 +227,12 @@ class GitHubAPI:
         return tentativa
 
     def _anotar_cota(self, r: requests.Response) -> None:
-        if "X-RateLimit-Remaining" in r.headers:
-            self.restante = int(r.headers["X-RateLimit-Remaining"])
-        if "X-RateLimit-Reset" in r.headers:
-            self.reset_em = float(r.headers["X-RateLimit-Reset"])
+        with self._trava:
+            self.chamadas_rede += 1
+            if "X-RateLimit-Remaining" in r.headers:
+                self.restante = int(r.headers["X-RateLimit-Remaining"])
+            if "X-RateLimit-Reset" in r.headers:
+                self.reset_em = float(r.headers["X-RateLimit-Reset"])
 
     def _eh_rate_limit(self, r: requests.Response) -> bool:
         """Dorme o necessário e devolve True se o 403/429 era de cota; False se era outra coisa."""
@@ -216,15 +241,20 @@ class GitHubAPI:
             log.warning("limite secundário, esperando %.0fs", espera)
             self._dormir(espera)
             return True
-        if self.restante == 0:
-            self._esperar_cota()
+        # o cabeçalho da própria resposta, não `self.restante`: outra thread pode ter anotado
+        # uma resposta mais velha por cima
+        if r.headers.get("X-RateLimit-Remaining") == "0":
+            self._dormir_ate(float(r.headers.get("X-RateLimit-Reset", 0)))
             return True
         return False
 
     def _esperar_cota(self) -> None:
         if self.restante != 0 or self.reset_em is None:
             return
-        espera = max(self.reset_em - self._agora(), 0) + FOLGA_RESET_S
+        self._dormir_ate(self.reset_em)
+
+    def _dormir_ate(self, reset_em: float) -> None:
+        espera = max(reset_em - self._agora(), 0) + FOLGA_RESET_S
         log.warning("cota esgotada, esperando %.0f min até o reset", espera / 60)
         self._dormir(espera)
         self.restante = None

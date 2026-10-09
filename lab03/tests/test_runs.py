@@ -3,7 +3,9 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 
 from lab03.pipeline.runs import (
+    CAMPOS,
     TETO_BUSCA,
+    _pagina_enxuta,
     classificar,
     contar_validos,
     fatias_mensais,
@@ -32,15 +34,16 @@ class APIFalsa:
             a, b = a + "T00:00:00Z", b + "T23:59:59Z"
         return [r for r in self.runs if a <= r["created_at"] <= b]
 
-    def get(self, caminho, params):
+    def get(self, caminho, params, enxugar=None):
         assert params["event"] == "push" and params["branch"] == "main"
         self.consultas.append(params["created"])
         return {"total_count": len(self._no_intervalo(params["created"]))}
 
-    def paginar(self, caminho, params, chave):
+    def paginar(self, caminho, params, chave, enxugar=None):
         assert chave == "workflow_runs"
         self.paginados.append(len(self._no_intervalo(params["created"])))
-        return self._no_intervalo(params["created"])[:TETO_BUSCA]
+        corpo = {"workflow_runs": self._no_intervalo(params["created"])[:TETO_BUSCA]}
+        return (enxugar(corpo) if enxugar else corpo)["workflow_runs"]
 
 
 def a_cada(inicio, passo, n):
@@ -121,6 +124,35 @@ def test_runs_fora_da_janela_ficam_de_fora():
              datetime(2025, 3, 31, 23, 59, 59, tzinfo=utc), datetime(2025, 4, 1, tzinfo=utc)]
     runs = listar_runs(APIFalsa(datas), "o/r", "main", "2025-01-01", "2025-03-31")
     assert len(runs) == 2
+
+
+def test_meses_em_paralelo_dao_o_mesmo_que_em_serie():
+    datas = a_cada(datetime(2025, 1, 1, tzinfo=timezone.utc), timedelta(minutes=97), 5000)
+    serie = listar_runs(APIFalsa(datas), "o/r", "main", "2025-01-01", "2025-12-31", workers=1)
+    paralelo = listar_runs(APIFalsa(datas), "o/r", "main", "2025-01-01", "2025-12-31", workers=4)
+    assert serie == paralelo
+    assert len(paralelo) == 5000
+
+
+def test_erro_numa_thread_sobe_para_quem_chamou():
+    class APIQuebrada(APIFalsa):
+        def get(self, caminho, params, enxugar=None):
+            if params["created"].startswith("2025-02"):
+                raise RuntimeError("caiu")
+            return super().get(caminho, params, enxugar)
+
+    api = APIQuebrada(a_cada(datetime(2025, 1, 1, tzinfo=timezone.utc), timedelta(days=1), 365))
+    with pytest.raises(RuntimeError, match="caiu"):
+        listar_runs(api, "o/r", "main", "2025-01-01", "2025-12-31", workers=3)
+
+
+def test_pagina_enxuta_guarda_so_os_campos_e_e_idempotente():
+    corpo = {"total_count": 1, "workflow_runs": [
+        {**{campo: 1 for campo in CAMPOS}, "repository": {"x": 1}, "head_repository": {"x": 1}}]}
+    enxuta = _pagina_enxuta(corpo)
+    assert enxuta["total_count"] == 1
+    assert set(enxuta["workflow_runs"][0]) == set(CAMPOS)
+    assert _pagina_enxuta(enxuta) == enxuta
 
 
 def test_classificar_e_o_mesmo_das_metricas():

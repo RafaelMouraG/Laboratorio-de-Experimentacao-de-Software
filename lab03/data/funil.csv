@@ -1,0 +1,7 @@
+ordem,etapa,restantes,descartados,motivo
+1,candidatos da busca,4000,0,
+2,com GitHub Actions,203,16,sem_actions
+3,metadados coletados,203,0,
+4,>= 5 releases na janela,109,94,menos_de_5_releases
+5,>= 50 runs válidos na janela,100,9,menos_de_50_runs
+6,amostra final (limite 100),100,3781,nao_avaliado_limite_atingido

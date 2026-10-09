@@ -2,11 +2,16 @@
 
 Com filtros, o /actions/runs devolve no máximo 1.000 runs por consulta. Por isso a janela é
 consultada mês a mês, e um mês que bate o teto é partido ao meio até cada pedaço caber.
+
+Os meses são coletados em paralelo, `WORKERS` por vez. Cada run da API vem com ~10 KB (os objetos
+do repositório vêm duas vezes), então as páginas vão para o cache só com os `CAMPOS`.
 """
 
 from __future__ import annotations
 
 import logging
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Union
 
@@ -14,6 +19,7 @@ from lab03.metricas.falhas import classificar
 from lab03.pipeline.api import GitHubAPI
 
 TETO_BUSCA = 1000
+WORKERS = 3  # o GitHub pede requisições seriais; poucas em paralelo ainda ficam longe do limite secundário
 CAMPOS = ("id", "workflow_id", "name", "status", "conclusion", "created_at", "run_started_at", "updated_at", "head_sha")
 
 log = logging.getLogger(__name__)
@@ -66,23 +72,47 @@ def _enxugar(run: dict) -> dict:
     return {campo: run.get(campo) for campo in CAMPOS}
 
 
-def listar_runs(api: GitHubAPI, repo: str, branch: str, inicio: Dia, fim: Dia) -> list[dict]:
+def _pagina_enxuta(corpo: dict) -> dict:
+    """O que fica no cache de uma página do /actions/runs. Aplicar duas vezes não muda nada."""
+    return {**corpo, "workflow_runs": [_enxugar(run) for run in corpo.get("workflow_runs", [])]}
+
+
+def _runs_do_mes(
+    api: GitHubAPI, repo: str, branch: str, mes: tuple[date, date], parar: threading.Event
+) -> list[dict]:
     caminho = f"/repos/{repo}/actions/runs"
-    pendentes = [_como_intervalo(f) for f in fatias_mensais(inicio, fim)]
-    vistos: dict[int, dict] = {}
-    while pendentes:
+    pendentes = [_como_intervalo(mes)]
+    achados: list[dict] = []
+    while pendentes and not parar.is_set():
         intervalo = pendentes.pop(0)
         params = {"branch": branch, "event": "push", "created": filtro_created(intervalo)}
         # mesma chave da 1ª página do paginar, então essa espiada sai do cache depois
-        total = api.get(caminho, {"per_page": 100, **params})["total_count"]
+        total = api.get(caminho, {"per_page": 100, **params}, enxugar=_pagina_enxuta)["total_count"]
         if total >= TETO_BUSCA:
             if intervalo[1] - intervalo[0] >= timedelta(seconds=1):
                 log.info("%s: %s tem %d runs, partindo ao meio", repo, params["created"], total)
                 pendentes[:0] = partir(intervalo)
                 continue
             log.warning("%s: %s tem %d runs num segundo só, ficando com os 1000", repo, params["created"], total)
-        for run in api.paginar(caminho, params, chave="workflow_runs"):
-            vistos[run["id"]] = _enxugar(run)
+        achados.extend(api.paginar(caminho, params, chave="workflow_runs", enxugar=_pagina_enxuta))
+    return achados
+
+
+def listar_runs(
+    api: GitHubAPI, repo: str, branch: str, inicio: Dia, fim: Dia, workers: int = WORKERS
+) -> list[dict]:
+    parar = threading.Event()
+    pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="runs")
+    try:
+        meses = list(pool.map(lambda mes: _runs_do_mes(api, repo, branch, mes, parar),
+                              fatias_mensais(inicio, fim)))
+    except BaseException:
+        # erro ou Ctrl+C: os meses na fila nem começam e os que estão rodando param no próximo pedaço
+        parar.set()
+        pool.shutdown(wait=False, cancel_futures=True)
+        raise
+    pool.shutdown()
+    vistos = {run["id"]: _enxugar(run) for lote in meses for run in lote}
     return sorted(vistos.values(), key=lambda r: (r["created_at"], r["id"]))
 
 
