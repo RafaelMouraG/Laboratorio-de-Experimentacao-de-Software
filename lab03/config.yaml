@@ -1,11 +1,14 @@
 # Configuração do pipeline do Lab03. Caminhos relativos à raiz do repositório.
 
+# 12 meses (seção 3 do enunciado). Provisória: os 12 meses fechados antes do início da coleta;
+# trocar pelas datas do professor, se ele divulgar outras.
 janela:
-  inicio:   # AAAA-MM-DD, definido pelo professor
-  fim:      # AAAA-MM-DD
+  inicio: 2025-10-01   # AAAA-MM-DD
+  fim: 2026-09-30      # AAAA-MM-DD
 
 limite_repos: 100
 pasta_cache: lab03/data/cache
+pasta_saida: lab03/data   # repos.csv, releases.csv, runs.csv e funil.csv
 coletar_tags: false
 
 # Fatias da busca: cada consulta do /search devolve no máximo 1.000 repositórios.

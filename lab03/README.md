@@ -5,6 +5,47 @@
 > Setup do ambiente (`.env`, `.venv`, dependências) está no [README da raiz](../README.md).
 > Todos os comandos abaixo rodam **a partir da raiz do repositório**.
 
+## Como rodar
+
+1. Coloque o token do GitHub no `.env` da raiz (ele está no `.gitignore`):
+
+   ```env
+   GITHUB_TOKEN=ghp_seu_token_aqui
+   ```
+
+2. Preencha `janela.inicio` e `janela.fim` (AAAA-MM-DD) em [`config.yaml`](config.yaml). Sem elas o
+   pipeline para com uma mensagem.
+
+3. Rode a coleta:
+
+   ```bash
+   python -m lab03.pipeline --config lab03/config.yaml             # amostra de limite_repos (100)
+   python -m lab03.pipeline --config lab03/config.yaml --limite 5  # teste rápido com 5 repositórios
+   ```
+
+   A ordem é: busca por faixas de estrelas → usa Actions → metadados → ≥ 5 releases na janela →
+   ≥ 50 runs válidos na janela, repo a repo, até a amostra chegar no limite. Cada repo imprime uma
+   linha com `repo i/N`, quantos já estão na amostra e a cota restante da API.
+
+**Saídas**, em `lab03/data/` (`pasta_saida` no config):
+
+| Arquivo | Conteúdo |
+|---|---|
+| `repos.csv` | Um repositório da amostra por linha: metadados (estrelas, linguagem, branch, idade, contribuidores) e contagens de releases, commits e runs |
+| `releases.csv` | Uma linha por release da janela, com nº de commits desde a anterior e as flags `sem_anterior` e `ignorada_compare_404` |
+| `runs.csv` | Uma linha por workflow run válido (sucesso ou falha) do default branch, com a `classe` |
+| `funil.csv` | Quantos repositórios restaram em cada etapa e o motivo de cada descarte |
+
+**Retomada.** Toda resposta da API fica em `lab03/data/cache/<owner>__<repo>/`, e um repo avaliado
+até o fim ganha o marcador `_completo` com o resultado. Se a coleta parar (Ctrl+C, queda de rede,
+cota), rode o mesmo comando: repos com marcador são pulados direto e o repo interrompido recomeça
+lendo do cache, então perde-se no máximo a página que estava sendo baixada. Mudar a janela no
+config invalida os marcadores (as respostas que não dependem da janela continuam no cache).
+
+**Forçar recoleta** de um repositório: apague a pasta dele no cache
+(`rm -r lab03/data/cache/<owner>__<repo>`). Para refazer a busca de candidatos, apague
+`lab03/data/cache/_global`.
+
 ## INFORMAÇÕES SOBRE A AVALIAÇÃO
 
 | LAB03 | Laboratório 03 - 20 pontos |
