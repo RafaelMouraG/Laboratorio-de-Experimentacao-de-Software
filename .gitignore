@@ -6,3 +6,4 @@ venv/
 lab03/data/cache/
 .coverage
 .pytest_cache/
+runs.csv

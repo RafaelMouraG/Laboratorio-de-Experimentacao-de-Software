@@ -113,12 +113,52 @@ def test_queda_de_rede_tambem_repete(tmp_path, esperas):
     assert esperas == [1]
 
 
+def test_resposta_cortada_no_meio_tambem_repete(tmp_path, esperas):
+    cortada = requests.exceptions.ChunkedEncodingError("IncompleteRead(8351 bytes read, 1889 more expected)")
+    api, _ = cliente(tmp_path, esperas, cortada, resposta(corpo=[]))
+    assert api.get("/repos/o/r/compare/v1...v2") == []
+    assert esperas == [1]
+
+
 def test_desiste_depois_do_limite_de_tentativas(tmp_path, esperas):
     api, _ = cliente(tmp_path, esperas, *[resposta(503)] * 5)
     with pytest.raises(ErroAPI):
         api.get("/repos/o/r")
     assert esperas == [1, 2, 4, 8]
     assert not list(tmp_path.rglob("*.json"))  # erro temporário não vai para o cache
+
+
+def test_enxugar_vale_para_o_cache(tmp_path, esperas):
+    so_id = lambda corpo: [{"id": item["id"]} for item in corpo]
+    api, _ = cliente(tmp_path, esperas, resposta(corpo=[{"id": 1, "grande": "x" * 1000}]))
+    assert api.get("/repos/o/r/actions/runs", enxugar=so_id) == [{"id": 1}]
+    gravado = json.loads(next(tmp_path.rglob("*.json")).read_text())
+    assert gravado["corpo"] == [{"id": 1}]
+
+
+def test_cache_antigo_inteiro_e_regravado_enxuto(tmp_path, esperas):
+    api, _ = cliente(tmp_path, esperas, resposta(corpo=[{"id": 1, "grande": "x" * 1000}]))
+    api.get("/repos/o/r/actions/runs")  # sem enxugar, como o cache de antes
+    outro, sessao = cliente(tmp_path, esperas)
+    so_id = lambda corpo: [{"id": item["id"]} for item in corpo]
+    assert outro.get("/repos/o/r/actions/runs", enxugar=so_id) == [{"id": 1}]
+    assert sessao.pedidos == []
+    assert json.loads(next(tmp_path.rglob("*.json")).read_text())["corpo"] == [{"id": 1}]
+
+
+def test_403_de_cota_espera_mesmo_com_cota_anotada_por_outra_thread(tmp_path, esperas):
+    zerada = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1600"}
+    api, sessao = cliente(tmp_path, esperas, resposta(403, {"message": "API rate limit exceeded"}, zerada),
+                          resposta(corpo=[]), agora=1000.0)
+    anotar = api._anotar_cota
+
+    def anotar_e_ser_atropelado(r):
+        anotar(r)
+        api.restante = 3000  # resposta mais velha de outra thread chegando depois
+
+    api._anotar_cota = anotar_e_ser_atropelado
+    assert api.get("/repos/o/r/releases") == []
+    assert esperas == [605]
 
 
 def test_cota_zerada_espera_ate_o_reset(tmp_path, esperas):
