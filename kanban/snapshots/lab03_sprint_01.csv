@@ -1,0 +1,14 @@
+snapshot_date,sprint,issue,titulo,status,assignee,state,url
+2026-10-14,S01,90,Links do Project 10 e snapshot da S01,Doing,mateusdsoc,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/90
+2026-10-14,S01,71,Cliente da API com cache e rate limit,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/71
+2026-10-14,S01,72,Seleção de repositórios e funil,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/72
+2026-10-14,S01,73,Coleta de metadados dos repositórios,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/73
+2026-10-14,S01,74,Frequência de deploy e classificação DORA,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/74
+2026-10-14,S01,75,"Coleta de releases, tags e commits entre releases",Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/75
+2026-10-14,S01,76,Cálculo do lead time,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/76
+2026-10-14,S01,77,Coleta de workflow runs,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/77
+2026-10-14,S01,78,CFR de CI e tempo de recuperação,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/78
+2026-10-14,S01,79,CI do grupo com pytest e cobertura,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/79
+2026-10-14,S01,80,Comando único do pipeline,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/80
+2026-10-14,S01,81,Introdução e hipóteses do artigo,Done,Athoosz;RafaelMouraG;mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/81
+2026-10-14,S01,89,Introdução do artigo,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/89
