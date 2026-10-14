@@ -7,8 +7,10 @@
    e compare válido: sem isso não existe lista de commits para quem for rotular.
 3. Para cada avaliador, uma planilha de repositórios e uma de releases, com os rótulos vazios.
    Planilha que já existe não é sobrescrita, para rodar de novo não apagar o que alguém rotulou.
-4. `heuristica_entrada.jsonl`: o que a heurística de release corretiva (#96) recebe para essas
-   mesmas releases. Fica fora das planilhas, para ninguém rotular olhando o que ela decidiu.
+4. `heuristica_entrada.jsonl.gz`: o que a heurística de release corretiva (#96) recebe para essas
+   mesmas releases. Fica fora das planilhas, para ninguém rotular olhando o que ela decidiu. Vai
+   comprimido porque release cuja anterior é de outra linha de versão (`v8.19.4` → `v9.1.5`) traz
+   milhares de commits no compare. Leitura: `pd.read_json(caminho, lines=True)`.
 
 Tudo que vem da API sai do cache da coleta; numa máquina sem cache são umas 600 chamadas.
 """
@@ -17,6 +19,8 @@ from __future__ import annotations
 
 import argparse
 import csv
+import gzip
+import io
 import json
 import logging
 import sys
@@ -35,6 +39,7 @@ N_REPOS = 60
 N_RELEASES = 5
 AVALIADORES = ("mateusdsoc", "RafaelMouraG", "Athoosz")
 PASTA = Path("lab03/validacao")
+ENTRADA_HEURISTICA = "heuristica_entrada.jsonl.gz"
 
 CAMPOS_ROTULO_REPOS = ("repo", "url", "tipo_projeto", "entregas_reais", "observacao")
 CAMPOS_ROTULO_RELEASES = ("repo", "tag_name", "url_release", "url_compare", "corretiva", "observacao")
@@ -116,7 +121,9 @@ def gravar(pasta: Path, amostra: pd.DataFrame, sorteadas: list[dict],
                        for r in sorteadas]
     _escrever_csv(pasta / "amostra_ouro_repos.csv", CAMPOS_AMOSTRA_REPOS, linhas_repos)
     _escrever_csv(pasta / "amostra_ouro_releases.csv", CAMPOS_AMOSTRA_RELEASES, linhas_releases)
-    with (pasta / "heuristica_entrada.jsonl").open("w", encoding="utf-8") as arquivo:
+    # mtime=0: o .gz sai igual byte a byte quando o sorteio é o mesmo
+    with gzip.GzipFile(pasta / ENTRADA_HEURISTICA, "wb", mtime=0) as bruto, \
+            io.TextIOWrapper(bruto, encoding="utf-8") as arquivo:
         for release in sorteadas:
             campos = ("repo", "tag_name", "published_at", "notas", "anterior", "commits")
             arquivo.write(json.dumps({c: release[c] for c in campos}, ensure_ascii=False) + "\n")

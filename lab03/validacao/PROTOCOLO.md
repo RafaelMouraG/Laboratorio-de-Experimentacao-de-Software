@@ -73,6 +73,10 @@ Dois cuidados:
   conferir se isso funciona.
 - Release sem notas e com poucos commits: decida pela mensagem dos commits. Se nem eles ajudarem,
   marque `nao` e explique em `observacao`.
+- Compare com milhares de commits: pode ser uma release grande de verdade, mas muitas vezes a
+  release anterior pela data é de outra linha de versão (no elasticsearch, `v9.2.8...v8.19.14` tem
+  5.188 commits). Nesse caso a lista não ajuda; decida pelas notas da release e anote
+  `outra linha` em `observacao`.
 
 ## Regras
 

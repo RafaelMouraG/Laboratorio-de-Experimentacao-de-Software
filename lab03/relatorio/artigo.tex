@@ -236,6 +236,29 @@ resultados podem ser generalizados.
 \subsection{Validação manual}
 % #92 (sorteio da amostra-ouro) e #97 (rotulagem, kappa de Fleiss e consenso).
 
+A heurística de release corretiva e o tipo do projeto usado na RQ~06 são conferidos contra o
+julgamento dos três integrantes, numa amostra-ouro de 60 repositórios sorteados da amostra final
+com semente fixa (\texttt{sample(n=60, random\_state=42)} do pandas). Em cada um foram sorteadas,
+com a mesma semente, 5 releases da janela entre as que têm uma release anterior e cujo
+\texttt{compare} com ela existe, porque sem a lista de commits não dá para julgar a release. Os 60
+repositórios tinham pelo menos 5 releases nessas condições, então a amostra-ouro tem 300 releases.
+
+Um script gera, para cada integrante, duas planilhas iguais com links diretos para a página de cada
+release e para a comparação com a anterior. Por repositório, rotula-se o tipo do projeto
+(biblioteca, aplicação, ferramenta de linha de comando ou outro) e se as releases chegam de fato a
+quem usa o projeto (sim, não ou incerto). Por release, rotula-se se ela é corretiva, isto é, se o
+objetivo principal dela é corrigir um defeito recente. As definições, com exemplos, estão no
+protocolo de rotulagem do repositório. Cada um rotula sozinho, sem ver as planilhas dos outros nem a
+saída da heurística, que recebe as mesmas releases num arquivo separado.
+
+O sorteio deixou visível um problema que afeta também o \textit{lead time}: 39 das 300 releases têm
+mais de 500 commits no \texttt{compare}. Parte disso é release grande de verdade (as \textit{minors}
+do PyTorch passam de 3 mil commits), mas em 9 delas a release anterior pela data tem versão maior
+que a da própria release. No \texttt{elastic/elasticsearch}, por exemplo, a \texttt{v8.19.14} sai
+depois da \texttt{v9.2.8}, e o \texttt{compare} entre as duas tem 5.188 commits. São repositórios
+que mantêm mais de uma linha de versão ao mesmo tempo, e nesse caso o \texttt{compare} junta
+commits que não fazem parte daquela entrega.
+
 % Sprint 3: Resultados e Discussão. Entrega final: Ameaças à validade e Replicação cruzada.
 
 \bibliographystyle{sbc}

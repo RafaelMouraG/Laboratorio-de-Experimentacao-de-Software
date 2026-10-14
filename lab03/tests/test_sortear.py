@@ -1,4 +1,5 @@
 import csv
+import gzip
 import json
 
 import pandas as pd
@@ -124,10 +125,18 @@ def test_planilhas_iguais_entre_avaliadores_e_com_rotulos_vazios(tmp_path):
 def test_entrada_da_heuristica_fica_fora_das_planilhas(tmp_path):
     gravar_exemplo(tmp_path)
 
-    linhas = [json.loads(l) for l in (tmp_path / "heuristica_entrada.jsonl").read_text().splitlines()]
+    with gzip.open(tmp_path / "heuristica_entrada.jsonl.gz", "rt", encoding="utf-8") as arquivo:
+        linhas = [json.loads(l) for l in arquivo]
     assert len(linhas) == 5
     assert set(linhas[0]) == {"repo", "tag_name", "published_at", "notas", "anterior", "commits"}
     assert "notas" not in ler(tmp_path / "rotulos/ana_releases.csv")[0]
+
+
+def test_mesmo_sorteio_gera_o_mesmo_arquivo(tmp_path):
+    gravar_exemplo(tmp_path / "a")
+    gravar_exemplo(tmp_path / "b")
+    for nome in ("heuristica_entrada.jsonl.gz", "amostra_ouro_releases.csv", "rotulos/ana_releases.csv"):
+        assert (tmp_path / "a" / nome).read_bytes() == (tmp_path / "b" / nome).read_bytes()
 
 
 def test_rodar_de_novo_nao_apaga_planilha_ja_rotulada(tmp_path):
