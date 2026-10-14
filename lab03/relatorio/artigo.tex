@@ -1,0 +1,244 @@
+% Lab03: Mineração de Métricas DORA. Compila no template da SBC do Overleaf (ver README do lab03).
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath}
+
+\sloppy
+
+\title{Métricas DORA em repositórios populares do GitHub:\\
+o que dá para medir só com dados públicos}
+
+\author{Athos Marques Ribeiro Fonseca\inst{1}, Mateus Araujo Santos\inst{1},\\
+Rafael Ganascini de Moura\inst{1}}
+
+% falta o nome da instituição
+\address{Curso de Engenharia de Software\\
+Laboratório de Experimentação de Software (Prof. Danilo Maia)}
+
+\begin{document}
+
+\maketitle
+
+% Resumo e abstract provisórios: reescrever na entrega final, com os números.
+\begin{abstract}
+DORA metrics are the usual way to describe how fast and how safely a team delivers software, but
+open-source projects on GitHub do not record deployments or incidents. This study measures the four
+metrics in at least 300 popular repositories that use GitHub Actions, replacing deployments with
+published releases and incidents with failed CI runs and corrective releases, and checks how much
+the resulting classification depends on these choices.
+\end{abstract}
+
+\begin{resumo}
+As métricas DORA são a forma mais usada de descrever o quão rápido e com quanta segurança um time
+entrega software, mas projetos open-source no GitHub não registram deploys nem incidentes. Este
+estudo mede as quatro métricas em pelo menos 300 repositórios populares que usam GitHub Actions,
+trocando deploy por release publicada e incidente por execução de CI com falha e por release
+corretiva, e verifica o quanto a classificação final depende dessas escolhas.
+\end{resumo}
+
+\section{Introdução}
+
+O DORA (\textit{DevOps Research and Assessment}) estuda há mais de dez anos como times de software
+entregam mudanças. Das pesquisas anuais do grupo saíram quatro métricas que viraram referência no
+mercado: frequência de deploy, \textit{lead time} das mudanças, taxa de falha das mudanças
+(\textit{change failure rate}, CFR) e tempo de recuperação \cite{forsgren2018accelerate,dora2024}.
+As duas primeiras medem velocidade e as duas últimas medem estabilidade. A afirmação mais conhecida
+do DORA é que velocidade e estabilidade não competem entre si: os times que entregam com mais
+frequência também são os que quebram menos e se recuperam mais rápido.
+
+Esses números vêm de questionários respondidos por profissionais, sobre sistemas em que existe um
+deploy em produção e um incidente registrado quando algo dá errado. Um repositório open-source no
+GitHub não tem nenhum dos dois. O que ele tem são dados que parecem com eles: releases publicadas,
+commits com data e execuções de CI no GitHub Actions. Por isso, medir DORA em open-source é sempre
+medir uma aproximação, e cada aproximação tem um buraco conhecido. Publicar a release de uma
+biblioteca não coloca nada em produção, porque quem usa decide quando atualizar. Uma execução de CI
+que falha no branch principal pode ser um teste instável, e não um defeito que chegou ao usuário.
+Uma release corretiva logo depois de outra pode ser só uma dependência atualizada às pressas. Como
+nenhuma dessas trocas é óbvia, o resultado depende da definição escolhida, e duas definições
+razoáveis podem colocar o mesmo repositório em categorias diferentes.
+
+Neste trabalho medimos as quatro métricas em pelo menos 300 repositórios populares (com mil
+estrelas ou mais) que usam GitHub Actions, numa janela de 12 meses, a partir dos dados públicos da
+API do GitHub. Queremos saber em que faixa de desempenho DORA esses projetos caem, se velocidade e
+estabilidade andam juntas também em open-source, quais características dos repositórios aparecem
+junto com um desempenho melhor e o quanto a classificação muda quando a definição operacional muda.
+O \textit{lead time} e a CFR são calculados em duas variantes cada, justamente para mostrar o peso
+dessas escolhas.
+
+\subsection{Questões de pesquisa e hipóteses}
+
+As hipóteses abaixo foram escritas antes da coleta da amostra, cada uma por quem implementou a parte
+do pipeline ligada àquela questão. Até então, os únicos dados vistos eram os de três repositórios
+usados para testar o pipeline, que não entram na análise.
+
+\paragraph{RQ 01. Qual a frequência de deploys dos repositórios populares que usam CI/CD?}
+Esperamos que a frequência de deploy, medida por releases publicadas por semana, fique concentrada
+entre as categorias \textit{Medium} e \textit{High}, isto é, entre 1 release por mês e 7 releases
+por semana. Apostamos em uma mediana mais próxima do limite inferior de \textit{Medium} do que da
+frequência diária da categoria \textit{Elite}, porque muitos repositórios populares são bibliotecas
+ou frameworks que agrupam várias mudanças antes de publicar uma versão. Assim, não esperamos
+releases diárias na maioria dos projetos, embora uma parcela menor possa alcançar \textit{Elite}
+por possuir publicação automatizada. Também esperamos uma cauda de valores baixos e uma
+distribuição assimétrica: alguns projetos podem publicar muitas versões, enquanto outros, apesar de
+usarem CI/CD, lançam versões apenas mensalmente ou com intervalos maiores. Por isso, a mediana e o
+IQR devem representar melhor o comportamento típico do que a média.
+
+\paragraph{RQ 02. Qual o tempo entre um commit e seu respectivo deploy?}
+Esperamos que a variante por release (a) fique bem acima da por commit (b), e que essa diferença
+venha da própria definição. O commit mais antigo de uma release costuma ser um dos primeiros
+escritos logo depois da release anterior, então (a) acaba medindo, na prática, o intervalo entre
+duas releases, somado ao tempo que o PR mais antigo passou aberto. Com o filtro de $\geq$ 5
+releases na janela e bibliotecas populares soltando versão a cada poucas semanas, apostamos em (a)
+com mediana entre 2 e 4 semanas (\textit{Medium}), com uma parte grande, perto de um terço, já em
+\textit{Low} ($\geq$ 30 dias). Na (b), os commits se espalham pelo intervalo inteiro, e os de perto
+da release puxam a mediana para baixo: esperamos algo entre 40\% e 60\% de (a), com mediana perto
+de 1 semana, na fronteira entre \textit{High} e \textit{Medium}. Duas coisas devem inflar a cauda
+de (a). A primeira é o commit antigo ``esquecido'', de uma branch que ficou parada meses e entrou
+numa release. A segunda é o repositório que mantém mais de uma linha de versão (\texttt{1.x} e
+\texttt{2.x} ao mesmo tempo): a release anterior pela data pode estar em outra linha, e o
+\texttt{compare} traz commits que não têm nada a ver com aquela entrega. Na (b) esses casos são
+poucos commits no meio de muitos e pesam pouco. Por isso esperamos (a) $\geq$ (b) em mais de 90\%
+dos repositórios e a categoria DORA de \textit{lead time} mudando entre as variantes em cerca de
+metade deles, quase sempre para a categoria do lado.
+
+\paragraph{RQ 03. Qual a taxa de falha das mudanças entregues por esses repositórios?}
+Nossa aposta é que as duas variantes vão contar histórias diferentes. Pelo CI (a), a taxa deve
+sair baixa, com mediana dentro de \textit{Elite} ($\leq$ 15\%). O motivo é simples: em projeto
+popular quase nada chega no \texttt{main} sem passar por um PR com o CI rodando, então o push no
+branch principal é, na prática, a segunda vez que aquela build roda. O que ainda falha ali deve ser
+mais teste instável e dependência externa mudando do que código quebrado de verdade. Já pela
+entrega (b), esperamos um número maior, na faixa \textit{High} (15\% a 30\%), porque é muito comum
+uma biblioteca soltar a \texttt{x.y.0} e, dois ou três dias depois, a \texttt{x.y.1} com o que os
+usuários reportaram. Se isso se confirmar, CI verde não quer dizer release sem problema, e as duas
+variantes vão ter pouca correlação entre si.
+
+\paragraph{RQ 04. Qual o tempo de recuperação após uma execução de CI/CD com falha?}
+Esperamos mediana entre 1 hora e 1 dia (\textit{High}). CI vermelho no \texttt{main} trava o PR de
+todo mundo, então alguém vai lá e resolve rápido, muitas vezes só rodando de novo o job que falhou
+por instabilidade. O problema deve estar na cauda: workflow de documentação, lint ou publicação
+pode ficar quebrado por semanas sem ninguém olhar, porque não bloqueia ninguém. Por isso esperamos
+um IQR largo e os episódios censurados concentrados nesses workflows secundários, não no de testes.
+
+\paragraph{RQ 05. Repositórios com maior frequência de deploy apresentam maior ou menor taxa de falha?}
+Achamos que as duas variantes vão dar respostas opostas, e que nenhuma das duas diz muito sobre o
+\textit{trade-off} do DORA. Com o CFR de CI (a), esperamos correlação fraca, $|\rho| < 0{,}2$,
+talvez levemente negativa. Falhar no CI do \texttt{main} depende mais da saúde dos testes (teste
+instável, dependência externa) do que de quantas releases o projeto solta, e o projeto que
+automatizou a publicação costuma ser o mesmo que tem um CI bem cuidado. Isso iria a favor do DORA,
+mas fraco demais para confirmar alguma coisa. Com o CFR de entrega (b), esperamos $\rho$ positivo e
+moderado, entre 0,3 e 0,5, o que pareceria um \textit{trade-off}, mas boa parte disso vem da forma
+de medir. Uma release só ``falha'' se vier outra em até 7 dias, e quem solta release toda semana
+quase sempre tem uma logo depois, enquanto quem solta uma por mês quase nunca tem. Além disso, cada
+release corretiva conta ao mesmo tempo como deploy na RQ 01, então um mesmo bug aumenta a
+frequência e o CFR de uma vez só. Se o $\rho$ da (b) vier positivo, não vamos ler isso como ``ir
+rápido quebra mais'', e sim como sinal de que o proxy de entrega mistura frequência e falha.
+
+\paragraph{RQ 06. Quais características dos repositórios estão associadas a um melhor desempenho DORA?}
+Esperamos que repositórios mais populares, mais antigos e com mais contribuidores apresentem melhor
+desempenho DORA, especialmente maior frequência de deploy e menor \textit{lead time}. A
+justificativa é que visibilidade e maturidade tendem a favorecer automação, processos de revisão e
+capacidade de manutenção. Para esses fatores, esperamos diferenças entre os grupos em pelo menos
+algumas métricas, mas com tamanhos de efeito pequenos ou moderados, e não uma separação completa
+entre as categorias DORA. Não esperamos que a associação seja uniforme nas quatro métricas. A idade
+pode indicar experiência e processos mais maduros, mas também pode estar associada a maior
+complexidade e dívida técnica, elevando o \textit{lead time} ou o tempo de recuperação. Da mesma
+forma, a popularidade pode favorecer automação e aumentar a capacidade de manutenção, mas também
+ampliar a superfície de uso e a quantidade de mudanças problemáticas. Também esperamos diferenças
+entre linguagens e tipos de projeto, mas sem assumir que uma linguagem seja causalmente superior às
+demais. Portanto, esperamos associações parciais e dependentes da métrica, e não que uma única
+característica explique todo o desempenho DORA.
+
+\paragraph{RQ 07. O quanto a classificação DORA de um repositório depende da definição operacional escolhida?}
+Achamos que a classificação vai mudar bastante dependendo da definição: algo entre 30\% e 50\% dos
+repositórios trocando de categoria em pelo menos um dos pares, com kappa ponderado moderado (0,40 a
+0,60). O que mais deve pesar é a unidade de deploy. Muito projeto cria tag e não publica release, e
+aí trocar release por tag (C3) faz a frequência subir e o repositório pular de categoria. Mas
+esperamos que essas trocas sejam quase sempre para a categoria do lado (\textit{Elite} $\rightarrow$
+\textit{High}, \textit{High} $\rightarrow$ \textit{Medium}), quase nunca de \textit{Elite} para
+\textit{Low}. Se for assim, dá para confiar nas conclusões das RQ 01 a 06 como tendência geral, mas
+não na categoria exata de cada repositório.
+
+\section{Metodologia}
+% Sprint 2. Cada subseção é escrita por quem pegou a issue indicada no comentário.
+
+\subsection{Fonte de dados e seleção}
+% #91
+
+Todos os dados vêm da API REST do GitHub, por um pipeline próprio, sem bibliotecas prontas de
+acesso à API. Cada resposta fica num cache em disco, então uma coleta interrompida continua de onde
+parou. A janela de observação vai de 1º de outubro de 2025 a 30 de setembro de 2026, e só entram
+releases publicadas e execuções de CI criadas dentro dela.
+
+Os candidatos são os repositórios com pelo menos mil estrelas que não são \textit{fork} nem estão
+arquivados: 60.188 na data da coleta. A busca do GitHub devolve no máximo mil resultados por
+consulta. Para passar desse teto sem pular ninguém, cada consulta nova pede as estrelas que vão do
+mínimo até o menor valor visto na anterior, e quem aparece de novo é descartado pelo nome. Com isso
+os candidatos formam uma lista contínua, do mais estrelado para baixo, e são avaliados nessa ordem
+até a amostra fechar.
+
+Cada candidato passa por quatro filtros, nesta ordem:
+\begin{enumerate}
+  \item ter sido criado antes do início da janela. A frequência de deploy divide as releases pelas
+  52 semanas da janela, e um repositório criado no meio dela sairia com uma frequência menor do que
+  a real;
+  \item usar GitHub Actions (pelo menos um workflow);
+  \item ter pelo menos 5 releases publicadas na janela;
+  \item ter pelo menos 50 execuções válidas (sucesso ou falha) no branch principal, disparadas por
+  \textit{push}, na janela.
+\end{enumerate}
+
+Os quatro são baratos: a data de criação vem do próprio resultado da busca, e as execuções são
+contadas pelo total que a API informa para cada valor de \texttt{conclusion}, sem baixar a lista.
+A avaliação para quando 310 repositórios passam, dez a mais que o mínimo de 300, como folga
+para quem cair na coleta completa. Só os aprovados seguem para a parte cara: os commits de cada
+release, pelo \texttt{compare} com a release anterior, e a lista inteira de execuções de CI, mês a
+mês. A Tabela~\ref{tab:funil} mostra quantos repositórios ficaram em cada etapa.
+
+\begin{table}[ht]
+\centering
+\caption{Funil de seleção da amostra}
+\label{tab:funil}
+\begin{tabular}{lrr}
+\hline
+Etapa & Restantes & Descartados \\
+\hline
+Repositórios na busca ($\geq$ 1.000 estrelas) & 60.188 & \\
+Avaliados, do mais estrelado para baixo & 845 & 59.343 \\
+Criados antes do início da janela & 761 & 84 \\
+Com GitHub Actions & 685 & 76 \\
+$\geq$ 5 releases na janela & 362 & 323 \\
+$\geq$ 50 execuções válidas na janela & 310 & 52 \\
+% atualizar com a linha da coleta completa quando ela terminar (#91)
+\hline
+Amostra final & 310 & \\
+\hline
+\end{tabular}
+\end{table}
+
+O filtro que mais pesa é o de releases: 323 dos 685 repositórios com Actions publicaram menos de
+5 releases na janela. Chama atenção também que 84 dos 845 avaliados foram criados depois de 1º de
+outubro de 2025, a maioria agentes, \textit{skills} e outras ferramentas de IA. Como a avaliação desce do mais estrelado
+e para em 310, a amostra fica entre 37 mil e 254 mil estrelas. Ela representa os projetos mais
+populares do GitHub, e não todos os que têm mil estrelas ou mais, o que limita até onde os
+resultados podem ser generalizados.
+
+\subsection{Definições operacionais}
+% #98: branch, o que conta como deploy, data do commit, tabela do conclusion, variantes de lead
+% time e de CFR, censura.
+
+\subsection{Heurística de release corretiva}
+% #96: a regra de cada versão testada e o F1 dela contra o consenso.
+
+\subsection{Validação manual}
+% #92 (sorteio da amostra-ouro) e #97 (rotulagem, kappa de Fleiss e consenso).
+
+% Sprint 3: Resultados e Discussão. Entrega final: Ameaças à validade e Replicação cruzada.
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+
+\end{document}

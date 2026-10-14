@@ -6,6 +6,11 @@ on:
       - "lab03/**"
       - "requirements.txt"
       - ".github/workflows/testes.yml"
+  pull_request:
+    paths:
+      - "lab03/**"
+      - "requirements.txt"
+      - ".github/workflows/testes.yml"
 
 jobs:
   test:

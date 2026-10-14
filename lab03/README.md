@@ -30,7 +30,7 @@
      estrelado para baixo: criado antes do início da janela → usa Actions → metadados → ≥ 5
      releases na janela → ≥ 50 runs válidos na janela. Os runs são contados pelo `total_count` da
      API, sem baixar a lista. Para quando a amostra chega em `limite_repos` e já grava `repos.csv`
-     e `funil.csv`. Leva poucas horas.
+     e `funil.csv`. Para 310 repositórios foram 845 avaliados, 4.500 chamadas e uns 45 minutos.
    - **Coleta pesada.** Para cada repositório aprovado, os commits de cada release (compare com a
      anterior) e a lista completa dos runs. É onde vai quase toda a cota: conte com mais de um dia
      para 300 repositórios, com pausas automáticas quando a cota acaba.
@@ -57,6 +57,15 @@ janela continuam no cache).
 **Forçar recoleta** de um repositório: apague a pasta dele no cache
 (`rm -r lab03/data/cache/<owner>__<repo>`). Para refazer a busca de candidatos, apague
 `lab03/data/cache/_global`.
+
+## Artigo
+
+O artigo fica em [`relatorio/artigo.tex`](relatorio/artigo.tex), no formato do template da SBC
+pedido na seção 8. Para gerar o PDF, crie um projeto no Overleaf a partir do
+[template SBC](https://www.overleaf.com/latex/templates/sbc-conferences-template/blbxwjwzdngr),
+troque o `.tex` principal pelo `artigo.tex` e suba junto o `referencias.bib`; o `sbc-template.sty` e
+o `sbc.bst` já vêm no template. O que ainda vai virar texto em outras seções está em
+[`relatorio/notas.md`](relatorio/notas.md).
 
 ## INFORMAÇÕES SOBRE A AVALIAÇÃO
 
@@ -357,7 +366,7 @@ O relatório tem formato de **artigo científico**, no [template da SBC (Overlea
 6. **Replicação cruzada:** o relato da seção 9.
 7. Link do repositório/GitHub Projects do grupo.
 
-Link do repositório/GitHub Projects: `<preencher>`
+Link do repositório/GitHub Projects: https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software | https://github.com/users/RafaelMouraG/projects/10
 
 ### 9. Replicação cruzada (entrega final)
 
