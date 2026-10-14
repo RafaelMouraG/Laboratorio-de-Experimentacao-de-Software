@@ -30,7 +30,7 @@
      estrelado para baixo: criado antes do início da janela → usa Actions → metadados → ≥ 5
      releases na janela → ≥ 50 runs válidos na janela. Os runs são contados pelo `total_count` da
      API, sem baixar a lista. Para quando a amostra chega em `limite_repos` e já grava `repos.csv`
-     e `funil.csv`. Leva poucas horas.
+     e `funil.csv`. Para 310 repositórios foram 845 avaliados, 4.500 chamadas e uns 45 minutos.
    - **Coleta pesada.** Para cada repositório aprovado, os commits de cada release (compare com a
      anterior) e a lista completa dos runs. É onde vai quase toda a cota: conte com mais de um dia
      para 300 repositórios, com pausas automáticas quando a cota acaba.

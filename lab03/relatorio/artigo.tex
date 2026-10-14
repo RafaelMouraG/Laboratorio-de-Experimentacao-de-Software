@@ -166,7 +166,65 @@ não na categoria exata de cada repositório.
 % Sprint 2. Cada subseção é escrita por quem pegou a issue indicada no comentário.
 
 \subsection{Fonte de dados e seleção}
-% #91: busca, critérios de inclusão, janela e a tabela do funil (lab03/data/funil.csv).
+% #91
+
+Todos os dados vêm da API REST do GitHub, por um pipeline próprio, sem bibliotecas prontas de
+acesso à API. Cada resposta fica num cache em disco, então uma coleta interrompida continua de onde
+parou. A janela de observação vai de 1º de outubro de 2025 a 30 de setembro de 2026, e só entram
+releases publicadas e execuções de CI criadas dentro dela.
+
+Os candidatos são os repositórios com pelo menos mil estrelas que não são \textit{fork} nem estão
+arquivados: 60.188 na data da coleta. A busca do GitHub devolve no máximo mil resultados por
+consulta. Para passar desse teto sem pular ninguém, cada consulta nova pede as estrelas que vão do
+mínimo até o menor valor visto na anterior, e quem aparece de novo é descartado pelo nome. Com isso
+os candidatos formam uma lista contínua, do mais estrelado para baixo, e são avaliados nessa ordem
+até a amostra fechar.
+
+Cada candidato passa por quatro filtros, nesta ordem:
+\begin{enumerate}
+  \item ter sido criado antes do início da janela. A frequência de deploy divide as releases pelas
+  52 semanas da janela, e um repositório criado no meio dela sairia com uma frequência menor do que
+  a real;
+  \item usar GitHub Actions (pelo menos um workflow);
+  \item ter pelo menos 5 releases publicadas na janela;
+  \item ter pelo menos 50 execuções válidas (sucesso ou falha) no branch principal, disparadas por
+  \textit{push}, na janela.
+\end{enumerate}
+
+Os quatro são baratos: a data de criação vem do próprio resultado da busca, e as execuções são
+contadas pelo total que a API informa para cada valor de \texttt{conclusion}, sem baixar a lista.
+A avaliação para quando 310 repositórios passam, dez a mais que o mínimo de 300, como folga
+para quem cair na coleta completa. Só os aprovados seguem para a parte cara: os commits de cada
+release, pelo \texttt{compare} com a release anterior, e a lista inteira de execuções de CI, mês a
+mês. A Tabela~\ref{tab:funil} mostra quantos repositórios ficaram em cada etapa.
+
+\begin{table}[ht]
+\centering
+\caption{Funil de seleção da amostra}
+\label{tab:funil}
+\begin{tabular}{lrr}
+\hline
+Etapa & Restantes & Descartados \\
+\hline
+Repositórios na busca ($\geq$ 1.000 estrelas) & 60.188 & \\
+Avaliados, do mais estrelado para baixo & 845 & 59.343 \\
+Criados antes do início da janela & 761 & 84 \\
+Com GitHub Actions & 685 & 76 \\
+$\geq$ 5 releases na janela & 362 & 323 \\
+$\geq$ 50 execuções válidas na janela & 310 & 52 \\
+% atualizar com a linha da coleta completa quando ela terminar (#91)
+\hline
+Amostra final & 310 & \\
+\hline
+\end{tabular}
+\end{table}
+
+O filtro que mais pesa é o de releases: 323 dos 685 repositórios com Actions publicaram menos de
+5 releases na janela. Chama atenção também que 84 dos 845 avaliados foram criados depois de 1º de
+outubro de 2025, a maioria agentes, \textit{skills} e outras ferramentas de IA. Como a avaliação desce do mais estrelado
+e para em 310, a amostra fica entre 37 mil e 254 mil estrelas. Ela representa os projetos mais
+populares do GitHub, e não todos os que têm mil estrelas ou mais, o que limita até onde os
+resultados podem ser generalizados.
 
 \subsection{Definições operacionais}
 % #98: branch, o que conta como deploy, data do commit, tabela do conclusion, variantes de lead
