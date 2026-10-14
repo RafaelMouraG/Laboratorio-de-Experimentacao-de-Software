@@ -1,68 +1,102 @@
 import csv
 import logging
+from itertools import islice
 
 from lab03.pipeline.selecao import (
     MOTIVO_SEM_ACTIONS,
+    TETO_BUSCA,
     Funil,
-    buscar_candidatos,
-    filtrar_actions,
+    candidatos_por_estrelas,
+    total_na_busca,
     usa_actions,
 )
 
 
-class APIFalsa:
-    def __init__(self, buscas, workflows=None):
-        self.buscas = iter(buscas)
-        self.workflows = workflows or {}
+class BuscaFalsa:
+    """Simula o /search/repositories: filtra pelo `stars:` da query, ordena e corta em 1000."""
+
+    def __init__(self, estrelas_por_repo):
+        self.repos = sorted(estrelas_por_repo.items(), key=lambda par: (-par[1], par[0]))
         self.consultas = []
 
     def get(self, caminho, params):
-        self.consultas.append((caminho, params))
-        if caminho == "/search/repositories":
-            try:
-                return next(self.buscas)
-            except StopIteration:
-                return {"total_count": 0, "items": []}
-        repo = caminho.removeprefix("/repos/").removesuffix("/actions/workflows")
-        return {"total_count": self.workflows[repo]}
+        assert caminho == "/search/repositories"
+        assert (params["sort"], params["order"]) == ("stars", "desc")
+        self.consultas.append(dict(params))
+        filtro = params["q"].split()[0].removeprefix("stars:")
+        if filtro.startswith(">="):
+            a, b = int(filtro[2:]), float("inf")
+        else:
+            a, b = map(int, filtro.split(".."))
+        achados = [{"full_name": nome, "stargazers_count": e} for nome, e in self.repos if a <= e <= b]
+        n, pagina = params["per_page"], params["page"]
+        return {"total_count": len(achados), "incomplete_results": False,
+                "items": achados[:TETO_BUSCA][(pagina - 1) * n:pagina * n]}
 
 
-def repo(nome, estrelas):
-    return {"full_name": nome, "stargazers_count": estrelas}
+def nomes(candidatos):
+    return [c["full_name"] for c in candidatos]
 
 
-def test_busca_remove_duplicados_entre_faixas_e_ordena():
-    api = APIFalsa(
-        [
-            {"total_count": 2, "items": [repo("o/a", 2000), repo("o/b", 1500)]},
-            {"total_count": 2, "items": [repo("o/a", 2000), repo("o/c", 1200)]},
-        ]
-    )
-
-    candidatos = buscar_candidatos(api, ["1000..2000", "2000..5000"])
-
-    assert [item["full_name"] for item in candidatos] == ["o/a", "o/b", "o/c"]
+def test_passa_do_teto_da_busca_sem_buraco_nem_repetido():
+    estrelas = {f"o/r{i}": 1000 + i for i in range(2500)}
+    candidatos = list(candidatos_por_estrelas(BuscaFalsa(estrelas), minimo=1000))
+    assert nomes(candidatos) == [f"o/r{i}" for i in range(2499, -1, -1)]
 
 
-def test_busca_avisa_quando_faixa_excede_limite(caplog):
-    api = APIFalsa([{"total_count": 1001, "items": [repo("o/a", 2000)]}])
+def test_empate_na_fronteira_entre_consultas_nao_perde_ninguem():
+    # a 1ª consulta acaba no meio dos 20 empatados com 2000 estrelas
+    estrelas = {f"o/topo{i:03d}": 3000 + i for i in range(995)}
+    estrelas.update({f"o/empate{i:02d}": 2000 for i in range(20)})
+    estrelas.update({f"o/baixo{i:03d}": 1000 + i for i in range(500)})
+    api = BuscaFalsa(estrelas)
+
+    candidatos = list(candidatos_por_estrelas(api, minimo=1000))
+
+    assert sorted(nomes(candidatos)) == sorted(estrelas)
+    assert len(candidatos) == len(set(nomes(candidatos)))
+    valores = [c["stargazers_count"] for c in candidatos]
+    assert valores == sorted(valores, reverse=True)
+    assert api.consultas[10]["q"].startswith("stars:1000..2000 ")
+
+
+def test_mais_de_mil_empatados_segue_abaixo_do_empate(caplog):
+    estrelas = {f"o/e{i:04d}": 1500 for i in range(1200)}
+    estrelas.update({f"o/b{i}": 1200 for i in range(10)})
 
     with caplog.at_level(logging.WARNING):
-        buscar_candidatos(api, ["1000..2000"])
+        candidatos = list(candidatos_por_estrelas(BuscaFalsa(estrelas), minimo=1000))
 
-    assert "precisa ser quebrada" in caplog.text
+    assert len(candidatos) == 1010  # 200 dos empatados ficam sem como aparecer
+    assert nomes(candidatos)[-10:] == [f"o/b{i}" for i in range(10)]
+    assert "mais de 1000 repositórios com 1500 estrelas" in caplog.text
+
+
+def test_so_busca_a_pagina_que_o_pipeline_pede():
+    api = BuscaFalsa({f"o/r{i}": 1000 + i for i in range(2500)})
+    assert len(list(islice(candidatos_por_estrelas(api), 5))) == 5
+    assert [c["page"] for c in api.consultas] == [1]
+
+
+def test_total_da_busca_reaproveita_a_primeira_pagina():
+    api = BuscaFalsa({f"o/r{i}": 1000 + i for i in range(1500)})
+    assert total_na_busca(api, 1000) == 1500
+    next(candidatos_por_estrelas(api, 1000))
+    assert api.consultas[0] == api.consultas[1]  # mesma chave de cache
+
+
+def test_minimo_de_estrelas_e_respeitado():
+    api = BuscaFalsa({"o/grande": 5000, "o/pequeno": 999})
+    assert nomes(candidatos_por_estrelas(api, minimo=1000)) == ["o/grande"]
 
 
 def test_usa_actions_descarta_total_count_zero():
-    api = APIFalsa([], {"o/sem-actions": 0})
+    class API:
+        def get(self, caminho, params):
+            assert caminho == "/repos/o/sem-actions/actions/workflows"
+            return {"total_count": 0}
 
-    assert usa_actions(api, "o/sem-actions") is False
-
-    funil = Funil()
-    restantes = filtrar_actions(api, [repo("o/sem-actions", 1000)], funil)
-    assert restantes == []
-    assert funil.linhas[0]["motivo"] == MOTIVO_SEM_ACTIONS
-    assert funil.linhas[0]["descartados"] == 1
+    assert usa_actions(API(), "o/sem-actions") is False
 
 
 def test_funil_salva_contagens_por_motivo(tmp_path):

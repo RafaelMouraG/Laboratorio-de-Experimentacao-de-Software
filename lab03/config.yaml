@@ -6,14 +6,11 @@ janela:
   inicio: 2025-10-01   # AAAA-MM-DD
   fim: 2026-09-30      # AAAA-MM-DD
 
-limite_repos: 100
+limite_repos: 310          # mínimo do enunciado é 300; a folga cobre quem cair na coleta pesada
 pasta_cache: lab03/data/cache
 pasta_saida: lab03/data   # repos.csv, releases.csv, runs.csv e funil.csv
 coletar_tags: false
 
-# Fatias da busca: cada consulta do /search devolve no máximo 1.000 repositórios.
-faixas_estrelas:
-  - "1000..2000"
-  - "2000..5000"
-  - "5000..10000"
-  - ">10000"
+# Candidatos: repositórios com pelo menos essa quantidade de estrelas, avaliados do mais estrelado
+# para baixo até a amostra completar. O teto de 1.000 resultados por busca é contornado em selecao.py.
+estrelas_minimas: 1000
