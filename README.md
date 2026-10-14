@@ -19,14 +19,15 @@
 | Lab | Tema | Pontos | Pasta |
 |---|---|---|---|
 | 01 | Características de repositórios populares + setup do Kanban | 15 | [`lab01/`](lab01/README.md) |
-| 02 | — | — | [`lab02/`](lab02/README.md) |
-| 03 | — | — | [`lab03/`](lab03/README.md) |
+| 02 | Assistentes de IA vs. codificação manual | 20 | [`lab02/`](lab02/README.md) |
+| 03 | Mineração de métricas DORA | 20 | [`lab03/`](lab03/README.md) |
 
 Cada laboratório é autocontido: enunciado, scripts (`src/`), dados coletados (`data/`) e relatório
 (`relatorio/`) ficam dentro da pasta do lab.
 
-O quadro Kanban é a exceção — ele atravessa o semestre inteiro e por isso mora em
-[`kanban/`](kanban/README.md), junto com os snapshots de fechamento de cada sprint.
+Cada lab tem o seu board no GitHub Projects (links abaixo). O script que exporta os boards e os
+snapshots de fechamento de cada sprint moram em [`kanban/`](kanban/README.md), na raiz, porque
+servem para todos os labs.
 
 ## Estrutura do repositório
 
@@ -41,7 +42,10 @@ lab02/, lab03/         demais laboratórios, no mesmo padrão
 ## Links do grupo
 
 - **Repositório:** https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software
-- **GitHub Projects (v2):** https://github.com/users/RafaelMouraG/projects/6
+- **GitHub Projects (v2), um por lab:**
+  - Lab01: https://github.com/users/RafaelMouraG/projects/6
+  - Lab02: https://github.com/users/RafaelMouraG/projects/7
+  - Lab03: https://github.com/users/RafaelMouraG/projects/10
 
 ## Convenção de commits
 

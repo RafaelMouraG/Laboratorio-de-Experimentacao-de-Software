@@ -58,6 +58,15 @@ janela continuam no cache).
 (`rm -r lab03/data/cache/<owner>__<repo>`). Para refazer a busca de candidatos, apague
 `lab03/data/cache/_global`.
 
+## Artigo
+
+O artigo fica em [`relatorio/artigo.tex`](relatorio/artigo.tex), no formato do template da SBC
+pedido na seção 8. Para gerar o PDF, crie um projeto no Overleaf a partir do
+[template SBC](https://www.overleaf.com/latex/templates/sbc-conferences-template/blbxwjwzdngr),
+troque o `.tex` principal pelo `artigo.tex` e suba junto o `referencias.bib`; o `sbc-template.sty` e
+o `sbc.bst` já vêm no template. O que ainda vai virar texto em outras seções está em
+[`relatorio/notas.md`](relatorio/notas.md).
+
 ## INFORMAÇÕES SOBRE A AVALIAÇÃO
 
 | LAB03 | Laboratório 03 - 20 pontos |
@@ -357,7 +366,7 @@ O relatório tem formato de **artigo científico**, no [template da SBC (Overlea
 6. **Replicação cruzada:** o relato da seção 9.
 7. Link do repositório/GitHub Projects do grupo.
 
-Link do repositório/GitHub Projects: `<preencher>`
+Link do repositório/GitHub Projects: https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software | https://github.com/users/RafaelMouraG/projects/10
 
 ### 9. Replicação cruzada (entrega final)
 

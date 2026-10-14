@@ -53,6 +53,9 @@ query ($login: String!, $number: Int!, $first: Int!, $after: String) {
               title
               url
               state
+              milestone {
+                title
+              }
               assignees(first: 5) {
                 nodes {
                   login
@@ -146,7 +149,7 @@ def fetch_all_items(token: str, login: str, number: int) -> tuple[dict, list[dic
     return project, all_nodes
 
 
-def to_rows(nodes: list[dict], sprint: str) -> list[dict]:
+def to_rows(nodes: list[dict], sprint: str, milestone: str = None) -> list[dict]:
     snapshot_date = datetime.now(timezone.utc).date().isoformat()
     rows = []
 
@@ -154,6 +157,9 @@ def to_rows(nodes: list[dict], sprint: str) -> list[dict]:
         content = item.get("content")
         if not content:
             # Issue em repositório que o token não enxerga.
+            continue
+        if milestone is not None and (content.get("milestone") or {}).get("title") != milestone:
+            # Board com mais de uma sprint aberta: só entram as issues da sprint pedida.
             continue
 
         status_field = item.get("fieldValueByName")
@@ -191,6 +197,7 @@ def main() -> None:
     parser.add_argument("--login", default="RafaelMouraG", help="dono do GitHub Projects")
     parser.add_argument("--number", type=int, default=6, help="número do ProjectV2")
     parser.add_argument("--sprint", default="S01", help="rótulo da sprint gravado no CSV")
+    parser.add_argument("--milestone", help="exporta só as issues desse milestone (ex.: \"Lab03 - Sprint 1\")")
     parser.add_argument("--out", default="kanban/snapshots/snapshot_sprint_01.csv")
     args = parser.parse_args()
 
@@ -201,7 +208,7 @@ def main() -> None:
 
     print(f"Lendo o project #{args.number} de {args.login}...")
     project, nodes = fetch_all_items(token, args.login, args.number)
-    rows = to_rows(nodes, args.sprint)
+    rows = to_rows(nodes, args.sprint, args.milestone)
 
     if not rows:
         print("\nNenhum item encontrado no board.")
