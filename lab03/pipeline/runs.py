@@ -13,9 +13,9 @@ import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, time, timedelta, timezone
-from typing import Union
+from typing import Optional, Union
 
-from lab03.metricas.falhas import classificar
+from lab03.metricas.falhas import CONCLUSOES_VALIDAS, classificar
 from lab03.pipeline.api import GitHubAPI
 
 TETO_BUSCA = 1000
@@ -120,3 +120,22 @@ def contar_validos(runs: list[dict]) -> int:
     """Runs que entram em alguma conta (sucesso ou falha). O funil exige pelo menos 50."""
     return sum(1 for run in runs if classificar(run.get("conclusion")))
 
+
+def contar_validos_na_janela(
+    api: GitHubAPI, repo: str, branch: str, inicio: Dia, fim: Dia, minimo: Optional[int] = None
+) -> int:
+    """Runs válidos da janela contados pelo `total_count`, sem baixar a lista. É o que a triagem usa.
+
+    Uma consulta por `conclusion` da tabela (o filtro `status` do /actions/runs aceita esses
+    valores), parando assim que a soma chega em `minimo`. O `total_count` satura em 2.500, então o
+    número só é exato abaixo disso, o que basta para o corte de 50.
+    """
+    caminho = f"/repos/{repo}/actions/runs"
+    created = f"{_dia(inicio)}..{_dia(fim)}"
+    total = 0
+    for conclusao in CONCLUSOES_VALIDAS:
+        params = {"branch": branch, "event": "push", "created": created, "status": conclusao, "per_page": 1}
+        total += api.get(caminho, params, enxugar=_pagina_enxuta)["total_count"]
+        if minimo is not None and total >= minimo:
+            break
+    return total

@@ -55,11 +55,32 @@ def release_anterior(releases: list[dict], release: dict) -> Optional[dict]:
     return None
 
 
+def _primeira_linha(mensagem: Optional[str]) -> str:
+    return (mensagem or "").split("\n", 1)[0]
+
+
 def _enxugar_commit(commit: dict) -> dict:
     return {
         "sha": commit["sha"],
         "data": commit["commit"]["author"]["date"],
-        "mensagem": (commit["commit"]["message"] or "").split("\n", 1)[0],
+        "mensagem": _primeira_linha(commit["commit"]["message"]),
+    }
+
+
+def _compare_enxuto(corpo: dict) -> dict:
+    """O que fica no cache de uma página do compare: só o que `_enxugar_commit` lê.
+
+    A resposta inteira traz o diff de cada arquivo e os dados completos de autor e committer;
+    num repo grande isso dá centenas de MB de cache. Aplicar duas vezes não muda nada.
+    """
+    return {
+        "total_commits": corpo["total_commits"],
+        "commits": [
+            {"sha": c["sha"],
+             "commit": {"author": {"date": c["commit"]["author"]["date"]},
+                        "message": _primeira_linha(c["commit"]["message"])}}
+            for c in corpo["commits"]
+        ],
     }
 
 
@@ -73,7 +94,7 @@ def commits_da_release(api: GitHubAPI, repo: str, tag_anterior: str, tag: str) -
     commits: list[dict] = []
     pagina = 1
     while True:
-        corpo = api.get(caminho, {"per_page": POR_PAGINA, "page": pagina})
+        corpo = api.get(caminho, {"per_page": POR_PAGINA, "page": pagina}, enxugar=_compare_enxuto)
         lote = corpo["commits"]
         commits.extend(_enxugar_commit(c) for c in lote)
         if not lote or len(commits) >= corpo["total_commits"]:

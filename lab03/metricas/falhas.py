@@ -23,6 +23,7 @@ _CONCLUSOES = {
     "timed_out": FALHA,
     "startup_failure": FALHA,
 }
+CONCLUSOES_VALIDAS = tuple(_CONCLUSOES)  # as que entram em alguma conta
 
 Data = Union[str, datetime]
 

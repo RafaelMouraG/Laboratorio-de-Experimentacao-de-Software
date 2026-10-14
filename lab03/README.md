@@ -19,28 +19,40 @@
 3. Rode a coleta:
 
    ```bash
-   python -m lab03.pipeline --config lab03/config.yaml             # amostra de limite_repos (100)
-   python -m lab03.pipeline --config lab03/config.yaml --limite 5  # teste rápido com 5 repositórios
+   python -m lab03.pipeline --config lab03/config.yaml               # amostra de limite_repos (310)
+   python -m lab03.pipeline --config lab03/config.yaml --so-triagem  # só define a amostra
+   python -m lab03.pipeline --config lab03/config.yaml --limite 5    # teste rápido com 5 repositórios
    ```
 
-   A ordem é: busca por faixas de estrelas → usa Actions → metadados → ≥ 5 releases na janela →
-   ≥ 50 runs válidos na janela, repo a repo, até a amostra chegar no limite. Cada repo imprime uma
-   linha com `repo i/N`, quantos já estão na amostra e a cota restante da API.
+   A coleta tem duas fases:
+
+   - **Triagem.** Os repositórios com pelo menos `estrelas_minimas` estrelas são avaliados do mais
+     estrelado para baixo: criado antes do início da janela → usa Actions → metadados → ≥ 5
+     releases na janela → ≥ 50 runs válidos na janela. Os runs são contados pelo `total_count` da
+     API, sem baixar a lista. Para quando a amostra chega em `limite_repos` e já grava `repos.csv`
+     e `funil.csv`. Leva poucas horas.
+   - **Coleta pesada.** Para cada repositório aprovado, os commits de cada release (compare com a
+     anterior) e a lista completa dos runs. É onde vai quase toda a cota: conte com mais de um dia
+     para 300 repositórios, com pausas automáticas quando a cota acaba.
+
+   Com `--so-triagem` o pipeline para depois da primeira fase. Rodar sem a opção depois continua
+   da coleta pesada, sem refazer a triagem.
 
 **Saídas**, em `lab03/data/` (`pasta_saida` no config):
 
 | Arquivo | Conteúdo |
 |---|---|
-| `repos.csv` | Um repositório da amostra por linha: metadados (estrelas, linguagem, branch, idade, contribuidores) e contagens de releases, commits e runs |
+| `repos.csv` | Um repositório da amostra por linha: metadados (estrelas, linguagem, branch, idade, contribuidores) e contagens de releases, commits e runs. Depois só da triagem, as contagens de commits e runs ficam vazias |
 | `releases.csv` | Uma linha por release da janela, com nº de commits desde a anterior e as flags `sem_anterior` e `ignorada_compare_404` |
-| `runs.csv` | Uma linha por workflow run válido (sucesso ou falha) do default branch, com a `classe` |
-| `funil.csv` | Quantos repositórios restaram em cada etapa e o motivo de cada descarte |
+| `runs.csv` | Uma linha por workflow run válido (sucesso ou falha) do default branch, com a `classe`. Fica fora do git pelo tamanho |
+| `funil.csv` | Quantos repositórios restaram em cada etapa e o motivo de cada descarte. Cada linha é a anterior menos os descartados dela |
 
-**Retomada.** Toda resposta da API fica em `lab03/data/cache/<owner>__<repo>/`, e um repo avaliado
-até o fim ganha o marcador `_completo` com o resultado. Se a coleta parar (Ctrl+C, queda de rede,
-cota), rode o mesmo comando: repos com marcador são pulados direto e o repo interrompido recomeça
-lendo do cache, então perde-se no máximo a página que estava sendo baixada. Mudar a janela no
-config invalida os marcadores (as respostas que não dependem da janela continuam no cache).
+**Retomada.** Toda resposta da API fica em `lab03/data/cache/<owner>__<repo>/`, e cada fase
+terminada ganha um marcador na pasta do repo (`_triagem` e `_completo`) com o resultado. Se a
+coleta parar (Ctrl+C, queda de rede, cota), rode o mesmo comando: repos com marcador são pulados
+direto e o repo interrompido recomeça lendo do cache, então perde-se no máximo a página que estava
+sendo baixada. Mudar a janela no config invalida os marcadores (as respostas que não dependem da
+janela continuam no cache).
 
 **Forçar recoleta** de um repositório: apague a pasta dele no cache
 (`rm -r lab03/data/cache/<owner>__<repo>`). Para refazer a busca de candidatos, apague

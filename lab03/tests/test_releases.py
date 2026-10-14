@@ -2,6 +2,7 @@ import pytest
 
 from lab03.pipeline.api import RecursoAusente
 from lab03.pipeline.releases import (
+    _compare_enxuto,
     coletar,
     commits_da_release,
     data_da_tag,
@@ -41,7 +42,7 @@ class APIFalsa:
             return self.tags
         raise AssertionError(caminho)
 
-    def get(self, caminho, params=None):
+    def get(self, caminho, params=None, enxugar=None):
         self.pedidos.append((caminho, params))
         if "/compare/" in caminho:
             intervalo = caminho.split("/compare/")[1]
@@ -49,7 +50,9 @@ class APIFalsa:
                 raise RecursoAusente(caminho, 404)
             todos = self.compares[intervalo]
             n, pagina = params["per_page"], params["page"]
-            return {"total_commits": len(todos), "commits": todos[(pagina - 1) * n:pagina * n]}
+            corpo = {"total_commits": len(todos), "commits": todos[(pagina - 1) * n:pagina * n],
+                     "files": [{"patch": "@@ diff enorme @@"}]}
+            return enxugar(corpo) if enxugar else corpo
         if "/commits/" in caminho:
             sha = caminho.rsplit("/", 1)[1]
             if sha not in self.commits:
@@ -106,6 +109,15 @@ def test_compare_com_tres_paginas_junta_todos_os_commits():
 def test_commit_guarda_so_a_primeira_linha_da_mensagem():
     api = APIFalsa(compares={"v1...v2": [commit("a", "2025-01-01T00:00:00Z", "fix: trava\n\ncorpo longo")]})
     assert commits_da_release(api, "o/r", "v1", "v2")[0]["mensagem"] == "fix: trava"
+
+
+def test_cache_do_compare_fica_so_com_o_que_o_pipeline_le():
+    corpo = {"total_commits": 1, "files": [{"patch": "@@ diff @@"}],
+             "commits": [commit("a", "2025-01-01T00:00:00Z", "fix: trava\n\ncorpo longo")]}
+    enxuto = _compare_enxuto(corpo)
+    assert enxuto == {"total_commits": 1, "commits": [
+        {"sha": "a", "commit": {"author": {"date": "2025-01-01T00:00:00Z"}, "message": "fix: trava"}}]}
+    assert _compare_enxuto(enxuto) == enxuto
 
 
 def test_compare_vazio_para_na_primeira_pagina():

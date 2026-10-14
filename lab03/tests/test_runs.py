@@ -8,6 +8,7 @@ from lab03.pipeline.runs import (
     _pagina_enxuta,
     classificar,
     contar_validos,
+    contar_validos_na_janela,
     fatias_mensais,
     filtro_created,
     listar_runs,
@@ -166,3 +167,29 @@ def test_classificar_e_o_mesmo_das_metricas():
 ])
 def test_contar_validos_segue_a_tabela(conclusion, conta):
     assert contar_validos([{"conclusion": conclusion}]) == conta
+
+
+class APIContagem:
+    """Responde só o `total_count` do /actions/runs filtrado por `status`."""
+
+    def __init__(self, por_conclusao):
+        self.por_conclusao = por_conclusao
+        self.pedidos = []
+
+    def get(self, caminho, params, enxugar=None):
+        self.pedidos.append(params)
+        return {"total_count": self.por_conclusao.get(params["status"], 0), "workflow_runs": []}
+
+
+def test_contagem_para_no_success_quando_ja_passou_do_minimo():
+    api = APIContagem({"success": 80, "failure": 5})
+    assert contar_validos_na_janela(api, "o/r", "main", "2025-10-01", "2026-09-30", minimo=50) == 80
+    assert [p["status"] for p in api.pedidos] == ["success"]
+    assert api.pedidos[0]["created"] == "2025-10-01..2026-09-30"
+    assert (api.pedidos[0]["event"], api.pedidos[0]["branch"]) == ("push", "main")
+
+
+def test_contagem_soma_as_falhas_e_nem_pergunta_pelos_ignorados():
+    api = APIContagem({"success": 30, "failure": 10, "timed_out": 3, "startup_failure": 1, "cancelled": 99})
+    assert contar_validos_na_janela(api, "o/r", "main", "2025-10-01", "2026-09-30", minimo=50) == 44
+    assert [p["status"] for p in api.pedidos] == ["success", "failure", "timed_out", "startup_failure"]
