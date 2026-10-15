@@ -1,61 +1,61 @@
 repo,url,tipo_projeto,entregas_reais,observacao
-AlistGo/alist,https://github.com/AlistGo/alist,,,
-AstrBotDevs/AstrBot,https://github.com/AstrBotDevs/AstrBot,,,
-CopilotKit/CopilotKit,https://github.com/CopilotKit/CopilotKit,,,
-PaddlePaddle/PaddleOCR,https://github.com/PaddlePaddle/PaddleOCR,,,
-Significant-Gravitas/AutoGPT,https://github.com/Significant-Gravitas/AutoGPT,,,
-ToolJet/ToolJet,https://github.com/ToolJet/ToolJet,,,
-TriliumNext/Trilium,https://github.com/TriliumNext/Trilium,,,
-angular/angular,https://github.com/angular/angular,,,
-apache/airflow,https://github.com/apache/airflow,,,
-apple/container,https://github.com/apple/container,,,
-appsmithorg/appsmith,https://github.com/appsmithorg/appsmith,,,
-aquasecurity/trivy,https://github.com/aquasecurity/trivy,,,
-bevyengine/bevy,https://github.com/bevyengine/bevy,,,
-bmad-code-org/BMAD-METHOD,https://github.com/bmad-code-org/BMAD-METHOD,,,
-charmbracelet/bubbletea,https://github.com/charmbracelet/bubbletea,,,
-curl/curl,https://github.com/curl/curl,,,
-dbeaver/dbeaver,https://github.com/dbeaver/dbeaver,,,
-earendil-works/pi,https://github.com/earendil-works/pi,,,
-elastic/elasticsearch,https://github.com/elastic/elasticsearch,,,
-electron/electron,https://github.com/electron/electron,,,
-etcd-io/etcd,https://github.com/etcd-io/etcd,,,
-expressjs/express,https://github.com/expressjs/express,,,
-files-community/Files,https://github.com/files-community/Files,,,
-gitroomhq/postiz-app,https://github.com/gitroomhq/postiz-app,,,
-gradio-app/gradio,https://github.com/gradio-app/gradio,,,
-home-assistant/core,https://github.com/home-assistant/core,,,
-jesseduffield/lazygit,https://github.com/jesseduffield/lazygit,,,
-keras-team/keras,https://github.com/keras-team/keras,,,
-keycloak/keycloak,https://github.com/keycloak/keycloak,,,
-khoj-ai/khoj,https://github.com/khoj-ai/khoj,,,
-langgenius/dify,https://github.com/langgenius/dify,,,
-laravel/laravel,https://github.com/laravel/laravel,,,
-laurent22/joplin,https://github.com/laurent22/joplin,,,
-louislam/uptime-kuma,https://github.com/louislam/uptime-kuma,,,
-meilisearch/meilisearch,https://github.com/meilisearch/meilisearch,,,
-metabase/metabase,https://github.com/metabase/metabase,,,
-microsoft/PowerToys,https://github.com/microsoft/PowerToys,,,
-microsoft/monaco-editor,https://github.com/microsoft/monaco-editor,,,
-microsoft/playwright-mcp,https://github.com/microsoft/playwright-mcp,,,
-microsoft/vscode,https://github.com/microsoft/vscode,,,
-mudler/LocalAI,https://github.com/mudler/LocalAI,,,
-n8n-io/n8n,https://github.com/n8n-io/n8n,,,
-novuhq/novu,https://github.com/novuhq/novu,,,
-nushell/nushell,https://github.com/nushell/nushell,,,
-obsproject/obs-studio,https://github.com/obsproject/obs-studio,,,
-openbq-org/OpenBB,https://github.com/openbq-org/OpenBB,,,
-opendatalab/MinerU,https://github.com/opendatalab/MinerU,,,
-openinterpreter/openinterpreter,https://github.com/openinterpreter/openinterpreter,,,
-prometheus/prometheus,https://github.com/prometheus/prometheus,,,
-pytorch/pytorch,https://github.com/pytorch/pytorch,,,
-ruvnet/ruflo,https://github.com/ruvnet/ruflo,,,
-scrapy/scrapy,https://github.com/scrapy/scrapy,,,
-serverless/serverless,https://github.com/serverless/serverless,,,
-shadcn-ui/ui,https://github.com/shadcn-ui/ui,,,
-soxoj/maigret,https://github.com/soxoj/maigret,,,
-tailscale/tailscale,https://github.com/tailscale/tailscale,,,
-thedotmack/claude-mem,https://github.com/thedotmack/claude-mem,,,
-usememos/memos,https://github.com/usememos/memos,,,
-vitejs/vite,https://github.com/vitejs/vite,,,
-zhayujie/CowAgent,https://github.com/zhayujie/CowAgent,,,
+AlistGo/alist,https://github.com/AlistGo/alist,aplicacao,sim,
+AstrBotDevs/AstrBot,https://github.com/AstrBotDevs/AstrBot,aplicacao,sim,README apresenta como assistente/chatbot; também se diz framework de desenvolvimento
+CopilotKit/CopilotKit,https://github.com/CopilotKit/CopilotKit,biblioteca,sim,pacotes npm (@copilotkit/*)
+PaddlePaddle/PaddleOCR,https://github.com/PaddlePaddle/PaddleOCR,biblioteca,sim,toolkit de OCR importado em Python (PyPI); também tem CLI
+Significant-Gravitas/AutoGPT,https://github.com/Significant-Gravitas/AutoGPT,aplicacao,incerto,plataforma oferecida principalmente na nuvem (agpt.co) com opção self-host; releases sem assets e algumas são fixtures de CI
+ToolJet/ToolJet,https://github.com/ToolJet/ToolJet,aplicacao,sim,imagens Docker por versão (inclusive LTS)
+TriliumNext/Trilium,https://github.com/TriliumNext/Trilium,aplicacao,sim,
+angular/angular,https://github.com/angular/angular,biblioteca,sim,
+apache/airflow,https://github.com/apache/airflow,aplicacao,sim,"plataforma/servidor; DAGs são escritos importando o pacote, mas o README apresenta como plataforma"
+apple/container,https://github.com/apple/container,cli,sim,
+appsmithorg/appsmith,https://github.com/appsmithorg/appsmith,aplicacao,sim,imagens Docker por versão
+aquasecurity/trivy,https://github.com/aquasecurity/trivy,cli,sim,
+bevyengine/bevy,https://github.com/bevyengine/bevy,biblioteca,sim,game engine usada como crate
+bmad-code-org/BMAD-METHOD,https://github.com/bmad-code-org/BMAD-METHOD,outro,sim,metodologia com agentes/prompts; instalada via npx (pacote npm bmad-method)
+charmbracelet/bubbletea,https://github.com/charmbracelet/bubbletea,biblioteca,sim,módulo Go: a tag é a versão que os usuários atualizam
+curl/curl,https://github.com/curl/curl,cli,sim,README apresenta a ferramenta de linha de comando primeiro; libcurl vem depois
+dbeaver/dbeaver,https://github.com/dbeaver/dbeaver,aplicacao,sim,
+earendil-works/pi,https://github.com/earendil-works/pi,cli,sim,"toolkit de agente, mas o uso principal é o coding agent no terminal"
+elastic/elasticsearch,https://github.com/elastic/elasticsearch,aplicacao,sim,
+electron/electron,https://github.com/electron/electron,biblioteca,sim,framework para apps desktop (npm)
+etcd-io/etcd,https://github.com/etcd-io/etcd,aplicacao,sim,
+expressjs/express,https://github.com/expressjs/express,biblioteca,sim,
+files-community/Files,https://github.com/files-community/Files,aplicacao,sim,
+gitroomhq/postiz-app,https://github.com/gitroomhq/postiz-app,aplicacao,sim,imagens Docker para self-host; também tem versão cloud
+gradio-app/gradio,https://github.com/gradio-app/gradio,biblioteca,sim,
+home-assistant/core,https://github.com/home-assistant/core,aplicacao,sim,
+jesseduffield/lazygit,https://github.com/jesseduffield/lazygit,cli,sim,TUI usada no terminal
+keras-team/keras,https://github.com/keras-team/keras,biblioteca,sim,
+keycloak/keycloak,https://github.com/keycloak/keycloak,aplicacao,sim,
+khoj-ai/khoj,https://github.com/khoj-ai/khoj,aplicacao,sim,pacote PyPI/Docker para self-host; assets das releases são o plugin do Obsidian
+langgenius/dify,https://github.com/langgenius/dify,aplicacao,sim,imagens Docker para self-host
+laravel/laravel,https://github.com/laravel/laravel,biblioteca,sim,"é o esqueleto de aplicação (o framework fica em laravel/framework); publicado no Packagist via create-project, mas quem já tem app não atualiza por ele"
+laurent22/joplin,https://github.com/laurent22/joplin,aplicacao,sim,
+louislam/uptime-kuma,https://github.com/louislam/uptime-kuma,aplicacao,sim,
+meilisearch/meilisearch,https://github.com/meilisearch/meilisearch,aplicacao,sim,
+metabase/metabase,https://github.com/metabase/metabase,aplicacao,sim,
+microsoft/PowerToys,https://github.com/microsoft/PowerToys,aplicacao,sim,
+microsoft/monaco-editor,https://github.com/microsoft/monaco-editor,biblioteca,sim,
+microsoft/playwright-mcp,https://github.com/microsoft/playwright-mcp,aplicacao,sim,servidor MCP (poderia ser visto como plugin de cliente de IA); publicado no npm
+microsoft/vscode,https://github.com/microsoft/vscode,aplicacao,sim,releases acompanham as versões que os usuários atualizam (o binário é distribuído pelo site)
+mudler/LocalAI,https://github.com/mudler/LocalAI,aplicacao,sim,
+n8n-io/n8n,https://github.com/n8n-io/n8n,aplicacao,sim,
+novuhq/novu,https://github.com/novuhq/novu,aplicacao,sim,infraestrutura/API self-hostable; muitas releases são dos SDKs npm do monorepo
+nushell/nushell,https://github.com/nushell/nushell,cli,sim,
+obsproject/obs-studio,https://github.com/obsproject/obs-studio,aplicacao,sim,
+openbq-org/OpenBB,https://github.com/openbq-org/OpenBB,biblioteca,sim,toolset Python (PyPI) usado como biblioteca; também tem app desktop
+opendatalab/MinerU,https://github.com/opendatalab/MinerU,cli,sim,ferramenta de conversão usada principalmente pela CLI/API; também importável em Python
+openinterpreter/openinterpreter,https://github.com/openinterpreter/openinterpreter,cli,sim,
+prometheus/prometheus,https://github.com/prometheus/prometheus,aplicacao,sim,
+pytorch/pytorch,https://github.com/pytorch/pytorch,biblioteca,sim,
+ruvnet/ruflo,https://github.com/ruvnet/ruflo,biblioteca,sim,README apresenta como plugin do Claude Code; também é CLI no npm
+scrapy/scrapy,https://github.com/scrapy/scrapy,biblioteca,sim,
+serverless/serverless,https://github.com/serverless/serverless,cli,sim,
+shadcn-ui/ui,https://github.com/shadcn-ui/ui,biblioteca,sim,componentes de UI; as releases são da CLI e dos pacotes npm
+soxoj/maigret,https://github.com/soxoj/maigret,cli,sim,
+tailscale/tailscale,https://github.com/tailscale/tailscale,aplicacao,sim,daemon + CLI; notas das releases só apontam o changelog do site
+thedotmack/claude-mem,https://github.com/thedotmack/claude-mem,biblioteca,sim,plugin do Claude Code
+usememos/memos,https://github.com/usememos/memos,aplicacao,sim,
+vitejs/vite,https://github.com/vitejs/vite,cli,sim,ferramenta de build usada pelo terminal; também tem API de plugins
+zhayujie/CowAgent,https://github.com/zhayujie/CowAgent,aplicacao,sim,
