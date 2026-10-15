@@ -66,7 +66,7 @@ def sortear_releases(
     """Embaralha as releases da janela que têm anterior e fica com as `n` primeiras cujo compare
     existe. Cada uma sai com a anterior, as notas e os commits, que é o que a heurística lê."""
     todas = releases.listar_releases(api, repo)
-    # mesma consulta do listar_releases, então sai do cache; ele descarta o `body`
+    # mesma consulta do listar_releases, então sai do cache
     notas = {r["tag_name"]: r.get("body") or "" for r in api.paginar(f"/repos/{repo}/releases")}
     candidatas = []
     for release in releases.releases_na_janela(todas, inicio, fim):

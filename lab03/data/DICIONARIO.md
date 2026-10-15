@@ -68,9 +68,10 @@ Cada linha corresponde a um repositório aceito. As faixas são inteiros de 1
 | `cfr_ci_avaliadas` | inteiro | runs | conclusões que entram na CFR |
 | `cfr_ci_censuradas` | inteiro | runs | conclusões ignoradas (cancelled, skipped etc.) |
 | `faixa_cfr_ci` | inteiro | faixa DORA 1–4 | `faixa_cfr(cfr_ci)` |
-| `cfr_entrega` | fração real | 0 a 1 | releases corretivas (`sim`) / releases rotuladas `sim` ou `nao` |
-| `cfr_entrega_avaliadas` | inteiro | releases | releases com rótulo de consenso |
-| `cfr_entrega_censuradas` | inteiro | releases | releases `incerto` ou sem rótulo |
+| `cfr_entrega` | fração real | 0 a 1 | `cfr_entrega_falharam / cfr_entrega_avaliadas` (`metricas/corretiva.py`) |
+| `cfr_entrega_avaliadas` | inteiro | releases | releases publicadas pelo menos 7 dias antes do fim da janela |
+| `cfr_entrega_falharam` | inteiro | releases | avaliadas cuja release seguinte sai em até 7 dias e é corretiva pela heurística (`eh_corretiva`, versão em `heuristica_versoes.md`) |
+| `cfr_entrega_censuradas` | inteiro | releases | publicadas nos últimos 7 dias da janela |
 | `faixa_cfr_entrega` | inteiro | faixa DORA 1–4 | `faixa_cfr(cfr_entrega)` |
 | `recuperacao_mediana_horas` | real | horas | mediana dos episódios fechados de falha de CI |
 | `recuperacao_episodios` | inteiro | episódios | episódios de falha após o primeiro sucesso do workflow |

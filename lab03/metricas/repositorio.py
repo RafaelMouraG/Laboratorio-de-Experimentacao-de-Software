@@ -7,7 +7,6 @@ e, por isso, produzem campos vazios em vez de zeros.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import date, datetime
 from typing import Any
 
@@ -18,6 +17,7 @@ from lab03.metricas.classificacao import (
     faixa_lead_time,
     faixa_recuperacao,
 )
+from lab03.metricas.corretiva import cfr_entrega
 from lab03.metricas.falhas import cfr_ci, tempo_recuperacao
 from lab03.metricas.frequencia import releases_por_semana
 from lab03.metricas.lead_time import lead_time_por_commit, lead_time_por_release
@@ -42,6 +42,7 @@ CAMPOS_METRICAS = (
     "faixa_cfr_ci",
     "cfr_entrega",
     "cfr_entrega_avaliadas",
+    "cfr_entrega_falharam",
     "cfr_entrega_censuradas",
     "faixa_cfr_entrega",
     "recuperacao_mediana_horas",
@@ -51,29 +52,6 @@ CAMPOS_METRICAS = (
     "faixa_recuperacao",
     "classificacao_geral",
 )
-
-
-def _cfr_entrega(releases: Iterable[dict[str, Any]]) -> tuple[float | None, int, int]:
-    """Calcula CFR (b) usando ``corretiva``: ``sim`` é falha e ``nao`` é sucesso.
-
-    ``incerto`` e releases sem rótulo são censurados. O campo pode vir da planilha
-    de consenso como ``consenso_corretiva`` ou já enriquecido como ``corretiva``.
-    """
-    avaliadas = 0
-    corretivas = 0
-    censuradas = 0
-    for release in releases:
-        rotulo = release.get("consenso_corretiva", release.get("corretiva"))
-        if rotulo in {"sim", "nao"}:
-            avaliadas += 1
-            corretivas += rotulo == "sim"
-        else:
-            censuradas += 1
-    return (
-        corretivas / avaliadas if avaliadas else None,
-        avaliadas,
-        censuradas,
-    )
 
 
 def metricas_do_repo(resultado: dict[str, Any], inicio: Data, fim: Data) -> dict[str, Any]:
@@ -100,9 +78,7 @@ def metricas_do_repo(resultado: dict[str, Any], inicio: Data, fim: Data) -> dict
         1 for run in runs if run.get("conclusion") in {"success", "failure", "timed_out", "startup_failure"}
     ) if completos else 0
     recuperacao = tempo_recuperacao(runs) if completos else None
-    cfr_entrega_valor, cfr_entrega_avaliadas, cfr_entrega_censuradas = (
-        _cfr_entrega(releases) if completos else (None, 0, 0)
-    )
+    entrega = cfr_entrega(releases, fim) if completos else None
 
     notas = [
         faixa_frequencia(frequencia),
@@ -128,10 +104,11 @@ def metricas_do_repo(resultado: dict[str, Any], inicio: Data, fim: Data) -> dict
             if completos else 0
         ),
         "faixa_cfr_ci": faixa_cfr(cfr_ci_valor),
-        "cfr_entrega": cfr_entrega_valor,
-        "cfr_entrega_avaliadas": cfr_entrega_avaliadas,
-        "cfr_entrega_censuradas": cfr_entrega_censuradas,
-        "faixa_cfr_entrega": faixa_cfr(cfr_entrega_valor),
+        "cfr_entrega": entrega.taxa if entrega else None,
+        "cfr_entrega_avaliadas": entrega.avaliadas if entrega else 0,
+        "cfr_entrega_falharam": entrega.falharam if entrega else 0,
+        "cfr_entrega_censuradas": entrega.censuradas if entrega else 0,
+        "faixa_cfr_entrega": faixa_cfr(entrega.taxa if entrega else None),
         "recuperacao_mediana_horas": recuperacao.mediana_horas if recuperacao else None,
         "recuperacao_episodios": recuperacao.episodios if recuperacao else 0,
         "recuperacao_censurados": recuperacao.censurados if recuperacao else 0,

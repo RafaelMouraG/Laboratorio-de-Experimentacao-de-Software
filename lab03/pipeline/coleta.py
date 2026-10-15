@@ -276,36 +276,10 @@ def salvar_csvs(
         ({**run, "repo": r["repo"], "classe": classificar(run["conclusion"])} for r in coletados for run in r["runs"]),
     )
     if inicio is not None and fim is not None:
-        consenso_path = pasta.parent / "validacao" / "consenso_releases.csv"
-        consenso: dict[tuple[str, str], str] = {}
-        if consenso_path.is_file():
-            with consenso_path.open(encoding="utf-8-sig", newline="") as arquivo:
-                for linha in csv.DictReader(arquivo):
-                    valor = (linha.get("consenso_corretiva") or "").strip()
-                    if valor:
-                        consenso[(linha.get("repo", ""), linha.get("tag_name", ""))] = valor
-
-        resultados_metricas = []
-        for resultado in aceitos:
-            if consenso and "releases" in resultado:
-                releases_com_consenso = [
-                    {
-                        **release,
-                        **(
-                            {"consenso_corretiva": consenso[(resultado["repo"], release["tag_name"])]}
-                            if (resultado["repo"], release["tag_name"]) in consenso
-                            else {}
-                        ),
-                    }
-                    for release in resultado["releases"]
-                ]
-                resultados_metricas.append({**resultado, "releases": releases_com_consenso})
-            else:
-                resultados_metricas.append(resultado)
         _escrever_csv(
             pasta / "metricas.csv",
             CAMPOS_METRICAS,
-            (metricas_do_repo(r, inicio, fim) for r in resultados_metricas),
+            (metricas_do_repo(r, inicio, fim) for r in aceitos),
         )
     if coletar_tags:
         _escrever_csv(pasta / "tags.csv", CAMPOS_TAGS,
@@ -341,7 +315,8 @@ def executar(
     Os pendentes ficam no repos.csv com as contagens vazias, como depois da triagem.
     """
     janela = {"inicio": str(inicio), "fim": str(fim)}
-    assinatura = {**janela, "coletar_tags": coletar_tags}
+    # com outros campos de release (ex.: o `body` da #96), o marcador antigo é refeito a partir do cache
+    assinatura = {**janela, "coletar_tags": coletar_tags, "campos_release": list(releases.CAMPOS_RELEASE)}
     total = total_na_busca(api, estrelas_minimas)
     log.info("%d repositórios na busca; triagem até %d na amostra", total, limite)
 

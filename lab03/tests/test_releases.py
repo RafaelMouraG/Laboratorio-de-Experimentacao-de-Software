@@ -16,7 +16,8 @@ from lab03.pipeline.releases import (
 def release(tag, publicada, draft=False, pre=False):
     return {
         "tag_name": tag, "published_at": publicada, "draft": draft, "prerelease": pre,
-        "html_url": f"https://github.com/o/r/releases/tag/{tag}", "body": "descartado",
+        "html_url": f"https://github.com/o/r/releases/tag/{tag}", "body": f"notas da {tag}",
+        "author": "descartado",
     }
 
 
@@ -70,7 +71,8 @@ def test_drafts_saem_e_a_lista_fica_em_ordem_de_publicacao():
     ])
     releases = listar_releases(api, "o/r")
     assert [r["tag_name"] for r in releases] == ["v1", "v3"]
-    assert set(releases[0]) == {"tag_name", "published_at", "prerelease", "html_url"}
+    assert set(releases[0]) == {"tag_name", "published_at", "prerelease", "html_url", "body"}
+    assert releases[0]["body"] == "notas da v1"
 
 
 def test_janela_inclui_as_pontas_e_tira_pre_release_por_padrao():

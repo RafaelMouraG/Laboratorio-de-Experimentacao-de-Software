@@ -5,26 +5,25 @@ import pytest
 from lab03.metricas.repositorio import metricas_do_repo
 
 
-def release(publicada, *commits, corretiva=None):
-    resultado = {
+def release(publicada, *commits, tag="v1.0.0", mensagem="feat: algo"):
+    return {
+        "tag_name": tag,
         "published_at": publicada,
-        "commits": list(commits),
+        "commits": [{"data": data, "mensagem": mensagem} for data in commits],
         "sem_anterior": False,
+        "body": "",
     }
-    if corretiva is not None:
-        resultado["corretiva"] = corretiva
-    return resultado
 
 
 def run(hora, conclusion, workflow=1, atualizado=None):
-    inicio = f"2025-03-10T{hora}:00:00Z"
+    inicio = f"2025-03-10T{hora}:00Z"
     return {
         "id": hora,
         "workflow_id": workflow,
         "conclusion": conclusion,
         "created_at": inicio,
         "run_started_at": inicio,
-        "updated_at": f"2025-03-10T{atualizado or hora}:00:00Z",
+        "updated_at": f"2025-03-10T{atualizado or hora}:00Z",
     }
 
 
@@ -33,8 +32,8 @@ def test_agrega_variantes_faixas_e_recuperacao():
         "repo": "o/exemplo",
         "releases": [
             release("2025-03-15T00:00:00Z", "2025-03-02T00:00:00Z", "2025-03-14T00:00:00Z",
-                    corretiva="nao"),
-            release("2025-03-20T00:00:00Z", "2025-03-19T00:00:00Z", corretiva="sim"),
+                    tag="v1.1.0"),
+            release("2025-03-20T00:00:00Z", "2025-03-19T00:00:00Z", tag="v1.1.1", mensagem="fix: crash"),
         ],
         "runs": [
             run("09:00", "success"),
@@ -49,8 +48,10 @@ def test_agrega_variantes_faixas_e_recuperacao():
     assert metricas["lead_time_commit_horas"] == 24
     assert metricas["cfr_ci"] == pytest.approx(1 / 3)
     assert metricas["cfr_ci_avaliadas"] == 3
+    # a v1.1.1 sai 5 dias depois da v1.1.0 e é corretiva; ela mesma não tem seguinte
     assert metricas["cfr_entrega"] == pytest.approx(1 / 2)
     assert metricas["cfr_entrega_avaliadas"] == 2
+    assert metricas["cfr_entrega_falharam"] == 1
     assert metricas["recuperacao_mediana_horas"] == pytest.approx(1 + 20 / 60)
     assert metricas["recuperacao_episodios"] == 1
 
@@ -68,19 +69,19 @@ def test_triagem_nao_converte_contagens_ausentes_em_zero_valido():
     assert metricas["recuperacao_mediana_horas"] is None
 
 
-def test_consenso_incerto_e_censurado_na_cfr_de_entrega():
+def test_cfr_de_entrega_censura_os_ultimos_7_dias():
     resultado = {
-        "repo": "o/incerto",
+        "repo": "o/fim",
         "releases": [
-            release("2025-03-10T00:00:00Z", corretiva="sim"),
-            release("2025-03-11T00:00:00Z", corretiva="incerto"),
-            release("2025-03-12T00:00:00Z"),
+            release("2025-03-10T00:00:00Z", tag="v1.0.0"),
+            release("2025-03-12T00:00:00Z", tag="v1.0.1", mensagem="fix: a"),
+            release("2025-03-28T00:00:00Z", tag="v1.1.0"),
         ],
         "runs": [],
     }
 
     metricas = metricas_do_repo(resultado, "2025-03-01", "2025-03-31")
 
-    assert metricas["cfr_entrega"] == 1
-    assert metricas["cfr_entrega_avaliadas"] == 1
-    assert metricas["cfr_entrega_censuradas"] == 2
+    assert metricas["cfr_entrega"] == pytest.approx(1 / 2)
+    assert metricas["cfr_entrega_avaliadas"] == 2
+    assert metricas["cfr_entrega_censuradas"] == 1

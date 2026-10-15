@@ -93,3 +93,24 @@ def test_maioria_e_empate_sao_escritos(tmp_path):
     empates = list(csv.DictReader((tmp_path / "empates.csv").open(encoding="utf-8")))
     assert len(empates) == 1
     assert empates[0]["item"] == "o/s"
+
+
+def test_decisao_da_reuniao_e_aplicada_ao_rodar_de_novo(tmp_path):
+    repos = [
+        [_repo("o/s", "cli", "sim")],
+        [_repo("o/s", "biblioteca", "sim")],
+        [_repo("o/s", "outro", "sim")],
+    ]
+    releases = [[_release("sim")], [_release("sim")], [_release("nao")]]
+    pasta = _planilhas(tmp_path, repos, releases)
+    executar(pasta)
+    empates = list(csv.DictReader((pasta / "empates.csv").open(encoding="utf-8")))
+    empates[0].update(decisao="cli", justificativa="README apresenta primeiro a CLI")
+    _escrever(pasta / "empates.csv", empates[0].keys(), empates)
+
+    executar(pasta)
+
+    consenso = list(csv.DictReader((pasta / "consenso_repos.csv").open(encoding="utf-8")))
+    assert consenso[0]["consenso_tipo_projeto"] == "cli"
+    empates = list(csv.DictReader((pasta / "empates.csv").open(encoding="utf-8")))
+    assert empates[0]["justificativa"] == "README apresenta primeiro a CLI"

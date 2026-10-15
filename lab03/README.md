@@ -57,8 +57,9 @@
 terminada ganha um marcador na pasta do repo (`_triagem` e `_completo`) com o resultado. Se a
 coleta parar (Ctrl+C, queda de rede, cota), rode o mesmo comando: repos com marcador são pulados
 direto e o repo interrompido recomeça lendo do cache, então perde-se no máximo a página que estava
-sendo baixada. Mudar a janela no config invalida os marcadores (as respostas que não dependem da
-janela continuam no cache).
+sendo baixada. Mudar a janela no config, ou os campos guardados de cada release
+(`releases.CAMPOS_RELEASE`), invalida os marcadores; as respostas da API continuam no cache, então
+refazer a coleta pesada não gasta cota.
 
 **Forçar recoleta** de um repositório: apague a pasta dele no cache
 (`rm -r lab03/data/cache/<owner>__<repo>`). Para refazer a busca de candidatos, apague
@@ -334,6 +335,11 @@ em `empates.csv`; a reunião preenche ali `decisao` e `justificativa`, e uma nov
 esses valores para produzir `consenso_repos.csv` e `consenso_releases.csv`. O protocolo completo
 está em [`validacao/PROTOCOLO.md`](validacao/PROTOCOLO.md). Kappa baixo é reportado como possível
 ambiguidade do critério, não como falha da rotulagem.
+
+Com o consenso pronto, `python -m lab03.validacao.avaliar_heuristica` roda cada versão da
+heurística de release corretiva (`metricas/corretiva.py`) nas releases da amostra-ouro, calcula
+precisão, recall e F1 contra `consenso_releases.csv` e regrava
+[`validacao/heuristica_versoes.md`](validacao/heuristica_versoes.md).
 
 ### 7. Requisitos de engenharia do pipeline
 
