@@ -43,7 +43,7 @@
 | Arquivo | Conteúdo |
 |---|---|
 | `repos.csv` | Um repositório da amostra por linha: metadados (estrelas, linguagem, branch, idade, contribuidores) e contagens de releases, commits e runs. Depois só da triagem, as contagens de commits e runs ficam vazias |
-| `releases.csv` | Uma linha por release da janela, com nº de commits desde a anterior e as flags `sem_anterior` e `ignorada_compare_404` |
+| `releases.csv` | Uma linha por release da janela, com nº de commits desde a anterior e as flags `sem_anterior` e `ignorada_compare_404`. Só sai depois da coleta pesada |
 | `runs.csv` | Uma linha por workflow run válido (sucesso ou falha) do default branch, com a `classe`. Fica fora do git pelo tamanho |
 | `funil.csv` | Quantos repositórios restaram em cada etapa e o motivo de cada descarte. Cada linha é a anterior menos os descartados dela |
 
