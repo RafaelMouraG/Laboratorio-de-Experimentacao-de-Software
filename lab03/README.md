@@ -51,6 +51,7 @@
 | `releases.csv` | Uma linha por release da janela, com nº de commits desde a anterior e as flags `sem_anterior` e `ignorada_compare_404`. Só sai depois da coleta pesada |
 | `runs.csv` | Uma linha por workflow run válido (sucesso ou falha) do default branch, com a `classe`. Fica fora do git pelo tamanho |
 | `funil.csv` | Quantos repositórios restaram em cada etapa e o motivo de cada descarte. Cada linha é a anterior menos os descartados dela |
+| `metricas.csv` | Uma linha por repositório aceito, com as quatro métricas DORA, variantes, censura, faixas e classificação geral. O dicionário está em [`data/DICIONARIO.md`](data/DICIONARIO.md) |
 
 **Retomada.** Toda resposta da API fica em `lab03/data/cache/<owner>__<repo>/`, e cada fase
 terminada ganha um marcador na pasta do repo (`_triagem` e `_completo`) com o resultado. Se a

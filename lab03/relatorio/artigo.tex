@@ -227,14 +227,35 @@ populares do GitHub, e não todos os que têm mil estrelas ou mais, o que limita
 resultados podem ser generalizados.
 
 \subsection{Definições operacionais}
-% #98: branch, o que conta como deploy, data do commit, tabela do conclusion, variantes de lead
-% time e de CFR, censura.
+A janela da coleta é de 1º de outubro de 2025 a 30 de setembro de 2026, em UTC.
+Consideramos somente o \texttt{default\_branch} de cada repositório. Uma release
+publicada e não marcada como pré-release é o proxy de deploy; a data do commit é a
+data do autor retornada pelo compare entre a release e a release estável anterior.
+No CI entram apenas runs do evento \texttt{push} no branch padrão. As conclusões
+\texttt{success}, \texttt{failure}, \texttt{timed\_out} e
+\texttt{startup\_failure} entram nas contas; \texttt{cancelled},
+\texttt{skipped}, \texttt{neutral}, \texttt{stale} e runs sem conclusão são
+ignorados.
+
+O lead time (a) é a mediana, por release, entre a publicação e o commit mais
+antigo do compare. O lead time (b) é a mediana de todos os pares commit--release.
+Commits posteriores à publicação são descartados e contabilizados. A CFR (a) é
+\textit{runs} de CI falhos divididos por falhos mais sucessos. A CFR (b) é a
+proporção de releases rotuladas como corretivas no consenso da validação manual;
+releases `incerto` ou sem consenso são censuradas. Um episódio de recuperação
+começa na primeira falha depois de um sucesso do workflow e termina no sucesso
+seguinte. Episódios sem sucesso posterior são censurados: entram na contagem, mas
+não na mediana. A classificação geral usa a mediana inteira das faixas de
+frequência de releases, lead time (a) e CFR (a).
 
 \subsection{Heurística de release corretiva}
 % #96: a regra de cada versão testada e o F1 dela contra o consenso.
 
 \subsection{Validação manual}
-% #92 (sorteio da amostra-ouro) e #97 (rotulagem, kappa de Fleiss e consenso).
+O sorteio da amostra-ouro, a rotulagem independente, o kappa de Fleiss e o
+consenso seguem o procedimento descrito no protocolo de validação. O dicionário
+de dados em \texttt{data/DICIONARIO.md} registra o tipo, a unidade e a origem de cada
+coluna dos CSVs finais.
 
 A heurística de release corretiva e o tipo do projeto usado na RQ~06 são conferidos contra o
 julgamento dos três integrantes, numa amostra-ouro de 60 repositórios sorteados da amostra final

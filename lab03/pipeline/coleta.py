@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from lab03.metricas.falhas import classificar
+from lab03.metricas.repositorio import CAMPOS_METRICAS, metricas_do_repo
 from lab03.pipeline import metadados, releases, runs
 from lab03.pipeline.api import ErroAPI, GitHubAPI, RecursoAusente
 from lab03.pipeline.selecao import MOTIVO_SEM_ACTIONS, Funil, candidatos_por_estrelas, total_na_busca, usa_actions
@@ -176,6 +177,7 @@ def coletar_repo(
         "releases": coleta_releases["releases"],
         "tags": coleta_releases["tags"],
         "runs": validos,
+        "runs_censurados": len(lista_runs) - len(validos),
     }
 
 
@@ -250,7 +252,15 @@ def salvar_triagem(pasta_saida: str | Path, aceitos: list[dict], funil: Funil) -
     funil.salvar(pasta / "funil.csv")
 
 
-def salvar_csvs(pasta_saida: str | Path, aceitos: list[dict], funil: Funil, coletar_tags: bool) -> None:
+def salvar_csvs(
+    pasta_saida: str | Path,
+    aceitos: list[dict],
+    funil: Funil,
+    coletar_tags: bool,
+    inicio: date | None = None,
+    fim: date | None = None,
+) -> None:
+    """Grava os CSVs da coleta e, quando há janela, o dataset agregado de métricas."""
     pasta = Path(pasta_saida)
     salvar_triagem(pasta, aceitos, funil)
     # com `so_concluidos`, quem ainda não passou pela coleta pesada só aparece no repos.csv
@@ -265,6 +275,38 @@ def salvar_csvs(pasta_saida: str | Path, aceitos: list[dict], funil: Funil, cole
         CAMPOS_RUNS,
         ({**run, "repo": r["repo"], "classe": classificar(run["conclusion"])} for r in coletados for run in r["runs"]),
     )
+    if inicio is not None and fim is not None:
+        consenso_path = pasta.parent / "validacao" / "consenso_releases.csv"
+        consenso: dict[tuple[str, str], str] = {}
+        if consenso_path.is_file():
+            with consenso_path.open(encoding="utf-8-sig", newline="") as arquivo:
+                for linha in csv.DictReader(arquivo):
+                    valor = (linha.get("consenso_corretiva") or "").strip()
+                    if valor:
+                        consenso[(linha.get("repo", ""), linha.get("tag_name", ""))] = valor
+
+        resultados_metricas = []
+        for resultado in aceitos:
+            if consenso and "releases" in resultado:
+                releases_com_consenso = [
+                    {
+                        **release,
+                        **(
+                            {"consenso_corretiva": consenso[(resultado["repo"], release["tag_name"])]}
+                            if (resultado["repo"], release["tag_name"]) in consenso
+                            else {}
+                        ),
+                    }
+                    for release in resultado["releases"]
+                ]
+                resultados_metricas.append({**resultado, "releases": releases_com_consenso})
+            else:
+                resultados_metricas.append(resultado)
+        _escrever_csv(
+            pasta / "metricas.csv",
+            CAMPOS_METRICAS,
+            (metricas_do_repo(r, inicio, fim) for r in resultados_metricas),
+        )
     if coletar_tags:
         _escrever_csv(pasta / "tags.csv", CAMPOS_TAGS,
                       ({**tag, "repo": r["repo"]} for r in coletados for tag in r["tags"] or []))
@@ -344,5 +386,12 @@ def executar(
         log.info("%d de %d repositórios com a coleta pesada concluída", len(completos), len(aceitos))
     finais = [completos.get(r["repo"], r) for r in triados]
     funil = montar_funil(total, finais, limite, estrelas_minimas)
-    salvar_csvs(pasta_saida, [r for r in finais if r["aceito"]], funil, coletar_tags)
+    salvar_csvs(
+        pasta_saida,
+        [r for r in finais if r["aceito"]],
+        funil,
+        coletar_tags,
+        inicio,
+        fim,
+    )
     return funil
