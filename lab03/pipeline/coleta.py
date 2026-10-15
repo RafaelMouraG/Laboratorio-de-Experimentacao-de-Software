@@ -253,19 +253,21 @@ def salvar_triagem(pasta_saida: str | Path, aceitos: list[dict], funil: Funil) -
 def salvar_csvs(pasta_saida: str | Path, aceitos: list[dict], funil: Funil, coletar_tags: bool) -> None:
     pasta = Path(pasta_saida)
     salvar_triagem(pasta, aceitos, funil)
+    # com `so_concluidos`, quem ainda não passou pela coleta pesada só aparece no repos.csv
+    coletados = [r for r in aceitos if "releases" in r]
     _escrever_csv(
         pasta / "releases.csv",
         CAMPOS_RELEASES,
-        ({**rel, "repo": r["repo"], "commits": len(rel["commits"])} for r in aceitos for rel in r["releases"]),
+        ({**rel, "repo": r["repo"], "commits": len(rel["commits"])} for r in coletados for rel in r["releases"]),
     )
     _escrever_csv(
         pasta / "runs.csv",
         CAMPOS_RUNS,
-        ({**run, "repo": r["repo"], "classe": classificar(run["conclusion"])} for r in aceitos for run in r["runs"]),
+        ({**run, "repo": r["repo"], "classe": classificar(run["conclusion"])} for r in coletados for run in r["runs"]),
     )
     if coletar_tags:
         _escrever_csv(pasta / "tags.csv", CAMPOS_TAGS,
-                      ({**tag, "repo": r["repo"]} for r in aceitos for tag in r["tags"] or []))
+                      ({**tag, "repo": r["repo"]} for r in coletados for tag in r["tags"] or []))
 
 
 # ---------- fluxo completo ----------
@@ -288,8 +290,14 @@ def executar(
     pasta_saida: str | Path,
     coletar_tags: bool = False,
     so_triagem: bool = False,
+    so_concluidos: bool = False,
 ) -> Funil:
-    """Triagem até `limite` aceitos e, se não for `so_triagem`, a coleta pesada deles."""
+    """Triagem até `limite` aceitos e, se não for `so_triagem`, a coleta pesada deles.
+
+    `so_concluidos` grava os CSVs só com os repositórios que já têm o marcador da coleta pesada,
+    sem chamar a API para os outros: serve para trabalhar com o que já saiu enquanto a coleta roda.
+    Os pendentes ficam no repos.csv com as contagens vazias, como depois da triagem.
+    """
     janela = {"inicio": str(inicio), "fim": str(fim)}
     assinatura = {**janela, "coletar_tags": coletar_tags}
     total = total_na_busca(api, estrelas_minimas)
@@ -323,6 +331,8 @@ def executar(
     for i, triado in enumerate(aceitos, start=1):
         repo = triado["repo"]
         resultado = ler_marcador(pasta_cache, repo, assinatura)
+        if resultado is None and so_concluidos:
+            continue
         if resultado is None:
             log.info("coleta %d/%d %s | cota %s", i, len(aceitos), repo, _cota(api))
             resultado = coletar_repo(api, triado, inicio, fim, coletar_tags)
@@ -330,6 +340,8 @@ def executar(
             log.info("coleta %d/%d %s -> %s | cota %s", i, len(aceitos), repo, _situacao(resultado), _cota(api))
         completos[repo] = resultado
 
+    if so_concluidos:
+        log.info("%d de %d repositórios com a coleta pesada concluída", len(completos), len(aceitos))
     finais = [completos.get(r["repo"], r) for r in triados]
     funil = montar_funil(total, finais, limite, estrelas_minimas)
     salvar_csvs(pasta_saida, [r for r in finais if r["aceito"]], funil, coletar_tags)

@@ -1,4 +1,4 @@
-"""`python -m lab03.pipeline --config lab03/config.yaml [--limite N] [--so-triagem]`, da raiz do repositório."""
+"""`python -m lab03.pipeline --config lab03/config.yaml [--limite N] [--so-triagem | --parcial]`, da raiz do repositório."""
 
 from __future__ import annotations
 
@@ -41,6 +41,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limite", type=int, help="tamanho da amostra (padrão: limite_repos do config)")
     parser.add_argument("--so-triagem", action="store_true",
                         help="para depois de definir a amostra, sem compare nem lista de runs")
+    parser.add_argument("--parcial", action="store_true",
+                        help="grava os CSVs só com o que a coleta pesada já terminou, sem chamar a API")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
@@ -66,6 +68,7 @@ def main(argv: list[str] | None = None) -> int:
             pasta_saida,
             coletar_tags=config.get("coletar_tags", False),
             so_triagem=args.so_triagem,
+            so_concluidos=args.parcial,
         )
     except KeyboardInterrupt:
         log.warning("interrompido; rode o mesmo comando para continuar de onde parou")
