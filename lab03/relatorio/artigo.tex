@@ -251,6 +251,13 @@ objetivo principal dela é corrigir um defeito recente. As definições, com exe
 protocolo de rotulagem do repositório. Cada um rotula sozinho, sem ver as planilhas dos outros nem a
 saída da heurística, que recebe as mesmas releases num arquivo separado.
 
+A concordância é calculada pelo kappa de Fleiss, acompanhada da porcentagem de concordância
+simples e da interpretação de Landis e Koch, para as três dimensões. O consenso usa maioria
+simples (dois votos iguais). Casos com três rótulos diferentes são registrados em
+\texttt{empates.csv} e resolvidos em reunião; a decisão e sua justificativa permanecem no próprio
+arquivo e são então propagadas para os CSVs de consenso. Um kappa baixo é interpretado como
+ambiguidade do critério, e não como erro de um avaliador.
+
 O sorteio deixou visível um problema que afeta também o \textit{lead time}: 39 das 300 releases têm
 mais de 500 commits no \texttt{compare}. Parte disso é release grande de verdade (as \textit{minors}
 do PyTorch passam de 3 mil commits), mas em 9 delas a release anterior pela data tem versão maior

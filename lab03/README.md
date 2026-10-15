@@ -324,6 +324,16 @@ Uma heurística automática (como "release que só muda o *patch* é corretiva")
 
 O **tipo do projeto** rotulado aqui é usado na RQ 06. A **validação da heurística** sustenta a RQ 03 (b) e a seção de ameaças à validade.
 
+#### Consenso e documentação da validação
+
+O script `python -m lab03.validacao.concordancia` valida as seis planilhas, calcula o kappa de
+Fleiss e a porcentagem de concordância simples para `tipo_projeto`, `entregas_reais` e
+`corretiva`. A maioria simples (2 de 3) é aplicada automaticamente. Casos `1-1-1` são escritos
+em `empates.csv`; a reunião preenche ali `decisao` e `justificativa`, e uma nova execução usa
+esses valores para produzir `consenso_repos.csv` e `consenso_releases.csv`. O protocolo completo
+está em [`validacao/PROTOCOLO.md`](validacao/PROTOCOLO.md). Kappa baixo é reportado como possível
+ambiguidade do critério, não como falha da rotulagem.
+
 ### 7. Requisitos de engenharia do pipeline
 
 A coleta deixa de ser "um script que roda uma vez no meu computador" e passa a ser um **pipeline reprodutível**. Na entrega final, **outro grupo** vai executá-lo seguindo apenas o README. Requisitos:

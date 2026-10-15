@@ -88,4 +88,17 @@ Dois cuidados:
 
 ## Consenso
 
-*A #97 completa esta seção com a regra de desempate usada.*
+Depois que os três integrantes terminarem a rotulagem, `python -m lab03.validacao.concordancia`
+valida os arquivos e calcula o kappa de Fleiss e a concordância simples para cada dimensão. Um
+item recebe automaticamente o rótulo que aparece em pelo menos duas das três planilhas (maioria
+simples).
+
+Quando os três rótulos são diferentes (`1-1-1`), o item é copiado para `empates.csv`. A reunião
+de consenso preenche nesse mesmo arquivo as colunas `decisao` e `justificativa`; a decisão deve
+ser um dos valores permitidos para a dimensão e a justificativa deve registrar o critério usado.
+Uma nova execução preserva essas decisões e as aplica em `consenso_repos.csv` ou
+`consenso_releases.csv`. Empates sem decisão continuam com o consenso vazio e ficam explicitamente
+pendentes no arquivo de empates.
+
+O kappa é acompanhado da porcentagem de concordância simples e da faixa de Landis & Koch. Kappa
+baixo não é tratado como erro: indica ambiguidade do critério e deve ser discutido no artigo.
