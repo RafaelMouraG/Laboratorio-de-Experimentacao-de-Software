@@ -14,7 +14,8 @@ from urllib.parse import quote
 from lab03.pipeline.api import GitHubAPI, RecursoAusente
 from lab03.pipeline.runs import Dia, _dia
 
-CAMPOS_RELEASE = ("tag_name", "published_at", "prerelease", "html_url")
+# `body` (notas) é lido pela heurística de release corretiva (#96), mas não vai para o releases.csv
+CAMPOS_RELEASE = ("tag_name", "published_at", "prerelease", "html_url", "body")
 POR_PAGINA = 100
 
 log = logging.getLogger(__name__)

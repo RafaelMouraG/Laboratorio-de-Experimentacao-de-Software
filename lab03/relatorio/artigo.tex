@@ -240,16 +240,59 @@ ignorados.
 O lead time (a) é a mediana, por release, entre a publicação e o commit mais
 antigo do compare. O lead time (b) é a mediana de todos os pares commit--release.
 Commits posteriores à publicação são descartados e contabilizados. A CFR (a) é
-\textit{runs} de CI falhos divididos por falhos mais sucessos. A CFR (b) é a
-proporção de releases rotuladas como corretivas no consenso da validação manual;
-releases `incerto` ou sem consenso são censuradas. Um episódio de recuperação
+\textit{runs} de CI falhos divididos por falhos mais sucessos. Na CFR (b), uma
+release falha quando a release seguinte sai em até 7 dias e é corretiva pela
+heurística descrita a seguir; a taxa é o número de releases que falharam dividido
+pelo de avaliadas. Releases publicadas nos últimos 7 dias da janela são censuradas
+e ficam fora do denominador. Um episódio de recuperação
 começa na primeira falha depois de um sucesso do workflow e termina no sucesso
 seguinte. Episódios sem sucesso posterior são censurados: entram na contagem, mas
 não na mediana. A classificação geral usa a mediana inteira das faixas de
 frequência de releases, lead time (a) e CFR (a).
 
 \subsection{Heurística de release corretiva}
-% #96: a regra de cada versão testada e o F1 dela contra o consenso.
+Uma release é corretiva quando o objetivo principal dela é corrigir um defeito recente. Como isso
+não está em nenhum campo da API, a decisão é de uma heurística, avaliada contra o consenso dos três
+avaliadores nas 300 releases da amostra-ouro (115 corretivas), com precisão, recall e F1 do
+scikit-learn. A Tabela~\ref{tab:heuristica} mostra as quatro versões testadas, na ordem em que
+foram propostas.
+
+\begin{table}[ht]
+\centering
+\caption{Versões da heurística de release corretiva contra o consenso}
+\label{tab:heuristica}
+\begin{tabular}{lp{7.2cm}rrr}
+\hline
+Versão & Regra & Precisão & Recall & F1 \\
+\hline
+v1 & Só o \textit{patch} subiu em relação à release anterior \textbf{ou} algum commit tem
+\texttt{fix}, \texttt{hotfix} ou \texttt{revert} & 0,399 & 0,965 & 0,565 \\
+v2 & Só o \textit{patch} subiu \textbf{e} algum commit tem \texttt{fix}, \texttt{hotfix} ou
+\texttt{revert} & 0,541 & 0,626 & 0,581 \\
+v3 & O \textit{patch} da própria versão é maior que zero, sem olhar a anterior & 0,542 & 0,904
+& 0,678 \\
+v4 & v3 \textbf{e} as notas da release citam correção pelo menos tantas vezes quanto novidade
+& 0,673 & 0,861 & 0,756 \\
+\hline
+\end{tabular}
+\end{table}
+
+A v1 é a sugestão do enunciado e marca 278 das 300 releases: quase toda release tem algum commit
+com \texttt{fix}, inclusive as que trazem funcionalidades novas. Exigir as duas condições (v2)
+aumenta a precisão, mas derruba o recall, porque a comparação com a release anterior pela data
+falha justamente nos repositórios que mantêm mais de uma linha de versão: a \texttt{v8.19.14} do
+\texttt{elastic/elasticsearch} vem depois da \texttt{v9.2.8}, e a \texttt{4.22.1} do
+\texttt{expressjs/express}, depois da \texttt{v5.2.1}. A v3 deixa a anterior de lado e olha só
+o número da própria versão, o que recupera 90\% das corretivas, mas também marca as
+\textit{patches} de rotina de projetos que lançam funcionalidades em versões \textit{x.y.z}. A v4
+acrescenta as notas da release: elas precisam mencionar correção (\texttt{fix}, \texttt{bug}) pelo
+menos tantas vezes quanto novidade (\texttt{feat}, \texttt{feature}, \texttt{add}, \texttt{new},
+\texttt{introduce}, \texttt{support}). Release sem notas fica só com a regra da versão, e tag que
+não segue o versionamento semântico fica só com a regra das mensagens de commit.
+
+A v4, com F1 de 0,756, é a usada na CFR (b). As versões foram refinadas olhando os erros nas
+mesmas 300 releases em que são avaliadas, então esse F1 tende a ser otimista para o restante da
+amostra.
 
 \subsection{Validação manual}
 O sorteio da amostra-ouro, a rotulagem independente, o kappa de Fleiss e o

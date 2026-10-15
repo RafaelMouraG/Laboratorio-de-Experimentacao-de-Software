@@ -144,7 +144,7 @@ def _ler_decisoes(caminho: Path) -> dict[tuple[str, str], tuple[str, str]]:
         if faltantes:
             raise ErroRotulagem(f"{caminho}: colunas ausentes: {', '.join(faltantes)}")
         linhas = [
-            {campo: (linha.get(campo) or "").strip()}
+            {campo: (linha.get(campo) or "").strip() for campo in _CAMPOS_EMPATES}
             for linha in leitor
         ]
     decisoes = {}
