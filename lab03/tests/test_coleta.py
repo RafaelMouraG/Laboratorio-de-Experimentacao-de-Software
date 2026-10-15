@@ -117,9 +117,10 @@ REPOS = [
 ]
 
 
-def rodar(tmp_path, sessao, limite=2, fim=FIM, so_triagem=False):
+def rodar(tmp_path, sessao, limite=2, fim=FIM, so_triagem=False, so_concluidos=False):
     api = GitHubAPI("t", tmp_path / "cache", sessao=sessao, dormir=lambda s: None)
-    return executar(api, 1000, INICIO, fim, limite, tmp_path / "cache", tmp_path / "data", so_triagem=so_triagem)
+    return executar(api, 1000, INICIO, fim, limite, tmp_path / "cache", tmp_path / "data",
+                    so_triagem=so_triagem, so_concluidos=so_concluidos)
 
 
 def ler(caminho):
@@ -206,6 +207,20 @@ def test_triagem_e_depois_a_coleta_pesada_reaproveitam_o_que_ja_foi_feito(tmp_pa
 
     assert sessao.pedidos and all("/o/bom/" in url or "/o/outro-bom/" in url for url, _ in sessao.pedidos)
     assert not [url for url, _ in sessao.pedidos if "/search/" in url or url.endswith("/releases")]
+
+
+def test_parcial_grava_so_quem_terminou_a_coleta_pesada_sem_chamar_a_api(tmp_path):
+    rodar(tmp_path, SessaoFalsa(REPOS), limite=1)  # só o o/bom passa pela coleta pesada
+    rodar(tmp_path, SessaoFalsa(REPOS), so_triagem=True)  # o o/outro-bom entra na amostra
+    sessao = SessaoFalsa(REPOS)
+
+    rodar(tmp_path, sessao, so_concluidos=True)
+
+    assert sessao.pedidos == []
+    repos = ler(tmp_path / "data/repos.csv")
+    assert [(r["repo"], r["runs_validos"]) for r in repos] == [("o/bom", "60"), ("o/outro-bom", "")]
+    assert {r["repo"] for r in ler(tmp_path / "data/releases.csv")} == {"o/bom"}
+    assert not (pasta_repo(tmp_path / "cache", "o/outro-bom") / MARCADOR).exists()
 
 
 def test_lista_de_runs_menor_que_a_contagem_tira_o_repo_e_o_funil_continua_fechando(tmp_path):

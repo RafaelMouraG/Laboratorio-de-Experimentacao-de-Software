@@ -21,6 +21,7 @@
    ```bash
    python -m lab03.pipeline --config lab03/config.yaml               # amostra de limite_repos (310)
    python -m lab03.pipeline --config lab03/config.yaml --so-triagem  # só define a amostra
+   python -m lab03.pipeline --config lab03/config.yaml --parcial     # CSVs com o que já terminou
    python -m lab03.pipeline --config lab03/config.yaml --limite 5    # teste rápido com 5 repositórios
    ```
 
@@ -37,6 +38,10 @@
 
    Com `--so-triagem` o pipeline para depois da primeira fase. Rodar sem a opção depois continua
    da coleta pesada, sem refazer a triagem.
+
+   Com `--parcial`, de outro terminal e enquanto a coleta pesada roda, o pipeline grava os CSVs só
+   com os repositórios que já terminaram, sem chamar a API. Os que faltam aparecem no `repos.csv`
+   com as contagens vazias. Serve para começar a análise sem esperar a coleta inteira.
 
 **Saídas**, em `lab03/data/` (`pasta_saida` no config):
 
