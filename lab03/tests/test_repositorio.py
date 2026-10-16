@@ -69,6 +69,25 @@ def test_triagem_nao_converte_contagens_ausentes_em_zero_valido():
     assert metricas["recuperacao_mediana_horas"] is None
 
 
+def test_conta_releases_excluidas_da_variante_a():
+    resultado = {
+        "repo": "o/excluidas",
+        "releases": [
+            release("2025-03-10T00:00:00Z", "2025-03-01T00:00:00Z", tag="v1.0.0")
+            | {"sem_anterior": True},
+            release("2025-03-20T00:00:00Z", "2025-03-21T00:00:00Z", tag="v1.0.1"),
+        ],
+        "runs": [],
+    }
+
+    metricas = metricas_do_repo(resultado, "2025-03-01", "2025-03-31")
+
+    assert metricas["lead_time_release_avaliadas"] == 0
+    assert metricas["lead_time_release_descartadas"] == 2
+    assert metricas["lead_time_commit_avaliadas"] == 0
+    assert metricas["lead_time_commit_descartados"] == 1
+
+
 def test_cfr_de_entrega_censura_os_ultimos_7_dias():
     resultado = {
         "repo": "o/fim",

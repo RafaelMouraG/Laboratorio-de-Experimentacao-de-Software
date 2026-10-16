@@ -151,6 +151,11 @@ def test_para_no_limite_e_gera_os_csvs(tmp_path):
     assert len(runs) == 120  # o cancelled fica de fora
     assert {r["classe"] for r in runs} == {"sucesso", "falha"}
 
+    metricas = ler(tmp_path / "data/metricas.csv")
+    assert [r["repo"] for r in metricas] == ["o/bom", "o/outro-bom"]
+    assert all(r["releases_por_semana"] for r in metricas)
+    assert all(r["cfr_ci_avaliadas"] == "60" for r in metricas)
+
     assert ler(tmp_path / "data/funil.csv") == [
         {k: str(v) for k, v in linha.items()} for linha in funil.linhas
     ]
@@ -220,6 +225,11 @@ def test_parcial_grava_so_quem_terminou_a_coleta_pesada_sem_chamar_a_api(tmp_pat
     repos = ler(tmp_path / "data/repos.csv")
     assert [(r["repo"], r["runs_validos"]) for r in repos] == [("o/bom", "60"), ("o/outro-bom", "")]
     assert {r["repo"] for r in ler(tmp_path / "data/releases.csv")} == {"o/bom"}
+    metricas = ler(tmp_path / "data/metricas.csv")
+    assert [r["repo"] for r in metricas] == ["o/bom", "o/outro-bom"]
+    assert metricas[0]["releases_por_semana"]
+    assert metricas[1]["releases_por_semana"] == ""
+    assert metricas[1]["cfr_ci"] == ""
     assert not (pasta_repo(tmp_path / "cache", "o/outro-bom") / MARCADOR).exists()
 
 

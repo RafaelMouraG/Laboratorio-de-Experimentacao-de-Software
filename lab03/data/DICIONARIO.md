@@ -58,7 +58,7 @@ Cada linha corresponde a um repositório aceito. As faixas são inteiros de 1
 | `faixa_releases` | inteiro | faixa DORA 1–4 | `faixa_frequencia(releases_por_semana)` |
 | `lead_time_release_horas` | real | horas | mediana de `published_at - commit mais antigo` por release |
 | `lead_time_release_avaliadas` | inteiro | releases | releases com commits válidos e release anterior |
-| `lead_time_release_descartados` | inteiro | commits | commits posteriores à publicação |
+| `lead_time_release_descartadas` | inteiro | releases | releases sem commit válido ou sem release anterior, excluídas da variante (a) |
 | `faixa_lead_time_release` | inteiro | faixa DORA 1–4 | `faixa_lead_time` da variante por release |
 | `lead_time_commit_horas` | real | horas | mediana de `published_at - commit` de todos os commits válidos |
 | `lead_time_commit_avaliadas` | inteiro | commits | commits válidos usados na mediana |

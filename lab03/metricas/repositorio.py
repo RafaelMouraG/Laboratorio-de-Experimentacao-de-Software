@@ -30,7 +30,7 @@ CAMPOS_METRICAS = (
     "faixa_releases",
     "lead_time_release_horas",
     "lead_time_release_avaliadas",
-    "lead_time_release_descartados",
+    "lead_time_release_descartadas",
     "faixa_lead_time_release",
     "lead_time_commit_horas",
     "lead_time_commit_avaliadas",
@@ -91,7 +91,9 @@ def metricas_do_repo(resultado: dict[str, Any], inicio: Data, fim: Data) -> dict
         "faixa_releases": faixa_frequencia(frequencia),
         "lead_time_release_horas": por_release.mediana_horas if por_release else None,
         "lead_time_release_avaliadas": por_release.valores if por_release else 0,
-        "lead_time_release_descartados": por_release.descartados if por_release else 0,
+        "lead_time_release_descartadas": (
+            len(releases) - por_release.valores if por_release else 0
+        ),
         "faixa_lead_time_release": faixa_lead_time(por_release.mediana_horas if por_release else None),
         "lead_time_commit_horas": por_commit.mediana_horas if por_commit else None,
         "lead_time_commit_avaliadas": por_commit.valores if por_commit else 0,
