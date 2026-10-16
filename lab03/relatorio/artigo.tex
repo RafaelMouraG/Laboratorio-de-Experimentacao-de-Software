@@ -212,7 +212,7 @@ Criados antes do início da janela & 761 & 84 \\
 Com GitHub Actions & 685 & 76 \\
 $\geq$ 5 releases na janela & 362 & 323 \\
 $\geq$ 50 execuções válidas na janela & 310 & 52 \\
-% atualizar com a linha da coleta completa quando ela terminar (#91)
+Commits e execuções coletados & 310 & 0 \\
 \hline
 Amostra final & 310 & \\
 \hline
@@ -225,6 +225,11 @@ outubro de 2025, a maioria agentes, \textit{skills} e outras ferramentas de IA. 
 e para em 310, a amostra fica entre 37 mil e 254 mil estrelas. Ela representa os projetos mais
 populares do GitHub, e não todos os que têm mil estrelas ou mais, o que limita até onde os
 resultados podem ser generalizados.
+
+Nenhum dos 310 caiu na coleta completa, então a folga não foi usada. No total, a amostra tem
+22.609 releases e 3.167.550 execuções válidas de CI (2.913.406 com sucesso e 254.144 com falha).
+Só 15 releases ficaram sem lista de commits: 13 porque não têm release estável anterior
+e 2 porque o \texttt{compare} devolveu 404.
 
 \subsection{Definições operacionais}
 A janela da coleta é de 1º de outubro de 2025 a 30 de setembro de 2026, em UTC.
