@@ -59,13 +59,14 @@ comando separado, que lê a amostra do `repos.csv` e não mexe nos marcadores da
 
 ```bash
 python -m lab03.pipeline.alternativas --config lab03/config.yaml             # os repositórios do repos.csv
+python -m lab03.pipeline.alternativas --config lab03/config.yaml --unidade pre  # só a C2
 python -m lab03.pipeline.alternativas --config lab03/config.yaml --limite 5  # teste rápido
 ```
 
 Grava `releases_pre.csv` e `tags.csv` em `pasta_saida`. As listas de releases já estão no cache;
 o que gasta cota são os compares novos (entre pré-release e release, e entre tags consecutivas) e a
 listagem das tags pela GraphQL, 100 por chamada, parando na primeira tag anterior ao início da janela.
-Cada repo terminado ganha o marcador `_alternativas`.
+Cada unidade terminada num repo ganha o marcador `_alternativas_pre` ou `_alternativas_tag`.
 
 **Retomada.** Toda resposta da API fica em `lab03/data/cache/<owner>__<repo>/`, e cada fase
 terminada ganha um marcador na pasta do repo (`_triagem` e `_completo`) com o resultado. Se a

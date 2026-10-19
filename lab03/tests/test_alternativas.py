@@ -51,9 +51,17 @@ def test_grava_as_duas_unidades_e_reaproveita_o_marcador(tmp_path):
     assert len(ler(tmp_path / "releases_pre.csv")) == 3
 
 
+def test_uma_unidade_so_nao_toca_na_outra(tmp_path):
+    inicio, fim = date(2025, 1, 1), date(2025, 12, 31)
+    api = api_com_dados()
+    executar(api, ["o/r"], inicio, fim, tmp_path / "cache", tmp_path, unidades=("pre",))
+    assert not any(p[0] == "graphql" for p in api.pedidos)
+    assert (tmp_path / "releases_pre.csv").exists() and not (tmp_path / "tags.csv").exists()
+
+
 def test_repo_que_sumiu_fica_sem_linhas_e_sem_marcador(tmp_path):
     inicio, fim = date(2025, 1, 1), date(2025, 12, 31)
-    [resultado] = executar(APISumida(), ["o/r"], inicio, fim, tmp_path / "cache", tmp_path)
-    assert resultado["erro"] and resultado["releases_pre"] == [] and resultado["tags"] == []
-    assert not (tmp_path / "cache" / "o__r" / "_alternativas").exists()
-    assert ler(tmp_path / "tags.csv") == []
+    [resultado] = executar(APISumida(), ["o/r"], inicio, fim, tmp_path / "cache", tmp_path, ("pre",))["pre"]
+    assert resultado["erro"] and resultado["entregas"] == []
+    assert not (tmp_path / "cache" / "o__r" / "_alternativas_pre").exists()
+    assert ler(tmp_path / "releases_pre.csv") == []
