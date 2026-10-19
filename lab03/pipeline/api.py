@@ -140,6 +140,26 @@ class GitHubAPI:
         corpo = resp["corpo"]
         return len(corpo) if isinstance(corpo, list) else 0
 
+    def graphql(self, consulta: str, variaveis: dict) -> dict:
+        """`data` de uma consulta GraphQL, com o mesmo cache e a mesma espera de cota do REST.
+
+        Com `dono` e `nome` nas variáveis, o cache fica na pasta do repo. Levanta `RecursoAusente`
+        se o repositório não existe mais.
+        """
+        caminho = f"/repos/{variaveis['dono']}/{variaveis['nome']}/graphql" if "dono" in variaveis else "/graphql"
+        arquivo = self.arquivo_cache(caminho, {"consulta": consulta, **variaveis})
+        resp = self._ler_cache(arquivo)
+        if resp is None:
+            resp = self._buscar("/graphql", None, {"query": consulta, "variables": variaveis})
+            erros = (resp["corpo"] or {}).get("errors") or []
+            if erros and not any(e.get("type") == "NOT_FOUND" for e in erros):
+                # erro que pode ser passageiro (timeout do lado deles): não vai para o cache
+                raise ErroAPI(caminho, resp["status"], erros[0].get("message", "erro na GraphQL"))
+            self._gravar_cache(arquivo, resp)
+        if (resp["corpo"] or {}).get("errors"):
+            raise RecursoAusente(caminho, 404)
+        return resp["corpo"]["data"]
+
     def cota(self) -> dict:
         """`/rate_limit` não gasta cota, então nunca passa pelo cache."""
         r = self.sessao.get(BASE + "/rate_limit", timeout=30)
@@ -195,12 +215,16 @@ class GitHubAPI:
 
     # ---------- rede ----------
 
-    def _buscar(self, caminho: str, params: Optional[dict]) -> dict:
+    def _buscar(self, caminho: str, params: Optional[dict], corpo: Optional[dict] = None) -> dict:
+        """GET, ou POST com `corpo` (a GraphQL)."""
         tentativa = 0
         while True:
             self._esperar_cota()
             try:
-                r = self.sessao.get(BASE + caminho, params=params, timeout=30)
+                if corpo is None:
+                    r = self.sessao.get(BASE + caminho, params=params, timeout=30)
+                else:
+                    r = self.sessao.post(BASE + caminho, json=corpo, timeout=60)
             except ERROS_DE_REDE as erro:
                 tentativa = self._backoff(caminho, tentativa, str(erro))
                 continue

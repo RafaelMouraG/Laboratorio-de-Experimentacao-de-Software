@@ -83,3 +83,36 @@ Cada linha corresponde a um repositório aceito. As faixas são inteiros de 1
 O `metricas.csv` é gravado pelo pipeline somente quando a janela é conhecida.
 Em execução parcial, repositórios ainda sem coleta pesada aparecem com métricas
 vazias, preservando a distinção entre ausência de dados e valor zero.
+
+## `releases_pre.csv`
+
+Unidade de deploy "release + pré-release" da C2 (RQ 07), gerada por
+`python -m lab03.pipeline.alternativas`. Mesmas colunas do `releases.csv`, com duas diferenças: as
+pré-releases da janela entram, e a entrega anterior de cada linha pode ser uma pré-release.
+
+| Coluna | Tipo | Unidade | Origem |
+|---|---|---|---|
+| `repo` | texto | `owner/name` | repositório do `repos.csv` |
+| `tag_name` | texto | — | API de releases, `tag_name` |
+| `published_at` | data-hora ISO 8601 | UTC | API de releases, `published_at` |
+| `prerelease` | booleano | — | API de releases, `prerelease` |
+| `html_url` | texto | URL | API de releases, `html_url` |
+| `commits` | inteiro | commits | tamanho do compare com a entrega anterior, release ou pré-release |
+| `sem_anterior` | booleano | — | fórmula: não existe release nem pré-release anterior |
+| `ignorada_compare_404` | booleano | — | fórmula: compare da entrega foi ignorado por 404 |
+
+## `tags.csv`
+
+Unidade de deploy "tag" da C3 (RQ 07), gerada por `python -m lab03.pipeline.alternativas`. Uma linha
+por commit com tag na janela: quando várias tags apontam para o mesmo commit (monorepo que marca
+cada pacote), fica a primeira pelo nome.
+
+| Coluna | Tipo | Unidade | Origem |
+|---|---|---|---|
+| `repo` | texto | `owner/name` | repositório do `repos.csv` |
+| `tag_name` | texto | — | GraphQL, `refs(refPrefix: "refs/tags/")`, `name` |
+| `sha` | texto | — | GraphQL, `oid` do commit apontado (seguindo a tag anotada até o commit) |
+| `published_at` | data-hora ISO 8601 | UTC | GraphQL, `committedDate` do commit apontado; tag não tem data própria |
+| `commits` | inteiro | commits | tamanho do compare com a tag anterior pela data, mesmo fora da janela |
+| `sem_anterior` | booleano | — | fórmula: não existe tag anterior |
+| `ignorada_compare_404` | booleano | — | fórmula: compare da tag foi ignorado por 404 |
