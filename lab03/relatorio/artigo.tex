@@ -162,6 +162,22 @@ esperamos que essas trocas sejam quase sempre para a categoria do lado (\textit{
 \textit{Low}. Se for assim, dá para confiar nas conclusões das RQ 01 a 06 como tendência geral, mas
 não na categoria exata de cada repositório.
 
+\paragraph{RQ 09 (extra). Repositórios que adotaram agentes de programação têm desempenho DORA diferente dos que não adotaram?}
+Esta questão não está no enunciado e entrou depois da coleta, então a hipótese foi escrita depois de
+vermos as métricas DORA da amostra, mas antes de cruzá-las com qualquer dado de adoção. Adoção aqui é
+deixar rastro explícito de um agente no repositório (arquivo de configuração, coautoria no commit,
+branch ou label), como em Robbes et al. \cite{robbes2026agentic}, que acharam agentes em 22\% a 29\% de
+128 mil projetos do GitHub. O relatório DORA de 2024 mediu o contrário do que se esperava: a cada
+25\% a mais de adoção de IA, o \textit{throughput} de entrega cai cerca de 1,5\% e a estabilidade
+cerca de 7,2\% \cite{dora2024}. A explicação deles é o tamanho do lote, já que com IA sai mais código
+de uma vez e mudança grande quebra mais. Robbes et al. acharam justamente isso nos
+commits feitos com agente, que são maiores que os escritos só por pessoas, e a base AIDev mostra o volume de
+PRs que esses agentes já abrem em projetos populares \cite{li2026aidev}. Por isso esperamos
+\textit{lead time} igual ou menor nos adotantes, porque o agente acelera a escrita e o efeito no
+\textit{throughput} medido pelo DORA foi pequeno, e CFR (a) maior, porque lote maior quebra mais o CI.
+Não esperamos diferença grande em nenhuma das duas: a detecção só enxerga quem deixa marca, e quem usa
+IA sem marca fica no grupo dos não adotantes, o que puxa os dois grupos um para o outro.
+
 \section{Metodologia}
 % Sprint 2. Cada subseção é escrita por quem pegou a issue indicada no comentário.
 
