@@ -4,7 +4,9 @@ Entregas nas unidades de deploy alternativas da RQ 07, para os repositórios que
 `repos.csv`: release + pré-release (C2) e tag (C3). Fica fora do pipeline principal para não mexer
 nos marcadores `_completo` da coleta pesada. Cada unidade terminada num repo ganha um marcador na
 pasta dele no cache (`_alternativas_pre` e `_alternativas_tag`), então parar e rodar de novo continua
-de onde parou. Com `--unidade` dá para coletar uma só: a C3 custa bem mais cota que a C2.
+de onde parou. Com `--unidade` dá para coletar uma só: a C3 custa bem mais cota que a C2. Com
+`--tags-de-versao`, a C3 só considera tags com `X.Y` ou `X.Y.Z` no nome, o que deixa de fora tags de
+CI como `ciflow/trunk/123` e `viable/strict/456`.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ import logging
 from datetime import date
 from pathlib import Path
 
+from lab03.metricas.corretiva import versao
 from lab03.pipeline import releases
 from lab03.pipeline.__main__ import PASTA_SAIDA, carregar_config
 from lab03.pipeline.api import ErroAPI, GitHubAPI, RecursoAusente
@@ -36,13 +39,21 @@ def repos_da_amostra(pasta_saida: str | Path) -> list[str]:
         return [linha["repo"] for linha in csv.DictReader(arquivo)]
 
 
-def coletar_repo(api: GitHubAPI, repo: str, unidade: str, inicio: date, fim: date) -> dict:
+def tag_de_versao(nome: str) -> bool:
+    """Mesmo critério de versão da heurística corretiva."""
+    return versao(nome) is not None
+
+
+def coletar_repo(
+    api: GitHubAPI, repo: str, unidade: str, inicio: date, fim: date, tags_de_versao: bool = False
+) -> dict:
     """Entregas de um repo numa unidade. Repo que sumiu ou deu erro sai com `erro` e lista vazia."""
     try:
         if unidade == "pre":
             entregas = releases.coletar(api, repo, inicio, fim, com_pre=True)["releases"]
         else:
-            entregas = releases.entregas_por_tag(api, repo, inicio, fim)
+            filtro = tag_de_versao if tags_de_versao else None
+            entregas = releases.entregas_por_tag(api, repo, inicio, fim, filtro)
     except (RecursoAusente, ErroAPI) as erro:
         log.warning("%s: %s", repo, erro)
         return {"repo": repo, "erro": str(erro), "entregas": []}
@@ -65,17 +76,19 @@ def executar(
     pasta_cache: str | Path,
     pasta_saida: str | Path,
     unidades: tuple[str, ...] = UNIDADES,
+    tags_de_versao: bool = False,
 ) -> dict[str, list[dict]]:
-    assinatura = {"inicio": str(inicio), "fim": str(fim), "campos_release": list(releases.CAMPOS_RELEASE)}
+    base = {"inicio": str(inicio), "fim": str(fim), "campos_release": list(releases.CAMPOS_RELEASE)}
     todos = {}
     for unidade in unidades:
         marcador = f"_alternativas_{unidade}"
+        assinatura = {**base, "tags_de_versao": tags_de_versao} if unidade == "tag" else base
         resultados = []
         for i, repo in enumerate(repos, start=1):
             resultado = ler_marcador(pasta_cache, repo, assinatura, marcador)
             if resultado is None:
                 antes = api.chamadas_rede
-                resultado = coletar_repo(api, repo, unidade, inicio, fim)
+                resultado = coletar_repo(api, repo, unidade, inicio, fim, tags_de_versao)
                 if resultado["erro"] is None:
                     gravar_marcador(pasta_cache, repo, assinatura, resultado, marcador)
                 log.info("%s %d/%d %s: %d entregas | %d chamadas | cota %s", unidade, i, len(repos), repo,
@@ -92,6 +105,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", default="lab03/config.yaml")
     parser.add_argument("--limite", type=int, help="só os N primeiros repositórios do repos.csv")
     parser.add_argument("--unidade", choices=UNIDADES, help="só release + pré-release (pre) ou só tag (tag)")
+    parser.add_argument("--tags-de-versao", action="store_true",
+                        help="na C3, só tags com X.Y ou X.Y.Z no nome (tira tags de CI)")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
@@ -103,7 +118,8 @@ def main(argv: list[str] | None = None) -> int:
     api = GitHubAPI.do_ambiente(pasta_cache)
     try:
         unidades = (args.unidade,) if args.unidade else UNIDADES
-        executar(api, repos, config["inicio"], config["fim"], pasta_cache, pasta_saida, unidades)
+        executar(api, repos, config["inicio"], config["fim"], pasta_cache, pasta_saida, unidades,
+                 args.tags_de_versao)
     except KeyboardInterrupt:
         log.warning("interrompido; rode o mesmo comando para continuar de onde parou")
         return 130

@@ -65,3 +65,14 @@ def test_repo_que_sumiu_fica_sem_linhas_e_sem_marcador(tmp_path):
     assert resultado["erro"] and resultado["entregas"] == []
     assert not (tmp_path / "cache" / "o__r" / "_alternativas_pre").exists()
     assert ler(tmp_path / "releases_pre.csv") == []
+
+
+def test_tags_de_versao_deixam_de_fora_as_de_ci(tmp_path):
+    api = APIContada(
+        tags=[leve("ciflow/trunk/7", "s3", "2025-03-01T00:00:00Z"), leve("v2", "s2", "2025-02-28T00:00:00Z"),
+              leve("v1.0", "s1", "2024-12-31T00:00:00Z")],
+        compares={"v1.0...v2": []},
+    )
+    inicio, fim = date(2025, 1, 1), date(2025, 12, 31)
+    [resultado] = executar(api, ["o/r"], inicio, fim, tmp_path / "cache", tmp_path, ("tag",), tags_de_versao=True)["tag"]
+    assert resultado["entregas"] == []  # `v2` não tem X.Y e `ciflow/trunk/7` é de CI

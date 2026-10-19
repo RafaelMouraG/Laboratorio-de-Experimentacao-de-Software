@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Callable, Optional
 from urllib.parse import quote
 
 from lab03.pipeline.api import GitHubAPI, RecursoAusente
@@ -140,13 +140,16 @@ def _commit_da_tag(alvo: Optional[dict]) -> Optional[dict]:
     return alvo
 
 
-def listar_tags(api: GitHubAPI, repo: str, desde: Optional[Dia] = None) -> list[dict]:
+def listar_tags(
+    api: GitHubAPI, repo: str, desde: Optional[Dia] = None, filtro: Optional[Callable[[str], bool]] = None
+) -> list[dict]:
     """Tags com a data do commit apontado, da mais antiga para a mais nova.
 
     A data é a do committer (`committedDate`), não a do author: é quando o commit chegou ao branch,
     e um rebase mantém o author date antigo. A GraphQL devolve 100 tags por chamada já ordenadas
     da mais nova para a mais velha, então com `desde` a listagem para na primeira tag anterior a
-    esse dia, que é a entrega anterior da primeira tag da janela.
+    esse dia, que é a entrega anterior da primeira tag da janela. `filtro` recebe o nome da tag e
+    decide se ela conta; a parada só olha as tags que passaram nele.
     """
     dono, nome = repo.split("/")
     limite = _dia(desde) if desde is not None else None
@@ -157,7 +160,7 @@ def listar_tags(api: GitHubAPI, repo: str, desde: Optional[Dia] = None) -> list[
         refs = dados["repository"]["refs"]
         for ref in refs["nodes"]:
             commit = _commit_da_tag(ref["target"])
-            if commit is None:
+            if commit is None or (filtro is not None and not filtro(ref["name"])):
                 continue
             tags.append({"nome": ref["name"], "sha": commit["oid"], "data": commit["committedDate"]})
         antes_do_limite = limite is not None and tags and _data(tags[-1]["data"]).date() < limite
@@ -177,15 +180,18 @@ def _uma_por_commit(tags: list[dict]) -> list[dict]:
     return unicas
 
 
-def entregas_por_tag(api: GitHubAPI, repo: str, inicio: Dia, fim: Dia) -> list[dict]:
+def entregas_por_tag(
+    api: GitHubAPI, repo: str, inicio: Dia, fim: Dia, filtro: Optional[Callable[[str], bool]] = None
+) -> list[dict]:
     """Unidade de deploy "tag" da C3: cada tag da janela, com os commits desde a tag anterior.
 
     Sai no mesmo formato das releases (`tag_name`, `published_at`, `commits`, `sem_anterior`,
     `ignorada_compare_404`), para as funções de `lab03/metricas` lerem igual. Tag não tem notas, então
-    `body` fica vazio. `published_at` é a data do commit apontado.
+    `body` fica vazio. `published_at` é a data do commit apontado. Com `filtro`, só as tags aceitas por
+    ele contam, inclusive como anterior.
     """
     inicio, fim = _dia(inicio), _dia(fim)
-    tags = _uma_por_commit(listar_tags(api, repo, desde=inicio))
+    tags = _uma_por_commit(listar_tags(api, repo, desde=inicio, filtro=filtro))
     entregas = []
     for posicao, tag in enumerate(tags):
         if not inicio <= _data(tag["data"]).date() <= fim:

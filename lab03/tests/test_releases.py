@@ -264,3 +264,14 @@ def test_primeira_tag_da_historia_fica_sem_anterior_e_compare_404_segue():
     v1, v2 = entregas_por_tag(api, "o/r", "2025-01-01", "2025-12-31")
     assert v1["sem_anterior"] is True and v1["commits"] == []
     assert v2["ignorada_compare_404"] is True
+
+
+def test_filtro_tambem_vale_para_a_tag_anterior():
+    api = APIFalsa(
+        tags=[leve("v1.1", "c", "2025-03-01T00:00:00Z"), leve("ciflow/trunk/9", "b", "2024-12-20T00:00:00Z"),
+              leve("v1.0", "a", "2024-12-01T00:00:00Z")],
+        compares={"v1.0...v1.1": [commit("x", "2025-02-01T00:00:00Z")]},
+    )
+    [entrega] = entregas_por_tag(api, "o/r", "2025-01-01", "2025-12-31", filtro=lambda nome: "/" not in nome)
+    assert entrega["tag_name"] == "v1.1" and [c["sha"] for c in entrega["commits"]] == ["x"]
+    assert sum(p[0] == "graphql" for p in api.pedidos) == 2  # a 1ª página só tinha a tag de CI antes da janela

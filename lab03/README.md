@@ -60,6 +60,7 @@ comando separado, que lê a amostra do `repos.csv` e não mexe nos marcadores da
 ```bash
 python -m lab03.pipeline.alternativas --config lab03/config.yaml             # os repositórios do repos.csv
 python -m lab03.pipeline.alternativas --config lab03/config.yaml --unidade pre  # só a C2
+python -m lab03.pipeline.alternativas --config lab03/config.yaml --unidade tag --tags-de-versao  # C3 sem tags de CI
 python -m lab03.pipeline.alternativas --config lab03/config.yaml --limite 5  # teste rápido
 ```
 
