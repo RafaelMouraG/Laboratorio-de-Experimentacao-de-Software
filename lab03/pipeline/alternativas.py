@@ -5,8 +5,9 @@ Entregas nas unidades de deploy alternativas da RQ 07, para os repositórios que
 nos marcadores `_completo` da coleta pesada. Cada unidade terminada num repo ganha um marcador na
 pasta dele no cache (`_alternativas_pre` e `_alternativas_tag`), então parar e rodar de novo continua
 de onde parou. Com `--unidade` dá para coletar uma só: a C3 custa bem mais cota que a C2. Com
-`--tags-de-versao`, a C3 só considera tags com `X.Y` ou `X.Y.Z` no nome, o que deixa de fora tags de
-CI como `ciflow/trunk/123` e `viable/strict/456`.
+`--tags-de-versao`, a C3 só considera tags com `X.Y` ou `X.Y.Z` no nome ou com release publicada de
+mesmo nome, o que deixa de fora tags de CI como `ciflow/trunk/123` e `viable/strict/456` sem perder
+releases com nome fora do padrão (`b6500` no llama.cpp, `r170` no three.js, `langchain==1.0.0`).
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import csv
 import logging
 from datetime import date
 from pathlib import Path
+from typing import Callable
 
 from lab03.metricas.corretiva import versao
 from lab03.pipeline import releases
@@ -39,9 +41,9 @@ def repos_da_amostra(pasta_saida: str | Path) -> list[str]:
         return [linha["repo"] for linha in csv.DictReader(arquivo)]
 
 
-def tag_de_versao(nome: str) -> bool:
-    """Mesmo critério de versão da heurística corretiva."""
-    return versao(nome) is not None
+def filtro_de_versao(nomes_de_release: set[str]) -> Callable[[str], bool]:
+    """Tag com versão pelo critério da heurística corretiva, ou com release publicada de mesmo nome."""
+    return lambda nome: versao(nome) is not None or nome in nomes_de_release
 
 
 def coletar_repo(
@@ -52,7 +54,9 @@ def coletar_repo(
         if unidade == "pre":
             entregas = releases.coletar(api, repo, inicio, fim, com_pre=True)["releases"]
         else:
-            filtro = tag_de_versao if tags_de_versao else None
+            filtro = None
+            if tags_de_versao:  # a lista de releases já está no cache da coleta principal
+                filtro = filtro_de_versao({r["tag_name"] for r in releases.listar_releases(api, repo)})
             entregas = releases.entregas_por_tag(api, repo, inicio, fim, filtro)
     except (RecursoAusente, ErroAPI) as erro:
         log.warning("%s: %s", repo, erro)
@@ -82,7 +86,7 @@ def executar(
     todos = {}
     for unidade in unidades:
         marcador = f"_alternativas_{unidade}"
-        assinatura = {**base, "tags_de_versao": tags_de_versao} if unidade == "tag" else base
+        assinatura = {**base, "tags_de_versao": "versao_ou_release" if tags_de_versao else False} if unidade == "tag" else base
         resultados = []
         for i, repo in enumerate(repos, start=1):
             resultado = ler_marcador(pasta_cache, repo, assinatura, marcador)
@@ -106,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limite", type=int, help="só os N primeiros repositórios do repos.csv")
     parser.add_argument("--unidade", choices=UNIDADES, help="só release + pré-release (pre) ou só tag (tag)")
     parser.add_argument("--tags-de-versao", action="store_true",
-                        help="na C3, só tags com X.Y ou X.Y.Z no nome (tira tags de CI)")
+                        help="na C3, só tags com X.Y ou X.Y.Z no nome ou com release (tira tags de CI)")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
