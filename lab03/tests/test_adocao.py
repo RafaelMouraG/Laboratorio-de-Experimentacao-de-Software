@@ -420,8 +420,26 @@ def test_parcial_grava_so_os_marcados_sem_chamar_a_api(tmp_path):
 def test_mudar_as_regras_refaz_o_resultado_so_do_cache(tmp_path, monkeypatch):
     preparar(tmp_path)
     rodar(tmp_path, SessaoFalsa())
-    monkeypatch.setattr("lab03.pipeline.adocao.VERSAO_REGRAS", "outra")
+    monkeypatch.setattr("lab03.pipeline.adocao.VERSAO_CODIGO", "outra")
     sessao = SessaoFalsa()
     adocao, _ = rodar(tmp_path, sessao)
     assert sessao.pedidos == []
     assert adocao["o/ia"]["commits_ia"] == 2
+
+
+def test_janela_inteira_completa_o_que_a_fatia_mensal_cortou_cedo(tmp_path):
+    """No nvm, o `since` da fatia de setembro parou de andar cedo e perdeu metade dos commits."""
+    class SessaoCorte(SessaoFalsa):
+        def get(self, url, params=None, timeout=None):
+            if url.endswith("/commits"):
+                self.pedidos.append((url, params))
+                comum = [commit_api("a", "2026-02-10T00:00:00Z", "x")]
+                if params["since"].startswith("2026-01-01") and params["until"].startswith("2026-02-28"):
+                    return resposta(comum + [commit_api("cortado", "2026-02-03T00:00:00Z", "y")])
+                return resposta(comum if params["since"].startswith("2026-02") else [])
+            return super().get(url, params, timeout)
+
+    preparar(tmp_path, repos=("o/ia",))
+    api = GitHubAPI("t", tmp_path / "cache", sessao=SessaoCorte(), dormir=lambda s: None)
+    executar(api, INICIO, date(2026, 2, 28), tmp_path / "data", None, Buscador(api, dormir=lambda s: None))
+    assert ler(tmp_path / "data/repos.csv")[0]["commits_janela"] == "2"

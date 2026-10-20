@@ -13,7 +13,7 @@ Interromper não joga nada fora. Cada página fica no cache da `GitHubAPI`, cada
 terminado ganha o marcador `_adocao` na pasta dele, e os CSVs são gravados com quem já terminou
 mesmo quando a execução para no meio (Ctrl+C ou erro). Rodar de novo pula os marcados e retoma o
 repo interrompido a partir das páginas em cache. A assinatura do marcador leva um hash de
-`metricas/agentes.py`: mudar uma regra refaz o resultado, mas só lendo o cache, sem rede.
+`metricas/agentes.py` e deste arquivo: mudar uma regra refaz o resultado, mas só lendo o cache.
 `--parcial` grava os CSVs só com os marcados, sem chamar a API.
 
 Depois de rodar a coleta principal de novo, o `repos.csv` volta sem as colunas de adoção; basta
@@ -64,7 +64,8 @@ MAX_PERDIDOS_SEGUIDOS = 3  # mais que isso já não é um commit quebrado, é a 
 
 MARCADOR = "_adocao"
 ARQUIVO_FALHAS = "_adocao_falhas.json"
-VERSAO_REGRAS = hashlib.sha1(Path(agentes.__file__).read_bytes()).hexdigest()[:12]
+# muda quando muda a detecção ou a coleta, e aí o marcador velho é refeito (do cache)
+VERSAO_CODIGO = hashlib.sha1(Path(agentes.__file__).read_bytes() + Path(__file__).read_bytes()).hexdigest()[:12]
 
 log = logging.getLogger(__name__)
 
@@ -192,6 +193,33 @@ def _commits_do_mes(
     return achados, perdidos
 
 
+def _commits_da_janela_inteira(
+    api: GitHubAPI, repo: str, branch: str, inicio: date, fim: date, falhas: Falhas
+) -> list[dict]:
+    """A janela numa consulta só, se ela cabe em `MAX_PAGINAS_COMMITS` páginas; senão, nada.
+
+    Complementa as fatias mensais. Com datas de committer fora de ordem (merge de branch antigo),
+    o `since` faz o /commits parar de andar cedo, como o `git log --since`: no nvm, a fatia de
+    setembro trouxe 16 de 33 commits. Numa consulta da janela inteira o `since` fica longe e
+    quase nunca corta; nas fatias, o corte de uma não é o da outra. A união pega os dois.
+    """
+    caminho = f"/repos/{repo}/commits"
+    params = {"sha": branch, "since": f"{inicio}T00:00:00Z", "until": f"{fim}T23:59:59Z"}
+    chave = f"{params['since']}..{params['until']}"
+    try:
+        if chave in falhas:
+            raise _ja_falhou(caminho)
+        if api.paginas(caminho, {"per_page": POR_PAGINA, **params}, enxugar=_pagina_commits) > MAX_PAGINAS_COMMITS:
+            return []
+        return api.paginar(caminho, params, enxugar=_pagina_commits)
+    except ErroAPI as erro:
+        if erro.status != 0:
+            raise
+        falhas.anotar(chave)
+        log.warning("%s: janela inteira falhou (%s), ficando só com as fatias mensais", repo, erro.mensagem)
+        return []
+
+
 def listar_commits(api: GitHubAPI, repo: str, branch: str, inicio: date, fim: date) -> tuple[list[dict], int]:
     """Commits do branch na janela, do mais novo para o mais velho, e quantos não saíram da API.
     Repo vazio (409) dá lista vazia.
@@ -199,13 +227,15 @@ def listar_commits(api: GitHubAPI, repo: str, branch: str, inicio: date, fim: da
     A janela vai mês a mês, e o mês com mais de `MAX_PAGINAS_COMMITS` páginas, ou que dá 5xx até
     esgotar as tentativas, é partido ao meio: paginar fundo no /commits dá HTTP 500 (o
     hermes-agent quebrou na página 152 de 476). Um segundo que ainda falha vai um commit por vez.
+    Quem cabe em 30 páginas também é consultado de uma vez (`_commits_da_janela_inteira`).
     """
     try:
         falhas = Falhas(pasta_repo(api.pasta_cache, repo) / ARQUIVO_FALHAS)
         meses = [_commits_do_mes(api, repo, branch, mes, falhas) for mes in fatias_mensais(inicio, fim)]
+        inteira = _commits_da_janela_inteira(api, repo, branch, inicio, fim, falhas)
     except RecursoAusente:
         return [], 0
-    vistos = {c["sha"]: c for lote, _ in meses for c in lote}
+    vistos = {c["sha"]: c for lote in [*(lote for lote, _ in meses), inteira] for c in lote}
     return sorted(vistos.values(), key=lambda c: c["data"], reverse=True), sum(p for _, p in meses)
 
 
@@ -430,7 +460,7 @@ def executar(
         linhas = list(leitor)
     buscador = buscador or Buscador(api)
     alvo = linhas[:limite] if limite else linhas
-    assinatura = {"inicio": str(inicio), "fim": str(fim), "regras": VERSAO_REGRAS}
+    assinatura = {"inicio": str(inicio), "fim": str(fim), "codigo": VERSAO_CODIGO}
 
     resultados: dict[str, dict] = {}
     try:
