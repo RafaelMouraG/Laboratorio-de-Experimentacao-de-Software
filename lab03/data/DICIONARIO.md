@@ -23,6 +23,38 @@ coleta necessária ainda não terminou ou que não há observação válida; vaz
 | `runs_sucesso` | inteiro | runs | subset dos runs válidos com `success` |
 | `runs_falha` | inteiro | runs | subset dos runs válidos com conclusão de falha |
 
+As colunas abaixo são da RQ 09 (adoção de agentes de IA, #117) e saem de
+`python -m lab03.pipeline --config lab03/config.yaml --adocao`, que reescreve o
+`repos.csv` acrescentando-as. Rodar a coleta principal de novo apaga essas colunas;
+basta rodar `--adocao` outra vez, e tudo sai do cache. As regras de detecção estão em
+`metricas/agentes.py`, nas quatro famílias de Robbes et al. (2026): arquivo,
+autoria, branch e label.
+
+| Coluna | Tipo | Unidade | Origem |
+|---|---|---|---|
+| `commits_janela` | inteiro | commits | API de commits do default branch, `since`/`until` da janela (data do committer) |
+| `commits_perdidos` | inteiro | commits | commits que a API não devolveu (HTTP 500 mesmo pedindo um por vez, num intervalo de 1 s) e que ficam fora de todas as contas |
+| `commits_ia` | inteiro | commits | commits distintos com pelo menos uma linha em `commits_ia.csv` |
+| `primeiro_commit_ia` | data-hora ISO 8601 | UTC | menor `data` do repositório em `commits_ia.csv` |
+| `proporcao_ia_desde_adocao` | fração real | 0 a 1 | `commits_ia` / commits da janela a partir de `primeiro_commit_ia` (inclusive); vazio sem commit com IA |
+| `prs_agente` | inteiro | PRs | PRs criados na janela achados pela busca de issues por branch (`copilot/`, `codex/`, `cursor/`, `claude/`, `devin/`), label `codex` ou autor `app/copilot-swe-agent`/`app/devin-ai-integration`; vazio se a busca recusou o repositório |
+| `arquivo_agente` | booleano | — | árvore do último commit da janela tem `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.cursor/rules` ou `.github/copilot-instructions.md`, em qualquer pasta |
+| `arquivo_agente_gitignore` | booleano | — | `.gitignore` da raiz, no mesmo commit, esconde um desses arquivos (`.cursor` inteiro conta) |
+| `ferramentas_ia` | texto | lista separada por `;` | ferramentas com algum rastro no repositório, de qualquer família; `genérico` é o `AGENTS.md` |
+
+## `commits_ia.csv`
+
+Uma linha por par commit/rastro: um commit com trailer do Claude que veio de um PR
+`copilot/` aparece duas vezes. Commit sem marca não entra.
+
+| Coluna | Tipo | Unidade | Origem |
+|---|---|---|---|
+| `sha` | texto | — | API de commits, `sha` |
+| `repo` | texto | `owner/name` | repositório da coleta |
+| `data` | data-hora ISO 8601 | UTC | API de commits, `commit.committer.date` |
+| `ferramenta` | texto | — | `Claude`, `Copilot`, `Cursor`, `Codex` ou `Devin` |
+| `familia` | texto | — | `autoria` (trailer `Co-authored-by`, "Generated with Claude Code", conta bot como autor do commit, ou squash `(#N)` de PR aberto pela conta bot); `branch` (merge de PR de branch com prefixo de agente, ou squash `(#N)` de um PR achado pela busca de branch); `label` (squash de PR com label `codex`) |
+
 ## `releases.csv`
 
 | Coluna | Tipo | Unidade | Origem |

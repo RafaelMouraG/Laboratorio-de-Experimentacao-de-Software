@@ -179,6 +179,18 @@ def test_ultima_requisicao_da_cota_faz_a_proxima_esperar(tmp_path, esperas):
     assert esperas == [65]
 
 
+def test_cota_da_busca_nao_passa_por_cima_da_core(tmp_path, esperas):
+    busca = {"X-RateLimit-Resource": "search", "X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1060"}
+    core = {"X-RateLimit-Resource": "core", "X-RateLimit-Remaining": "4321"}
+    api, _ = cliente(tmp_path, esperas, resposta(corpo=[1], cabecalhos=core),
+                     resposta(corpo={"items": []}, cabecalhos=busca), resposta(corpo=[2]))
+    api.get("/repos/o/r/releases")
+    api.get("/search/issues", {"q": "x"})
+    assert api.restante == 4321
+    api.get("/repos/o/r/tags")
+    assert esperas == []
+
+
 def test_limite_secundario_respeita_retry_after(tmp_path, esperas):
     api, _ = cliente(tmp_path, esperas, resposta(429, {}, {"Retry-After": "30"}), resposta(corpo=[]))
     api.get("/search/repositories", {"q": "stars:>1000"})
@@ -213,6 +225,14 @@ def test_ultima_pagina_le_o_link(tmp_path, esperas):
 def test_ultima_pagina_sem_link_conta_a_lista(tmp_path, esperas):
     api, _ = cliente(tmp_path, esperas, resposta(corpo=[{"login": "sozinho"}]))
     assert api.ultima_pagina("/repos/o/r/contributors", {"per_page": 1}) == 1
+
+
+def test_paginas_le_o_last_e_sem_link_e_uma_so(tmp_path, esperas):
+    link = '<https://api.github.com/repositories/1/commits?per_page=100&page=7>; rel="last"'
+    api, _ = cliente(tmp_path, esperas, resposta(corpo=[1] * 100, cabecalhos={"Link": link}),
+                     resposta(corpo=[1] * 62))
+    assert api.paginas("/repos/o/r/commits", {"per_page": 100, "since": "a"}) == 7
+    assert api.paginas("/repos/o/r/commits", {"per_page": 100, "since": "b"}) == 1
 
 
 def test_json_corrompido_no_cache_e_refeito(tmp_path, esperas):
