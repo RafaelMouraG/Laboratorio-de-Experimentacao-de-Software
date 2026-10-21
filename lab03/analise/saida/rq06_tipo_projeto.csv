@@ -1,0 +1,5 @@
+fator,metrica,teste,grupos,n,ausentes,estatistica,p_valor,efeito,nome_efeito,p_ajustado,significativo
+tipo_projeto,releases_por_semana,kruskal-wallis,3,59,0,0.8858845636692935,0.6421442694073227,0.015273871787401612,epsilon2,1.0,False
+tipo_projeto,lead_time_release_horas,kruskal-wallis,3,59,0,1.6971326489739056,0.42802814574033643,0.029260907740929407,epsilon2,1.0,False
+tipo_projeto,cfr_ci,kruskal-wallis,3,59,0,1.0292019740927718,0.5977390526660435,0.01774486162228917,epsilon2,1.0,False
+tipo_projeto,recuperacao_mediana_horas,kruskal-wallis,3,55,4,1.0059335469725283,0.6047338872591237,0.018628399018009785,epsilon2,1.0,False
