@@ -355,7 +355,47 @@ commits que não fazem parte daquela entrega.
 
 \section{Resultados}
 
-% RQ 01 a RQ 05 e RQ 07 entram antes desta subseção (#108, #110, #113).
+% RQ 01 a RQ 04 entram antes desta subseção (#108) e a RQ 07 depois da RQ 06 (#113).
+\subsection{RQ 05}
+
+Calculamos o Spearman entre releases por semana e cada variante da CFR, tirando os repositórios
+sem uma das duas métricas. Na CFR (a) entram os 310. Na CFR (b) entram 309, porque o
+\texttt{expo/expo} não tem nenhuma release avaliada. As duas correlações são positivas e
+significativas (Tabela~\ref{tab:rq05}), mas com forças bem diferentes. Na CFR (a) o $\rho$ é 0,19,
+uma associação fraca: soltar mais releases quase não diz nada sobre a taxa de falha do CI. Na CFR
+(b) o $\rho$ é 0,62, uma associação forte.
+
+Como as notas da Introdução previam, muitos repositórios têm CFR (b) igual a zero: 59 dos 309
+(19\%), contra 12 na CFR (a). Esses repositórios soltam poucas releases (mediana de 0,19 por semana,
+contra 0,56 nos demais) e por isso formam a faixa de pontos no zero, à esquerda do painel da
+direita na Figura~\ref{fig:rq05}. Empates costumam tirar poder do teste, mas aqui eles se
+concentram no extremo de baixa frequência e acabam reforçando a correlação. Como
+checagem, refizemos o Spearman da variante (b) sem os 59 repositórios. O $\rho$ cai para 0,49, mas
+continua moderado e significativo ($n = 250$). O resultado principal segue sendo o com todos os
+repositórios.
+
+\begin{table}[ht]
+\centering
+\caption{RQ 05: Spearman entre releases por semana e a CFR}
+\label{tab:rq05}
+\begin{tabular}{llrrr}
+\hline
+Variante & Recorte & $n$ & $\rho$ & $p$ \\
+\hline
+CFR (a) & Todos & 310 & 0,19 & $<$0,001 \\
+CFR (b) & Todos & 309 & 0,62 & $<$0,001 \\
+CFR (b) & Sem CFR (b) = 0 & 250 & 0,49 & $<$0,001 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figuras/rq05_dispersao.pdf}
+\caption{RQ 05: releases por semana × CFR, um painel por variante. Eixo x em escala log}
+\label{fig:rq05}
+\end{figure}
+
 \subsection{RQ 06}
 
 Comparamos as quatro métricas da variante de referência (releases por semana, \textit{lead time}
@@ -426,7 +466,24 @@ correção, $\varepsilon^2 \leq 0{,}03$).
 
 \section{Discussão}
 
-% RQ 01 a RQ 05 e RQ 07 entram antes deste parágrafo (#108, #110, #113).
+% RQ 01 a RQ 04 entram antes deste parágrafo (#108) e a RQ 07 depois da RQ 06 (#113).
+\paragraph{RQ 05.} A hipótese acertou que as duas variantes dariam respostas diferentes, mas errou
+o sinal da (a) e a força da (b). Na CFR (a), esperávamos $|\rho| < 0{,}2$, talvez levemente
+negativo. A força ficou dentro do previsto ($\rho = 0{,}19$), mas o sinal foi positivo: quem solta
+mais releases tem CI um pouco mais vermelho, e não um pouco mais verde. A associação é tão fraca
+que não confirma nem contradiz o DORA. A CFR de CI depende mais da saúde dos testes do que do ritmo
+de publicação, como a hipótese supunha. Na CFR (b), esperávamos um $\rho$ entre 0,3 e 0,5 e ele
+veio em 0,62. Lido ao pé da letra, isso seria um \textit{trade-off} claro entre velocidade e
+estabilidade, contrário ao que o DORA afirma. Mas, como a hipótese já previa, boa parte dessa
+correlação vem da forma de medir: uma release só falha se outra sair em até 7 dias, e isso é quase
+certo para quem solta várias por semana e raro para quem solta uma por mês. A própria release
+corretiva ainda conta como deploy na RQ 01. Os 59 repositórios com CFR (b) igual a zero mostram
+isso: são justamente os de menor frequência, e tirá-los baixa o $\rho$ de 0,62 para 0,49. Por isso
+não lemos o resultado como ``ir rápido quebra mais'', e sim como sinal de que a CFR (b) mistura
+frequência e falha. Além disso, correlação não é causalidade: as duas métricas podem depender de um
+terceiro fator, como o tamanho do projeto ou a política de versionamento, e o desenho não permite
+separar esses efeitos.
+
 \paragraph{RQ 06.} A hipótese se confirma só em parte. Ela acertou que as associações seriam
 parciais e dependentes da métrica: a CFR (a) e o tempo de recuperação não variam com nenhum fator,
 e quase tudo o que aparece está no \textit{lead time} (a). Mas a direção é a contrária da que
