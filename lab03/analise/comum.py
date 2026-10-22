@@ -19,6 +19,27 @@ def carregar(dados: Path = DADOS) -> pd.DataFrame:
     return repos.merge(metricas, on="repo", how="left", validate="one_to_one")
 
 
+def resumo(serie: pd.Series) -> dict:
+    """Resume uma série numérica, contando valores ausentes fora das estatísticas."""
+    validos = serie.dropna()
+    if validos.empty:
+        mediana = q1 = q3 = iqr = float("nan")
+    else:
+        mediana = validos.median()
+        q1 = validos.quantile(0.25)
+        q3 = validos.quantile(0.75)
+        iqr = q3 - q1
+
+    return {
+        "n": int(len(validos)),
+        "ausentes": int(serie.isna().sum()),
+        "mediana": mediana,
+        "q1": q1,
+        "q3": q3,
+        "iqr": iqr,
+    }
+
+
 def salvar_tabela(df: pd.DataFrame, nome: str, pasta: Path = SAIDA) -> None:
     """Grava ``nome.csv`` e ``nome.tex`` em ``lab03/analise/saida``."""
     pasta.mkdir(parents=True, exist_ok=True)

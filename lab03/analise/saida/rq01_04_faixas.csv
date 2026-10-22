@@ -1,0 +1,25 @@
+metrica,variante,faixa,repositorios,percentual,n_ausentes
+Releases por semana,Única,Elite,8,2.5806451612903225,0
+Releases por semana,Única,High,71,22.903225806451612,0
+Releases por semana,Única,Medium,157,50.645161290322584,0
+Releases por semana,Única,Low,74,23.870967741935484,0
+Lead time (a),(a),Elite,23,7.443365695792881,1
+Lead time (a),(a),High,74,23.948220064724918,1
+Lead time (a),(a),Medium,106,34.3042071197411,1
+Lead time (a),(a),Low,106,34.3042071197411,1
+Lead time (b),(b),Elite,24,7.766990291262135,1
+Lead time (b),(b),High,67,21.68284789644013,1
+Lead time (b),(b),Medium,103,33.33333333333333,1
+Lead time (b),(b),Low,115,37.2168284789644,1
+CFR (a),(a),Elite,259,83.54838709677419,0
+CFR (a),(a),High,34,10.967741935483872,0
+CFR (a),(a),Medium,10,3.225806451612903,0
+CFR (a),(a),Low,7,2.258064516129032,0
+CFR (b),(b),Elite,113,36.56957928802589,1
+CFR (b),(b),High,74,23.948220064724918,1
+CFR (b),(b),Medium,48,15.53398058252427,1
+CFR (b),(b),Low,74,23.948220064724918,1
+Tempo de recuperação,Única,Elite,61,20.74829931972789,16
+Tempo de recuperação,Única,High,207,70.40816326530613,16
+Tempo de recuperação,Única,Medium,24,8.16326530612245,16
+Tempo de recuperação,Única,Low,2,0.6802721088435374,16

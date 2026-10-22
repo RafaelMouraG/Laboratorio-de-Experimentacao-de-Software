@@ -351,11 +351,179 @@ depois da \texttt{v9.2.8}, e o \texttt{compare} entre as duas tem 5.188 commits.
 que mantêm mais de uma linha de versão ao mesmo tempo, e nesse caso o \texttt{compare} junta
 commits que não fazem parte daquela entrega.
 
-% Sprint 3: Resultados e Discussão. Entrega final: Ameaças à validade e Replicação cruzada.
-
 \section{Resultados}
 
-% RQ 01 a RQ 04 entram antes desta subseção (#108) e a RQ 07 depois da RQ 06 (#113).
+\subsection{RQ 01}
+
+A amostra tem 310 repositórios, com mediana de 0,46 release por semana
+(aproximadamente 24 por ano; IQR = 0,77). A faixa mais frequente é \textit{Medium}, com 157
+repositórios (50,6\%), seguida por \textit{Low} (74; 23,9\%), \textit{High} (71; 22,9\%) e
+\textit{Elite} (8; 2,6\%). A hipótese de concentração entre \textit{Medium} e \textit{High} se
+confirma em parte: a maioria está em \textit{Medium}, mas quase um quarto fica em \textit{Low}.
+
+\begin{table}[ht]
+\centering
+\caption{RQ 01: frequência de releases por semana}
+\label{tab:rq01}
+\begin{tabular}{lrrrrrr}
+\hline
+$n$ & Mediana & Q1 & Q3 & IQR & Ausentes & Unidade \\
+\hline
+310 & 0,462 & 0,231 & 1,000 & 0,769 & 0 & releases/semana \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.82\textwidth]{figuras/rq01_frequencia.pdf}
+\caption{RQ 01: distribuição da frequência de releases por semana, em escala logarítmica}
+\label{fig:rq01}
+\end{figure}
+
+\subsection{RQ 02}
+
+Há lead time válido nas duas variantes para 309 repositórios. A variante (a) é maior que a (b)
+em 186 deles (60,2\%), e a mediana das razões (a)/(b) é 1,28. Apesar disso, as medianas
+agregadas são 354 horas na (a) e 400 horas na (b); a mediana das razões entre repositórios não
+é a razão entre essas duas medianas. A dispersão também é ampla, especialmente na variante (b),
+cujo IQR é de 1.458 horas.
+
+As variantes ponderam os dados de maneiras diferentes. Na (a), cada release contribui com um
+valor: o intervalo entre a publicação e o commit mais antigo incluído nela. Na (b), cada commit
+contribui com um valor, de modo que releases com muitos commits pesam mais e commits próximos à
+publicação podem puxar a mediana para baixo. A direção e a magnitude da diferença, portanto,
+dependem do perfil de commits e releases de cada repositório. A expectativa de que (a) fosse maior
+em mais de 90\% dos repositórios não se confirma.
+
+\begin{table}[ht]
+\centering
+\caption{RQ 02: resumo do lead time por variante, em horas}
+\label{tab:rq02}
+\begin{tabular}{lrrrrrr}
+\hline
+Variante & $n$ & Mediana & Q1 & Q3 & IQR & Ausentes \\
+\hline
+(a) Por release & 309 & 353,70 & 135,13 & 1.057,85 & 922,72 & 1 \\
+(b) Por commit & 309 & 399,55 & 137,30 & 1.595,50 & 1.458,20 & 1 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{RQ 02: comparação pareada das variantes de lead time}
+\label{tab:rq02-razao}
+\begin{tabular}{rrrr}
+\hline
+Comparáveis & (a) $>$ (b) & Mediana da razão (a)/(b) & Razões com (b) = 0 \\
+\hline
+309 & 186 & 1,284 & 0 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{RQ 02: repositórios por faixa DORA de lead time}
+\label{tab:rq02-faixas}
+\begin{tabular}{lrrrr}
+\hline
+Variante & Elite & High & Medium & Low \\
+\hline
+(a) Por release & 23 & 74 & 106 & 106 \\
+(b) Por commit & 24 & 67 & 103 & 115 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.72\textwidth]{figuras/rq02_lead_time.pdf}
+\caption{RQ 02: distribuição do lead time nas variantes (a) e (b), em escala logarítmica}
+\label{fig:rq02}
+\end{figure}
+
+\subsection{RQ 03}
+
+A mediana da CFR (a), calculada a partir de execuções de CI, é 4,7\%; 259 dos 310 repositórios
+(83,5\%) ficam em \textit{Elite}. Na CFR (b), calculada a partir de releases corretivas, a
+mediana é 25,0\%, na faixa \textit{High}. Entre os 309 repositórios com valor para a (b), 59
+(19,1\%) têm CFR igual a zero. Um repositório ficou sem CFR (b) porque todas as releases
+da janela foram censuradas; não houve release no denominador da taxa.
+
+As variantes não representam o mesmo tipo de falha. A CFR (a) mede execuções de CI com falha
+no branch padrão, não falhas em produção: uma execução pode falhar por teste instável ou por
+dependência externa, e o CI normalmente roda antes de uma mudança chegar aos usuários. Como os
+dados não registram incidentes de produção, não é possível interpretar essa taxa como proporção
+de deploys que causaram falha em produção. A CFR (b) usa releases corretivas como proxy de
+falhas percebidas após a entrega, mas depende da heurística de classificação e da janela de sete
+dias.
+
+\begin{table}[ht]
+\centering
+\caption{RQ 03: CFR e distribuição das faixas DORA por variante}
+\label{tab:rq03}
+\begin{tabular}{lrrrrrr}
+\hline
+Variante & $n$ & Mediana & Elite & High & Medium & Low \\
+\hline
+(a) CI & 310 & 0,047 & 259 & 34 & 10 & 7 \\
+(b) Entrega & 309 & 0,250 & 113 & 74 & 48 & 74 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.72\textwidth]{figuras/rq03_cfr.pdf}
+\caption{RQ 03: distribuição da CFR nas variantes (a), baseada em CI, e (b), baseada em entrega}
+\label{fig:rq03}
+\end{figure}
+
+\subsection{RQ 04}
+
+Foram observados 294 repositórios com pelo menos um episódio de recuperação conhecido. O tempo
+mediano é 2,91 horas (IQR = 5,53), dentro da faixa \textit{High}; 207 dos 294 (70,4\%) também
+ficam nessa faixa. Dezesseis repositórios não tiveram episódios de recuperação observados.
+Entre os que tiveram episódios, a proporção mediana de episódios censurados é zero e o terceiro
+quartil é 0,0037.
+
+\begin{table}[ht]
+\centering
+\caption{RQ 04: tempo e proporção de episódios censurados}
+\label{tab:rq04}
+\begin{tabular}{lrrrrrr}
+\hline
+Métrica & $n$ & Ausentes & Mediana & Q1 & Q3 & IQR \\
+\hline
+Recuperação (horas) & 294 & 16 & 2,91 & 1,25 & 6,78 & 5,53 \\
+Proporção censurada & 294 & 16 & 0,000 & 0,000 & 0,0037 & 0,0037 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{RQ 04: faixa DORA do tempo de recuperação}
+\label{tab:rq04-faixas}
+\begin{tabular}{lrrrr}
+\hline
+Repositórios válidos & Elite & High & Medium & Low \\
+\hline
+294 & 61 & 207 & 24 & 2 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.65\textwidth]{figuras/rq04_censura.pdf}
+\caption{RQ 04: distribuição da proporção de episódios de falha censurados}
+\label{fig:rq04}
+\end{figure}
+
+% A RQ 07 entra depois da RQ 06 (#113).
 \subsection{RQ 05}
 
 Calculamos o Spearman entre releases por semana e cada variante da CFR, tirando os repositórios
@@ -466,7 +634,38 @@ correção, $\varepsilon^2 \leq 0{,}03$).
 
 \section{Discussão}
 
-% RQ 01 a RQ 04 entram antes deste parágrafo (#108) e a RQ 07 depois da RQ 06 (#113).
+\paragraph{RQ 01.} A hipótese de uma concentração em \textit{Medium} e \textit{High} se confirma
+parcialmente: metade da amostra está em \textit{Medium}, como esperado para projetos que agrupam
+mudanças antes de publicar, mas 23,9\% ficam em \textit{Low}. Apenas 2,6\% alcançam \textit{Elite},
+o que é compatível com a expectativa de que releases diárias sejam incomuns. A frequência observada
+é de releases públicas, não de deploys em produção, e a interpretação permanece limitada por esse
+proxy.
+
+\paragraph{RQ 02.} A hipótese de que o lead time (a) seria maior em mais de 90\% dos repositórios
+não se confirma: isso ocorre em 60,2\%. A razão mediana entre variantes é 1,28, mas as medianas
+agregadas ficam em ordem inversa (354 horas na (a), 400 na (b)). Isso não é contraditório: a
+mediana das razões individuais não é a razão das medianas, e os dois cálculos dão pesos diferentes
+a releases e commits. Na (a), um commit antigo de uma release pode elevar o valor; na (b), cada
+commit é uma observação e releases com muitos commits passam a ter mais peso. Repositórios com
+linhas de versão paralelas também podem inflar o compare entre releases, como observado na
+validação manual. Portanto, a divergência reflete tanto a definição quanto a estrutura de
+versionamento e de commits; não há um fator único que faça a variante (a) crescer em todos os
+projetos.
+
+\paragraph{RQ 03.} A mediana de 4,7\% da CFR (a) confirma a expectativa de uma taxa baixa para o
+proxy de CI, e a mediana de 25\% da CFR (b) fica na faixa \textit{High}, como previsto. A diferença
+não deve ser lida como contradição entre CI e produção: a variante (a) conta execuções de pipeline
+que falharam, e não incidentes depois de um deploy. Ela pode incluir flakiness e falhas de
+dependências, enquanto mudanças barradas no CI podem nunca chegar aos usuários. A variante (b)
+aproxima falhas pós-entrega por releases corretivas, mas também não observa diretamente incidentes
+em produção e depende da heurística e da janela temporal adotadas.
+
+\paragraph{RQ 04.} A mediana de recuperação de 2,91 horas confirma a hipótese de uma faixa
+\textit{High} (entre 1 e 24 horas). A proporção de episódios censurados é baixa na maior parte dos
+repositórios, embora 16 não tenham tido episódios observados e, portanto, não contribuam para esse
+resumo. O resultado descreve apenas falhas de CI após um sucesso conhecido; não é uma medida de
+recuperação de incidentes em produção.
+
 \paragraph{RQ 05.} A hipótese acertou que as duas variantes dariam respostas diferentes, mas errou
 o sinal da (a) e a força da (b). Na CFR (a), esperávamos $|\rho| < 0{,}2$, talvez levemente
 negativo. A força ficou dentro do previsto ($\rho = 0{,}19$), mas o sinal foi positivo: quem solta

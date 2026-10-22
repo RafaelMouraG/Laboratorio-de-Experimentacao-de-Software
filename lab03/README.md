@@ -65,6 +65,24 @@ refazer a coleta pesada não gasta cota.
 (`rm -r lab03/data/cache/<owner>__<repo>`). Para refazer a busca de candidatos, apague
 `lab03/data/cache/_global`.
 
+## Como reproduzir a análise
+
+Com as dependências instaladas e os arquivos `lab03/data/repos.csv` e
+`lab03/data/metricas.csv` commitados, execute da raiz do repositório:
+
+```bash
+python -m lab03.analise.rq01_04
+```
+
+O comando gera os resumos e as distribuições das faixas DORA em
+`lab03/analise/saida/` (CSV e LaTeX) e as figuras em `lab03/relatorio/figuras/` (PDF).
+Ele também imprime os resultados das RQ 01 a RQ 04 no terminal. Para executar os testes
+do resumo compartilhado:
+
+```bash
+python -m pytest lab03/tests/test_comum.py
+```
+
 ## Artigo
 
 O artigo fica em [`relatorio/artigo.tex`](relatorio/artigo.tex), no formato do template da SBC
