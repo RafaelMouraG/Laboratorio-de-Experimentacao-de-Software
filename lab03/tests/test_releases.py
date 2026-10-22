@@ -5,7 +5,7 @@ from lab03.pipeline.releases import (
     _compare_enxuto,
     coletar,
     commits_da_release,
-    data_da_tag,
+    entregas_por_tag,
     listar_releases,
     listar_tags,
     release_anterior,
@@ -28,20 +28,27 @@ def commit(sha, data, mensagem="feat: algo"):
 class APIFalsa:
     """Responde `paginar` e `get` a partir de dicionários montados no teste."""
 
-    def __init__(self, releases=(), compares=None, tags=(), commits=None):
+    def __init__(self, releases=(), compares=None, tags=()):
         self.releases = list(releases)
         self.compares = compares or {}  # "base...head" -> lista de commits
-        self.tags = list(tags)
-        self.commits = commits or {}  # sha -> committer date
+        self.tags = list(tags)  # nós de `refs` da GraphQL, já do mais novo para o mais velho
         self.pedidos = []
 
     def paginar(self, caminho, params=None, chave=None):
         self.pedidos.append((caminho, params))
         if caminho.endswith("/releases"):
             return self.releases
-        if caminho.endswith("/tags"):
-            return self.tags
         raise AssertionError(caminho)
+
+    def graphql(self, consulta, variaveis):
+        """Páginas de 2 tags, para os testes passarem por mais de uma."""
+        self.pedidos.append(("graphql", variaveis))
+        inicio = int(variaveis["depois"] or 0)
+        fim = inicio + 2
+        return {"repository": {"refs": {
+            "pageInfo": {"hasNextPage": fim < len(self.tags), "endCursor": str(fim)},
+            "nodes": self.tags[inicio:fim],
+        }}}
 
     def get(self, caminho, params=None, enxugar=None):
         self.pedidos.append((caminho, params))
@@ -54,11 +61,6 @@ class APIFalsa:
             corpo = {"total_commits": len(todos), "commits": todos[(pagina - 1) * n:pagina * n],
                      "files": [{"patch": "@@ diff enorme @@"}]}
             return enxugar(corpo) if enxugar else corpo
-        if "/commits/" in caminho:
-            sha = caminho.rsplit("/", 1)[1]
-            if sha not in self.commits:
-                raise RecursoAusente(caminho, 404)
-            return {"commit": {"committer": {"date": self.commits[sha]}}}
         raise AssertionError(caminho)
 
 
@@ -97,6 +99,30 @@ def test_anterior_pula_pre_release_e_primeira_nao_tem_anterior():
     assert release_anterior(releases, releases[2])["tag_name"] == "v1"
     assert release_anterior(releases, releases[1])["tag_name"] == "v1"
     assert release_anterior(releases, releases[0]) is None
+
+
+def test_com_pre_a_anterior_pode_ser_pre_release():
+    releases = [
+        {"tag_name": "v1", "prerelease": False},
+        {"tag_name": "v2-rc1", "prerelease": True},
+        {"tag_name": "v2", "prerelease": False},
+    ]
+    assert release_anterior(releases, releases[2], com_pre=True)["tag_name"] == "v2-rc1"
+    assert release_anterior(releases, releases[1], com_pre=True)["tag_name"] == "v1"
+
+
+def test_coleta_com_pre_compara_com_a_pre_release_anterior():
+    api = APIFalsa(
+        releases=[release("v1", "2025-01-01T00:00:00Z"), release("v2-rc1", "2025-02-01T00:00:00Z", pre=True),
+                  release("v2", "2025-03-01T00:00:00Z")],
+        compares={"v1...v2-rc1": [commit("a", "2025-01-20T00:00:00Z")],
+                  "v2-rc1...v2": [commit("b", "2025-02-20T00:00:00Z")]},
+    )
+    principal = coletar(api, "o/r", "2025-01-01", "2025-12-31")["releases"]
+    assert [r["tag_name"] for r in principal] == ["v1", "v2"]
+    com_pre = coletar(api, "o/r", "2025-01-01", "2025-12-31", com_pre=True)["releases"]
+    assert [r["tag_name"] for r in com_pre] == ["v1", "v2-rc1", "v2"]
+    assert [c["sha"] for c in com_pre[2]["commits"]] == ["b"]
 
 
 def test_compare_com_tres_paginas_junta_todos_os_commits():
@@ -166,28 +192,86 @@ def test_compare_404_marca_a_release_e_segue():
     assert resultado["ignoradas_compare_404"] == 1
 
 
+def leve(nome, sha, data):
+    return {"name": nome, "target": {"__typename": "Commit", "oid": sha, "committedDate": data}}
+
+
+def anotada(nome, sha, data):
+    return {"name": nome, "target": {"__typename": "Tag", "target": {
+        "__typename": "Commit", "oid": sha, "committedDate": data}}}
+
+
 def test_tags_so_sao_coletadas_quando_pedidas():
     api = APIFalsa(releases=[release("v1", "2025-02-01T00:00:00Z")])
     assert coletar(api, "o/r", "2025-01-01", "2025-12-31")["tags"] is None
-    assert not any(p[0].endswith("/tags") for p in api.pedidos)
+    assert not any(p[0] == "graphql" for p in api.pedidos)
 
 
-def test_tags_ganham_a_data_do_commit_e_saem_ordenadas():
-    api = APIFalsa(
-        tags=[{"name": "v2", "commit": {"sha": "b"}}, {"name": "v1", "commit": {"sha": "a"}},
-              {"name": "orfa", "commit": {"sha": "sumiu"}}],
-        commits={"a": "2025-01-01T10:00:00Z", "b": "2025-03-01T10:00:00Z"},
-    )
-    tags = coletar(api, "o/r", "2025-01-01", "2025-12-31", coletar_tags=True)["tags"]
-    assert tags == [
+def test_tag_leve_e_anotada_ganham_a_data_do_commit_e_saem_ordenadas():
+    api = APIFalsa(tags=[
+        anotada("v2", "b", "2025-03-01T10:00:00Z"),
+        {"name": "arvore", "target": {"__typename": "Tree", "oid": "t"}},
+        leve("v1", "a", "2025-01-01T10:00:00Z"),
+    ])
+    assert listar_tags(api, "o/r") == [
         {"nome": "v1", "sha": "a", "data": "2025-01-01T10:00:00Z"},
         {"nome": "v2", "sha": "b", "data": "2025-03-01T10:00:00Z"},
     ]
+    assert sum(p[0] == "graphql" for p in api.pedidos) == 2
 
 
-def test_listar_tags_e_data_da_tag():
-    api = APIFalsa(tags=[{"name": "v1", "commit": {"sha": "a"}}], commits={"a": "2025-01-01T10:00:00Z"})
-    assert listar_tags(api, "o/r") == [{"nome": "v1", "sha": "a"}]
-    assert data_da_tag(api, "o/r", "a") == "2025-01-01T10:00:00Z"
-    with pytest.raises(RecursoAusente):
-        data_da_tag(api, "o/r", "nao-existe")
+def test_tag_anotada_que_aponta_para_outra_tag_chega_no_commit():
+    dupla = {"name": "v3", "target": {"__typename": "Tag", "target": anotada("x", "c", "2025-04-01T00:00:00Z")["target"]}}
+    api = APIFalsa(tags=[dupla])
+    assert listar_tags(api, "o/r") == [{"nome": "v3", "sha": "c", "data": "2025-04-01T00:00:00Z"}]
+
+
+def test_listagem_para_na_primeira_pagina_que_passa_do_inicio():
+    api = APIFalsa(tags=[
+        leve("v4", "d", "2025-04-01T00:00:00Z"), leve("v3", "c", "2024-12-01T00:00:00Z"),
+        leve("v2", "b", "2024-06-01T00:00:00Z"), leve("v1", "a", "2024-01-01T00:00:00Z"),
+    ])
+    tags = listar_tags(api, "o/r", desde="2025-01-01")
+    assert [t["nome"] for t in tags] == ["v3", "v4"]
+    assert sum(p[0] == "graphql" for p in api.pedidos) == 1
+
+
+def test_entregas_por_tag_usam_a_tag_anterior_mesmo_fora_da_janela():
+    api = APIFalsa(
+        tags=[leve("v3", "c", "2025-03-01T00:00:00Z"), leve("v2", "b", "2025-02-01T00:00:00Z"),
+              leve("v1", "a", "2024-12-01T00:00:00Z")],
+        compares={"v1...v2": [commit("x", "2025-01-15T00:00:00Z")], "v2...v3": [commit("y", "2025-02-15T00:00:00Z")]},
+    )
+    entregas = entregas_por_tag(api, "o/r", "2025-01-01", "2025-12-31")
+    assert [e["tag_name"] for e in entregas] == ["v2", "v3"]
+    assert entregas[0]["published_at"] == "2025-02-01T00:00:00Z"
+    assert [c["sha"] for c in entregas[0]["commits"]] == ["x"]
+    assert entregas[0]["sem_anterior"] is False and entregas[0]["body"] is None
+
+
+def test_tags_no_mesmo_commit_sao_uma_entrega_so():
+    api = APIFalsa(
+        tags=[leve("pkg-b@1.0", "b", "2025-02-01T00:00:00Z"), leve("pkg-a@1.0", "b", "2025-02-01T00:00:00Z"),
+              leve("v0", "a", "2024-12-01T00:00:00Z")],
+        compares={"v0...pkg-a%401.0": [commit("x", "2025-01-15T00:00:00Z")]},
+    )
+    entregas = entregas_por_tag(api, "o/r", "2025-01-01", "2025-12-31")
+    assert [e["tag_name"] for e in entregas] == ["pkg-a@1.0"]
+
+
+def test_primeira_tag_da_historia_fica_sem_anterior_e_compare_404_segue():
+    api = APIFalsa(tags=[leve("v2", "b", "2025-02-01T00:00:00Z"), leve("v1", "a", "2025-01-10T00:00:00Z")])
+    v1, v2 = entregas_por_tag(api, "o/r", "2025-01-01", "2025-12-31")
+    assert v1["sem_anterior"] is True and v1["commits"] == []
+    assert v2["ignorada_compare_404"] is True
+
+
+def test_filtro_tambem_vale_para_a_tag_anterior():
+    api = APIFalsa(
+        tags=[leve("v1.1", "c", "2025-03-01T00:00:00Z"), leve("ciflow/trunk/9", "b", "2024-12-20T00:00:00Z"),
+              leve("v1.0", "a", "2024-12-01T00:00:00Z")],
+        compares={"v1.0...v1.1": [commit("x", "2025-02-01T00:00:00Z")]},
+    )
+    [entrega] = entregas_por_tag(api, "o/r", "2025-01-01", "2025-12-31", filtro=lambda nome: "/" not in nome)
+    assert entrega["tag_name"] == "v1.1" and [c["sha"] for c in entrega["commits"]] == ["x"]
+    assert sum(p[0] == "graphql" for p in api.pedidos) == 2  # a 1ª página só tinha a tag de CI antes da janela

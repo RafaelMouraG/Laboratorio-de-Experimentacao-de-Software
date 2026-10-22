@@ -51,7 +51,23 @@
 | `releases.csv` | Uma linha por release da janela, com nº de commits desde a anterior e as flags `sem_anterior` e `ignorada_compare_404`. Só sai depois da coleta pesada |
 | `runs.csv` | Uma linha por workflow run válido (sucesso ou falha) do default branch, com a `classe`. Fica fora do git pelo tamanho |
 | `funil.csv` | Quantos repositórios restaram em cada etapa e o motivo de cada descarte. Cada linha é a anterior menos os descartados dela |
+| `releases_pre.csv`, `tags.csv` | Entregas da C2 e da C3 da RQ 07, do comando `lab03.pipeline.alternativas` |
 | `metricas.csv` | Uma linha por repositório aceito, com as quatro métricas DORA, variantes, censura, faixas e classificação geral. O dicionário está em [`data/DICIONARIO.md`](data/DICIONARIO.md) |
+
+**Unidades de deploy alternativas (RQ 07).** A C2 (release + pré-release) e a C3 (tag) saem de um
+comando separado, que lê a amostra do `repos.csv` e não mexe nos marcadores da coleta pesada:
+
+```bash
+python -m lab03.pipeline.alternativas --config lab03/config.yaml             # os repositórios do repos.csv
+python -m lab03.pipeline.alternativas --config lab03/config.yaml --unidade pre  # só a C2
+python -m lab03.pipeline.alternativas --config lab03/config.yaml --unidade tag --tags-de-versao  # C3 sem tags de CI (só versão ou com release)
+python -m lab03.pipeline.alternativas --config lab03/config.yaml --limite 5  # teste rápido
+```
+
+Grava `releases_pre.csv` e `tags.csv` em `pasta_saida`. As listas de releases já estão no cache;
+o que gasta cota são os compares novos (entre pré-release e release, e entre tags consecutivas) e a
+listagem das tags pela GraphQL, 100 por chamada, parando na primeira tag anterior ao início da janela.
+Cada unidade terminada num repo ganha o marcador `_alternativas_pre` ou `_alternativas_tag`.
 
 **Retomada.** Toda resposta da API fica em `lab03/data/cache/<owner>__<repo>/`, e cada fase
 terminada ganha um marcador na pasta do repo (`_triagem` e `_completo`) com o resultado. Se a
