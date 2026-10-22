@@ -29,6 +29,13 @@ class SessaoFalsa:
             raise item
         return item
 
+    def post(self, url, json=None, timeout=None):
+        self.pedidos.append((url, json))
+        item = self.fila.pop(0)
+        if isinstance(item, BaseException):
+            raise item
+        return item
+
 
 @pytest.fixture
 def esperas():
@@ -255,3 +262,35 @@ def test_sem_token_no_ambiente(tmp_path, monkeypatch):
     monkeypatch.setattr("lab03.pipeline.api.load_dotenv", lambda: None)
     with pytest.raises(SystemExit):
         GitHubAPI.do_ambiente(tmp_path)
+
+
+CONSULTA = "query($dono: String!, $nome: String!) { repository(owner: $dono, name: $nome) { id } }"
+
+
+def test_graphql_vai_por_post_e_fica_no_cache_do_repo(tmp_path, esperas):
+    api, sessao = cliente(tmp_path, esperas, resposta(corpo={"data": {"repository": {"id": "R1"}}}))
+    for _ in range(2):
+        assert api.graphql(CONSULTA, {"dono": "o", "nome": "r"}) == {"repository": {"id": "R1"}}
+    assert len(sessao.pedidos) == 1
+    url, corpo = sessao.pedidos[0]
+    assert url.endswith("/graphql") and corpo["variables"] == {"dono": "o", "nome": "r"}
+    assert list((tmp_path / "o__r").glob("graphql__*.json"))
+
+
+def test_graphql_repo_que_sumiu_levanta_recurso_ausente(tmp_path, esperas):
+    corpo = {"data": {"repository": None}, "errors": [{"type": "NOT_FOUND", "message": "nope"}]}
+    api, sessao = cliente(tmp_path, esperas, resposta(corpo=corpo))
+    for _ in range(2):
+        with pytest.raises(RecursoAusente):
+            api.graphql(CONSULTA, {"dono": "o", "nome": "r"})
+    assert len(sessao.pedidos) == 1
+
+
+def test_graphql_com_outro_erro_nao_vai_para_o_cache(tmp_path, esperas):
+    erro = {"errors": [{"message": "Something went wrong while executing your query"}]}
+    api, sessao = cliente(tmp_path, esperas, resposta(corpo=erro),
+                          resposta(corpo={"data": {"repository": {"id": "R1"}}}))
+    with pytest.raises(ErroAPI):
+        api.graphql(CONSULTA, {"dono": "o", "nome": "r"})
+    assert api.graphql(CONSULTA, {"dono": "o", "nome": "r"}) == {"repository": {"id": "R1"}}
+    assert len(sessao.pedidos) == 2
