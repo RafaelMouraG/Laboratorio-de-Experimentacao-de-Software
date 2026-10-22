@@ -523,6 +523,70 @@ Repositórios válidos & Elite & High & Medium & Low \\
 \label{fig:rq04}
 \end{figure}
 
+\subsection{Classificação DORA de referência (C1)}
+
+A classificação geral C1 foi Elite em 21 repositórios (6,8\%), High em 101 (32,6\%), Medium
+em 133 (42,9\%) e Low em 55 (17,7\%). Todos os 310 repositórios receberam classificação.
+Embora o CSV leve as quatro faixas DORA, C1 é calculada apenas com releases por semana,
+\textit{lead time} (a) e CFR (a); a recuperação é apresentada para comparação, mas não compõe
+a nota geral de referência.
+
+Em 293 repositórios (94,5\%) há nota para as quatro métricas, e em 17 (5,5\%) há nota para
+três. Nos componentes de C1, 309 repositórios têm as três notas e um tem duas; nenhum tem
+menos de duas. A regra implementada ignora notas ausentes, calcula a mediana das notas
+disponíveis e arredonda para baixo quando a mediana fica entre faixas. Portanto, C1 usa a
+nota intermediária quando há três componentes e, no único caso com duas notas, usa o piso da
+média delas. Se houvesse menos de duas notas de C1, o repositório ficaria sem classificação.
+
+A Tabela~\ref{tab:c1-cruzada} cruza a faixa de cada métrica com a classificação geral. A faixa de
+releases acompanha a categoria geral: 53 dos 55 repositórios Low têm frequência Low, enquanto
+117 dos 133 Medium têm frequência Medium. O \textit{lead time} (a) também acompanha a classificação:
+55 dos 55 Low gerais têm lead time Low, e 94 dos 133 Medium têm lead time Medium. Em contraste,
+259 dos 310 repositórios têm CFR (a) Elite, inclusive 47 dos 55 classificados Low; portanto, a
+CFR (a) baixa não é suficiente para elevar a nota geral quando frequência ou lead time são baixos.
+A recuperação não entra em C1 e sua distribuição não acompanha a classificação com a mesma
+nitidez.
+
+\begin{table}[ht]
+\centering
+\caption{Faixa de cada métrica por classificação geral C1 (contagem de repositórios)}
+\label{tab:c1-cruzada}
+\begin{tabular}{llrrrr}
+\hline
+Métrica & Faixa & Elite & High & Medium & Low \\
+\hline
+Releases/semana & Elite & 8 & 8 & 5 & 0 \\
+ & High & 0 & 61 & 34 & 6 \\
+ & Medium & 0 & 1 & 117 & 15 \\
+ & Low & 0 & 1 & 1 & 53 \\
+\hline
+\textit{Lead time} (a) & Elite & 18 & 2 & 1 & 0 \\
+ & High & 5 & 69 & 11 & 15 \\
+ & Medium & 0 & 3 & 94 & 36 \\
+ & Low & 0 & 0 & 0 & 55 \\
+ & Sem nota & 0 & 1 & 0 & 0 \\
+\hline
+CFR (a) & Elite & 21 & 0 & 0 & 0 \\
+ & High & 82 & 15 & 3 & 1 \\
+ & Medium & 109 & 14 & 6 & 4 \\
+ & Low & 47 & 5 & 1 & 2 \\
+\hline
+Recuperação & Elite & 10 & 11 & 0 & 0 \\
+ & High & 22 & 70 & 4 & 0 \\
+ & Medium & 20 & 97 & 10 & 1 \\
+ & Low & 9 & 29 & 10 & 1 \\
+ & Sem nota & 0 & 5 & 5 & 6 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.82\textwidth]{figuras/classificacao_c1.pdf}
+\caption{Distribuição das faixas das quatro métricas e da classificação geral C1}
+\label{fig:c1}
+\end{figure}
+
 % A RQ 07 entra depois da RQ 06 (#113).
 \subsection{RQ 05}
 
@@ -665,6 +729,18 @@ em produção e depende da heurística e da janela temporal adotadas.
 repositórios, embora 16 não tenham tido episódios observados e, portanto, não contribuam para esse
 resumo. O resultado descreve apenas falhas de CI após um sucesso conhecido; não é uma medida de
 recuperação de incidentes em produção.
+
+\paragraph{Classificação DORA de referência (C1).} A distribuição geral concentra-se em Medium
+(42,9\%) e High (32,6\%), mas a categoria final não deve ser lida como consenso das quatro métricas:
+C1 usa frequência, \textit{lead time} (a) e CFR (a), excluindo a recuperação. O cruzamento mostra
+que frequência e \textit{lead time} são os componentes que mais acompanham a faixa geral. A CFR
+(a) fica em Elite para 83,5\% da amostra, inclusive em 47 repositórios classificados como Low;
+ela raramente determina sozinha a categoria, pois a mediana de três componentes é a nota
+intermediária. A ausência de uma nota em um dos três componentes afetou um repositório, que foi
+classificado a partir das duas notas restantes. Assim, a classificação é uma síntese operacional
+das escolhas de proxy, não uma medida independente do desempenho em produção. A inspeção manual
+de cinco repositórios Elite e cinco Low também identificou publicações automatizadas de artefatos
+auxiliares e linhas de versão paralelas, ameaças de construto para a frequência baseada em releases.
 
 \paragraph{RQ 05.} A hipótese acertou que as duas variantes dariam respostas diferentes, mas errou
 o sinal da (a) e a força da (b). Na CFR (a), esperávamos $|\rho| < 0{,}2$, talvez levemente

@@ -88,15 +88,17 @@ Com as dependências instaladas e os arquivos `lab03/data/repos.csv` e
 
 ```bash
 python -m lab03.analise.rq01_04
+python -m lab03.analise.classificacao_c1
 ```
 
-O comando gera os resumos e as distribuições das faixas DORA em
-`lab03/analise/saida/` (CSV e LaTeX) e as figuras em `lab03/relatorio/figuras/` (PDF).
-Ele também imprime os resultados das RQ 01 a RQ 04 no terminal. Para executar os testes
-do resumo compartilhado:
+Os comandos geram os resumos, as distribuições das faixas DORA, as tabelas de contingência
+da classificação C1 em `lab03/analise/saida/` (CSV e LaTeX) e as figuras em
+`lab03/relatorio/figuras/` (PDF). O arquivo `classificacao_c1.csv` contém uma linha por
+repositório, suas quatro faixas e a classificação geral. Os comandos também imprimem os
+resultados no terminal. Para executar os testes relacionados:
 
 ```bash
-python -m pytest lab03/tests/test_comum.py
+python -m pytest lab03/tests/test_comum.py lab03/tests/test_classificacao_c1.py
 ```
 
 ## Artigo

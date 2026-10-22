@@ -1,0 +1,101 @@
+metrica,faixa,classificacao_geral,repositorios,percentual_na_categoria_geral
+Releases por semana,Low,Low,53,96.36363636363636
+Releases por semana,Low,Medium,15,11.278195488721805
+Releases por semana,Low,High,6,5.9405940594059405
+Releases por semana,Low,Elite,0,0.0
+Releases por semana,Low,Sem classificação,0,
+Releases por semana,Medium,Low,1,1.8181818181818181
+Releases por semana,Medium,Medium,117,87.96992481203007
+Releases por semana,Medium,High,34,33.663366336633665
+Releases por semana,Medium,Elite,5,23.809523809523807
+Releases por semana,Medium,Sem classificação,0,
+Releases por semana,High,Low,1,1.8181818181818181
+Releases por semana,High,Medium,1,0.7518796992481203
+Releases por semana,High,High,61,60.396039603960396
+Releases por semana,High,Elite,8,38.095238095238095
+Releases por semana,High,Sem classificação,0,
+Releases por semana,Elite,Low,0,0.0
+Releases por semana,Elite,Medium,0,0.0
+Releases por semana,Elite,High,0,0.0
+Releases por semana,Elite,Elite,8,38.095238095238095
+Releases por semana,Elite,Sem classificação,0,
+Releases por semana,Sem nota,Low,0,0.0
+Releases por semana,Sem nota,Medium,0,0.0
+Releases por semana,Sem nota,High,0,0.0
+Releases por semana,Sem nota,Elite,0,0.0
+Releases por semana,Sem nota,Sem classificação,0,
+Lead time (a),Low,Low,55,100.0
+Lead time (a),Low,Medium,36,27.06766917293233
+Lead time (a),Low,High,15,14.85148514851485
+Lead time (a),Low,Elite,0,0.0
+Lead time (a),Low,Sem classificação,0,
+Lead time (a),Medium,Low,0,0.0
+Lead time (a),Medium,Medium,94,70.67669172932331
+Lead time (a),Medium,High,11,10.891089108910892
+Lead time (a),Medium,Elite,1,4.761904761904762
+Lead time (a),Medium,Sem classificação,0,
+Lead time (a),High,Low,0,0.0
+Lead time (a),High,Medium,3,2.2556390977443606
+Lead time (a),High,High,69,68.31683168316832
+Lead time (a),High,Elite,2,9.523809523809524
+Lead time (a),High,Sem classificação,0,
+Lead time (a),Elite,Low,0,0.0
+Lead time (a),Elite,Medium,0,0.0
+Lead time (a),Elite,High,5,4.9504950495049505
+Lead time (a),Elite,Elite,18,85.71428571428571
+Lead time (a),Elite,Sem classificação,0,
+Lead time (a),Sem nota,Low,0,0.0
+Lead time (a),Sem nota,Medium,0,0.0
+Lead time (a),Sem nota,High,1,0.9900990099009901
+Lead time (a),Sem nota,Elite,0,0.0
+Lead time (a),Sem nota,Sem classificação,0,
+CFR (a),Low,Low,2,3.6363636363636362
+CFR (a),Low,Medium,4,3.007518796992481
+CFR (a),Low,High,1,0.9900990099009901
+CFR (a),Low,Elite,0,0.0
+CFR (a),Low,Sem classificação,0,
+CFR (a),Medium,Low,1,1.8181818181818181
+CFR (a),Medium,Medium,6,4.511278195488721
+CFR (a),Medium,High,3,2.9702970297029703
+CFR (a),Medium,Elite,0,0.0
+CFR (a),Medium,Sem classificação,0,
+CFR (a),High,Low,5,9.090909090909092
+CFR (a),High,Medium,14,10.526315789473683
+CFR (a),High,High,15,14.85148514851485
+CFR (a),High,Elite,0,0.0
+CFR (a),High,Sem classificação,0,
+CFR (a),Elite,Low,47,85.45454545454545
+CFR (a),Elite,Medium,109,81.95488721804512
+CFR (a),Elite,High,82,81.1881188118812
+CFR (a),Elite,Elite,21,100.0
+CFR (a),Elite,Sem classificação,0,
+CFR (a),Sem nota,Low,0,0.0
+CFR (a),Sem nota,Medium,0,0.0
+CFR (a),Sem nota,High,0,0.0
+CFR (a),Sem nota,Elite,0,0.0
+CFR (a),Sem nota,Sem classificação,0,
+Tempo de recuperação,Low,Low,1,1.8181818181818181
+Tempo de recuperação,Low,Medium,1,0.7518796992481203
+Tempo de recuperação,Low,High,0,0.0
+Tempo de recuperação,Low,Elite,0,0.0
+Tempo de recuperação,Low,Sem classificação,0,
+Tempo de recuperação,Medium,Low,10,18.181818181818183
+Tempo de recuperação,Medium,Medium,10,7.518796992481203
+Tempo de recuperação,Medium,High,4,3.9603960396039604
+Tempo de recuperação,Medium,Elite,0,0.0
+Tempo de recuperação,Medium,Sem classificação,0,
+Tempo de recuperação,High,Low,29,52.72727272727272
+Tempo de recuperação,High,Medium,97,72.93233082706767
+Tempo de recuperação,High,High,70,69.3069306930693
+Tempo de recuperação,High,Elite,11,52.38095238095239
+Tempo de recuperação,High,Sem classificação,0,
+Tempo de recuperação,Elite,Low,9,16.363636363636363
+Tempo de recuperação,Elite,Medium,20,15.037593984962406
+Tempo de recuperação,Elite,High,22,21.782178217821784
+Tempo de recuperação,Elite,Elite,10,47.61904761904761
+Tempo de recuperação,Elite,Sem classificação,0,
+Tempo de recuperação,Sem nota,Low,6,10.909090909090908
+Tempo de recuperação,Sem nota,Medium,5,3.7593984962406015
+Tempo de recuperação,Sem nota,High,5,4.9504950495049505
+Tempo de recuperação,Sem nota,Elite,0,0.0
+Tempo de recuperação,Sem nota,Sem classificação,0,
