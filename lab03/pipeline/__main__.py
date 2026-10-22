@@ -1,4 +1,4 @@
-"""`python -m lab03.pipeline --config lab03/config.yaml [--limite N] [--so-triagem | --parcial]`, da raiz do repositório."""
+"""`python -m lab03.pipeline --config lab03/config.yaml [--limite N] [--so-triagem | --parcial | --adocao]`, da raiz do repositório."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 
 import yaml
 
+from lab03.pipeline import adocao
 from lab03.pipeline.api import ErroAPI, GitHubAPI
 from lab03.pipeline.coleta import executar
 
@@ -42,7 +43,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--so-triagem", action="store_true",
                         help="para depois de definir a amostra, sem compare nem lista de runs")
     parser.add_argument("--parcial", action="store_true",
-                        help="grava os CSVs só com o que a coleta pesada já terminou, sem chamar a API")
+                        help="grava os CSVs só com o que a coleta pesada (ou a --adocao) já terminou, "
+                             "sem chamar a API")
+    parser.add_argument("--adocao", action="store_true",
+                        help="rastros de agentes de IA (RQ 09) dos repositórios do repos.csv; "
+                             "com --limite, só os N primeiros")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
@@ -58,18 +63,22 @@ def main(argv: list[str] | None = None) -> int:
         log.warning("não deu para ler a cota inicial: %s", erro)
 
     try:
-        executar(
-            api,
-            config.get("estrelas_minimas", 1000),
-            config["inicio"],
-            config["fim"],
-            limite,
-            pasta_cache,
-            pasta_saida,
-            coletar_tags=config.get("coletar_tags", False),
-            so_triagem=args.so_triagem,
-            so_concluidos=args.parcial,
-        )
+        if args.adocao:
+            adocao.executar(api, config["inicio"], config["fim"], pasta_saida, args.limite,
+                            so_concluidos=args.parcial)
+        else:
+            executar(
+                api,
+                config.get("estrelas_minimas", 1000),
+                config["inicio"],
+                config["fim"],
+                limite,
+                pasta_cache,
+                pasta_saida,
+                coletar_tags=config.get("coletar_tags", False),
+                so_triagem=args.so_triagem,
+                so_concluidos=args.parcial,
+            )
     except KeyboardInterrupt:
         log.warning("interrompido; rode o mesmo comando para continuar de onde parou")
         return 130

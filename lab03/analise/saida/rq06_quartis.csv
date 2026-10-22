@@ -1,0 +1,13 @@
+fator,grupo,minimo,maximo,n
+quartil_estrelas,Q1,37145.0,42823.0,78
+quartil_estrelas,Q2,42828.0,54145.0,77
+quartil_estrelas,Q3,54393.0,81622.0,77
+quartil_estrelas,Q4,81754.0,253788.0,78
+quartil_contribuidores,Q1,11.0,270.0,79
+quartil_contribuidores,Q2,273.0,527.0,76
+quartil_contribuidores,Q3,531.0,1071.0,77
+quartil_contribuidores,Q4,1081.0,9912.0,78
+quartil_idade,Q1,1.0204603645397303,3.95585481785684,78
+quartil_idade,Q2,3.963318598372468,7.392996235455136,77
+quartil_idade,Q3,7.417552602225739,11.369427047684203,77
+quartil_idade,Q4,11.436958323826875,18.47201349278776,78

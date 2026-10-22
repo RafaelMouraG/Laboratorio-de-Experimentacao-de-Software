@@ -1,0 +1,4 @@
+recorte,x,y,n,ausentes,rho,p_valor
+todos,releases_por_semana,cfr_ci,310,0,0.18604438586500657,0.0009976220882301687
+todos,releases_por_semana,cfr_entrega,309,1,0.6181866800456652,5.816845745846739e-34
+sem_cfr_zero,releases_por_semana,cfr_entrega,250,1,0.4944553979932485,8.072318700672787e-17

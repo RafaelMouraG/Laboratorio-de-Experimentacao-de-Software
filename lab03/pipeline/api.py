@@ -160,6 +160,16 @@ class GitHubAPI:
             raise RecursoAusente(caminho, 404)
         return resp["corpo"]["data"]
 
+    def paginas(self, caminho: str, params: Optional[dict] = None, enxugar: Optional[Enxugar] = None) -> int:
+        """Quantas páginas a lista tem no `per_page` de `params`: o `last` do Link, ou 1 sem ele.
+
+        Mesma chave de cache da 1ª página do `paginar` com os mesmos params, então não custa nada a
+        mais quando a lista é baixada depois.
+        """
+        resp = self._resposta(caminho, params, enxugar)
+        ultima = links(resp["link"]).get("last")
+        return int(_separar_url(ultima)[1]["page"]) if ultima else 1
+
     def cota(self) -> dict:
         """`/rate_limit` não gasta cota, então nunca passa pelo cache."""
         r = self.sessao.get(BASE + "/rate_limit", timeout=30)
@@ -253,6 +263,10 @@ class GitHubAPI:
     def _anotar_cota(self, r: requests.Response) -> None:
         with self._trava:
             self.chamadas_rede += 1
+            # a busca tem cota própria (30/min); anotá-la por cima da core faria a próxima chamada
+            # core esperar o reset da busca. O 403 dela continua tratado em `_eh_rate_limit`.
+            if r.headers.get("X-RateLimit-Resource", "core") != "core":
+                return
             if "X-RateLimit-Remaining" in r.headers:
                 self.restante = int(r.headers["X-RateLimit-Remaining"])
             if "X-RateLimit-Reset" in r.headers:

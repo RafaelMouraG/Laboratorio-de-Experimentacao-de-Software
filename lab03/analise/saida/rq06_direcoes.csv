@@ -1,0 +1,5 @@
+fator,metrica,grupo_a,mediana_a,n_a,grupo_b,mediana_b,n_b,delta_cliff,magnitude
+quartil_contribuidores,lead_time_release_horas,Q4,1024.4633333333334,77,Q1,235.5127777777778,79,0.5199736971888871,grande
+quartil_idade,releases_por_semana,Q4,0.3461538461538461,78,Q1,0.8461538461538461,78,-0.44000657462195925,medio
+quartil_idade,lead_time_release_horas,Q4,1057.7766666666666,78,Q1,130.62604166666665,78,0.7024983563445102,grande
+grupo_linguagem,lead_time_release_horas,C++,2156.863888888889,16,TypeScript,240.92048611111113,90,0.5930555555555554,grande
