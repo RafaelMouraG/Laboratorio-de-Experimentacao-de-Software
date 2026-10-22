@@ -102,3 +102,27 @@ pendentes no arquivo de empates.
 
 O kappa é acompanhado da porcentagem de concordância simples e da faixa de Landis & Koch. Kappa
 baixo não é tratado como erro: indica ambiguidade do critério e deve ser discutido no artigo.
+
+## Conferência da detecção de agentes (#120)
+
+A RQ 09 marca um commit como feito com agente quando ele deixa rastro explícito: trailer
+`Co-authored-by` do agente, "Generated with Claude Code", autor que é a conta bot do agente, PR
+aberto de um branch `copilot/`, `codex/` e parecidos, ou label do agente. Para saber quantas dessas
+marcas estão certas (a precisão), cada um confere a mesma amostra sozinho.
+
+`python -m lab03.validacao.sortear_ia` sorteia 100 commits de `lab03/data/commits_ia.csv`
+(`sample(n=100, random_state=42)`, um commit por linha mesmo quando ele tem mais de um rastro).
+Rodar de novo sorteia os mesmos. A planilha `rotulos/<login>_ia.csv` traz só o link do commit; o que
+a detecção achou fica em `amostra_ia.csv`, e a ideia é não abrir esse arquivo antes de terminar.
+
+Abra o link e preencha `com_agente`:
+
+| Valor | Quando |
+|---|---|
+| `sim` | O commit foi feito ou coescrito por um agente de programação (Claude Code, Copilot, Cursor, Codex, Devin): a mensagem, o autor, o coautor ou o PR de origem mostram isso |
+| `nao` | A marca não quer dizer que um agente escreveu o commit. Ex.: uma pessoa chamada Claude, um commit que só cita a ferramenta, um trailer copiado de outro commit num revert ou cherry-pick, um bot que não é agente (Dependabot, Renovate) |
+| `incerto` | Não dá para decidir pelo que está no GitHub |
+
+Depois que os três preencherem, `python -m lab03.validacao.precisao_ia` monta o consenso por maioria
+em `consenso_ia.csv` e imprime a precisão, `sim / (sim + nao)`. `incerto` e os commits sem maioria
+ficam fora da conta e são informados à parte.
