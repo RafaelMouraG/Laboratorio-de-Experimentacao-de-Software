@@ -78,3 +78,19 @@ def test_tags_de_versao_deixam_de_fora_as_de_ci(tmp_path):
     [resultado] = executar(api, ["o/r"], inicio, fim, tmp_path / "cache", tmp_path, ("tag",), tags_de_versao=True)["tag"]
     # `v2` não tem X.Y nem release e `ciflow/trunk/7` é de CI; `b6500` entra porque tem release
     assert [e["tag_name"] for e in resultado["entregas"]] == ["b6500"]
+
+
+def test_metricas_da_unidade_sai_junto_com_as_entregas(tmp_path):
+    inicio, fim = date(2025, 1, 1), date(2025, 12, 31)
+    executar(api_com_dados(), ["o/r"], inicio, fim, tmp_path / "cache", tmp_path, ("pre",))
+    [linha] = ler(tmp_path / "metricas_c2.csv")
+    assert linha["repo"] == "o/r" and linha["entregas"] == "3"
+    # v1 não tem anterior; v2-rc1 e v2 entram no lead time, então são 2 releases e 3 commits
+    assert linha["lead_time_release_avaliadas"] == "2" and linha["lead_time_commit_avaliadas"] == "3"
+
+
+def test_repo_com_erro_sai_com_metricas_vazias(tmp_path):
+    inicio, fim = date(2025, 1, 1), date(2025, 12, 31)
+    executar(APISumida(), ["o/r"], inicio, fim, tmp_path / "cache", tmp_path, ("pre",))
+    [linha] = ler(tmp_path / "metricas_c2.csv")
+    assert linha["repo"] == "o/r" and linha["entregas"] == "" and linha["faixa_frequencia"] == ""
