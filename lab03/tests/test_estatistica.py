@@ -3,7 +3,7 @@ import math
 import pandas as pd
 import pytest
 
-from lab03.analise.estatistica import cliffs_delta, comparar_grupos, epsilon_quadrado, magnitude
+from lab03.analise.estatistica import cliffs_delta, comparar_grupos, epsilon_quadrado, magnitude, wilcoxon_pareado
 
 
 def test_cliffs_delta_grupos_totalmente_separados():
@@ -89,3 +89,28 @@ def test_comparar_grupos_exige_dois_grupos():
     df = pd.DataFrame({"fator": ["a", "a"], "metrica": [1, 2]})
     with pytest.raises(ValueError):
         comparar_grupos(df, "fator", "metrica")
+
+
+def test_wilcoxon_pareado_todas_as_diferencas_positivas():
+    # d = 1, 2, 4, 8: W+ = 10, W- = 0. Exato: só 1 das 16 combinações de sinais dá W = 0 de cada
+    # lado, então p = 2/16.
+    resultado = wilcoxon_pareado([2, 3, 5, 9], [1, 1, 1, 1])
+    assert resultado["efeito"] == 1.0
+    assert resultado["estatistica"] == 0.0
+    assert resultado["p_valor"] == pytest.approx(0.125)
+    assert (resultado["n"], resultado["empates"]) == (4, 0)
+
+
+def test_wilcoxon_pareado_rank_biserial_a_mao():
+    # d = 1, -2, 3: postos 1, 2, 3 -> W+ = 4, W- = 2 -> (4 - 2) / 6.
+    assert wilcoxon_pareado([2, 1, 4], [1, 3, 1])["efeito"] == pytest.approx(1 / 3)
+
+
+def test_wilcoxon_pareado_tira_e_conta_empates():
+    resultado = wilcoxon_pareado([1, 3, 5], [1, 1, 1])
+    assert (resultado["n"], resultado["empates"], resultado["efeito"]) == (3, 1, 1.0)
+
+
+def test_wilcoxon_pareado_sem_diferenca():
+    with pytest.raises(ValueError):
+        wilcoxon_pareado([1, 2], [1, 2])

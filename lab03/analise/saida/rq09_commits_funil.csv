@@ -1,0 +1,5 @@
+etapa,repos
+repositórios no repos.csv,310
+sem cache de releases ou commits,0
+sem nenhum run no runs.csv (falha de CI vazia),0
+com pelo menos um commit com IA,282
