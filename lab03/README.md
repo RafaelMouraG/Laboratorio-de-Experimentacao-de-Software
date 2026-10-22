@@ -64,8 +64,10 @@ python -m lab03.pipeline.alternativas --config lab03/config.yaml --unidade tag -
 python -m lab03.pipeline.alternativas --config lab03/config.yaml --limite 5  # teste rápido
 ```
 
-Grava `releases_pre.csv` e `tags.csv` em `pasta_saida`. As listas de releases já estão no cache;
-o que gasta cota são os compares novos (entre pré-release e release, e entre tags consecutivas) e a
+Grava `releases_pre.csv` e `tags.csv` em `pasta_saida`, e junto o `metricas_c2.csv` e o `metricas_c3.csv`
+com as métricas de cada repo nessas unidades. Com os marcadores no cache, rodar de novo só refaz os
+CSVs, sem chamar a API. A comparação das três combinações sai com `python -m lab03.analise.rq07`.
+As listas de releases já estão no cache; o que gasta cota são os compares novos (entre pré-release e release, e entre tags consecutivas) e a
 listagem das tags pela GraphQL, 100 por chamada, parando na primeira tag anterior ao início da janela.
 Cada unidade terminada num repo ganha o marcador `_alternativas_pre` ou `_alternativas_tag`.
 
@@ -89,6 +91,7 @@ Com as dependências instaladas e os arquivos `lab03/data/repos.csv` e
 ```bash
 python -m lab03.analise.rq01_04
 python -m lab03.analise.classificacao_c1
+python -m lab03.analise.rq07   # depois da classificacao_c1; lê também metricas_c2.csv e metricas_c3.csv
 ```
 
 Os comandos geram os resumos, as distribuições das faixas DORA, as tabelas de contingência
