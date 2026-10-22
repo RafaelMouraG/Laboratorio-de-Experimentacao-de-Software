@@ -136,23 +136,32 @@ class CFREntrega:
     censuradas: int  # publicadas nos últimos 7 dias da janela
 
 
-def cfr_entrega(releases: Iterable[dict], fim: Data) -> CFREntrega:
-    """A release R falhou se a próxima sai em até 7 dias e é corretiva.
+def falhas_por_release(releases: Iterable[dict], fim: Data) -> list[tuple[dict, Optional[bool]]]:
+    """Cada release em ordem de publicação, com True se falhou, False se não e None se censurada.
 
-    Só a release seguinte conta. As publicadas a menos de 7 dias do fim da janela (inclusivo) ficam
-    fora do denominador, porque ainda não dá para saber se vão ganhar correção.
+    A release R falhou se a próxima sai em até 7 dias e é corretiva; só a release seguinte conta.
+    As publicadas a menos de 7 dias do fim da janela (inclusivo) são censuradas, porque ainda não
+    dá para saber se vão ganhar correção.
     """
     ordenadas = sorted(releases, key=lambda r: _data(r["published_at"]))
     limite = _data(fim, fim=True)
-    avaliadas = falharam = censuradas = 0
+    situacoes = []
     for i, release in enumerate(ordenadas):
         publicada = _data(release["published_at"])
         if publicada + PRAZO > limite:
-            censuradas += 1
+            situacoes.append((release, None))
             continue
-        avaliadas += 1
         proxima = ordenadas[i + 1] if i + 1 < len(ordenadas) else None
-        if (proxima is not None and _data(proxima["published_at"]) - publicada <= PRAZO
-                and eh_corretiva(proxima, release)):
-            falharam += 1
+        situacoes.append((release, proxima is not None
+                          and _data(proxima["published_at"]) - publicada <= PRAZO
+                          and eh_corretiva(proxima, release)))
+    return situacoes
+
+
+def cfr_entrega(releases: Iterable[dict], fim: Data) -> CFREntrega:
+    """Falharam / avaliadas pela regra de `falhas_por_release`; censuradas ficam fora do denominador."""
+    situacoes = [falhou for _, falhou in falhas_por_release(releases, fim)]
+    censuradas = situacoes.count(None)
+    avaliadas = len(situacoes) - censuradas
+    falharam = situacoes.count(True)
     return CFREntrega(falharam / avaliadas if avaliadas else None, avaliadas, falharam, censuradas)

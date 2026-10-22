@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Sequence
 
 import pandas as pd
-from scipy.stats import kruskal, mannwhitneyu
+from scipy.stats import kruskal, mannwhitneyu, rankdata, wilcoxon
 
 # Cortes de Romano et al. (2006) para |delta| de Cliff.
 CORTES_MAGNITUDE = ((0.147, "negligenciavel"), (0.33, "pequeno"), (0.474, "medio"))
@@ -68,4 +68,30 @@ def comparar_grupos(df: pd.DataFrame, fator: str, metrica: str) -> dict:
         "p_valor": float(p_valor),
         "efeito": float(efeito),
         "nome_efeito": nome_efeito,
+    }
+
+
+def wilcoxon_pareado(x: Sequence[float], y: Sequence[float]) -> dict:
+    """Wilcoxon pareado bilateral entre ``x`` e ``y``, pareados pela posição.
+
+    Efeito: correlação rank-biserial pareada (Kerby, 2014), ``(W+ - W-) / (W+ + W-)``, positiva
+    quando ``x`` tende a ser maior. Pares com diferença zero ficam fora do teste e do efeito
+    (``zero_method="wilcox"``) e são contados em ``empates``.
+    """
+    if len(x) != len(y):
+        raise ValueError("Wilcoxon pareado precisa de duas listas do mesmo tamanho")
+    diferencas = [a - b for a, b in zip(x, y) if a != b]
+    if not diferencas:
+        raise ValueError("Wilcoxon pareado precisa de pelo menos um par com diferença")
+    postos = rankdata([abs(d) for d in diferencas])
+    positivos = sum(p for p, d in zip(postos, diferencas) if d > 0)
+    negativos = sum(postos) - positivos
+    estatistica, p_valor = wilcoxon(x, y, zero_method="wilcox", alternative="two-sided")
+    return {
+        "n": len(x),
+        "empates": len(x) - len(diferencas),
+        "estatistica": float(estatistica),
+        "p_valor": float(p_valor),
+        "efeito": float((positivos - negativos) / (positivos + negativos)),
+        "nome_efeito": "rank_biserial",
     }

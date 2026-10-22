@@ -10,6 +10,7 @@ from lab03.metricas.corretiva import (
     Versao,
     cfr_entrega,
     eh_corretiva,
+    falhas_por_release,
     so_patch,
     versao,
 )
@@ -81,6 +82,18 @@ def test_release_nos_ultimos_7_dias_da_janela_e_censurada():
     # v1.0.0 + 7 dias = 27/12, dentro da janela; as outras duas ainda podiam ganhar correção
     assert (cfr.avaliadas, cfr.falharam, cfr.censuradas) == (1, 1, 2)
     assert cfr.taxa == 1
+
+
+def test_falhas_por_release_em_ordem_de_publicacao():
+    releases = [
+        release("v2.4.0", "2025-12-20T12:00:00Z", "feat: exportar PDF"),
+        release("v2.3.1", "2025-12-12T12:00:00Z", "fix: crash", notas="fix crash"),
+        release("v2.3.0", "2025-12-10T12:00:00Z"),
+        release("v2.3.2", "2025-12-29T12:00:00Z", "fix: outro crash", notas="fix crash"),
+    ]
+    situacoes = [(r["tag_name"], falhou) for r, falhou in falhas_por_release(releases, "2025-12-31")]
+    # v2.3.0 ganhou a v2.3.1 em 2 dias; a v2.4.0 ganhou a v2.3.2 9 dias depois; a v2.3.2 é censurada
+    assert situacoes == [("v2.3.0", True), ("v2.3.1", False), ("v2.4.0", False), ("v2.3.2", None)]
 
 
 def test_so_censuradas_da_taxa_vazia():
