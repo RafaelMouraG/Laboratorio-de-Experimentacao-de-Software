@@ -37,11 +37,12 @@ FAIXAS = (1, 2, 3, 4)
 NOMES = {4: "Elite", 3: "High", 2: "Medium", 1: "Low"}
 
 
-def comparar(a: pd.Series, b: pd.Series) -> dict:
+def comparar(a: pd.Series, b: pd.Series, labels=FAIXAS) -> dict:
     """Compara duas classificações indexadas por repo.
 
     Só entram os repos classificados nas duas. Devolve n, quantos e que % mudaram de categoria e o
     kappa de Cohen com peso linear, em que trocar Elite por Low pesa mais que Elite por High.
+    ``labels`` são os códigos ordinais possíveis, em ordem; o padrão são as faixas DORA 1 a 4.
     """
     juntas = pd.concat([a.rename("a"), b.rename("b")], axis=1).dropna()
     n = len(juntas)
@@ -52,7 +53,7 @@ def comparar(a: pd.Series, b: pd.Series) -> dict:
     if mudaram == 0:
         kappa = 1.0  # concordância total; o sklearn devolve NaN quando só há uma categoria
     else:
-        kappa = float(cohen_kappa_score(x, y, labels=list(FAIXAS), weights="linear"))
+        kappa = float(cohen_kappa_score(x, y, labels=list(labels), weights="linear"))
     return {"n": n, "mudaram": mudaram, "pct_mudaram": mudaram / n * 100, "kappa": kappa}
 
 

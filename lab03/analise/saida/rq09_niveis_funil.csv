@@ -1,0 +1,7 @@
+etapa,repos
+repositórios no repos.csv,310
+sem commit com IA (nenhuma),28
+com pelo menos um commit com IA,282
+excluídos: menos de 10 commits depois da adoção,2
+adotantes classificados,280
+classificados no total,308
