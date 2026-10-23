@@ -1,0 +1,49 @@
+repo,categoria,motivo
+anomalyco/opencode,agente de programação,descrição: agente de programação open source
+openai/codex,agente de programação,descrição: agente de programação no terminal
+google-gemini/gemini-cli,agente de programação,descrição: agente de IA do Gemini no terminal
+cline/cline,agente de programação,"descrição: agente de programação autônomo (SDK, extensão de IDE, CLI)"
+OpenHands/OpenHands,agente de programação,descrição: desenvolvimento feito por IA
+openinterpreter/openinterpreter,agente de programação,descrição: agente de programação para modelos abertos
+aaif-goose/goose,agente de programação,"descrição: agente que instala, executa, edita e testa código"
+warpdotdev/warp,agente de programação,descrição: ambiente de desenvolvimento agêntico
+earendil-works/pi,agente de programação,descrição: toolkit de agente com CLI de programação
+farion1231/cc-switch,agente de programação,"descrição: assistente para Claude Code, Codex e OpenCode"
+thedotmack/claude-mem,agente de programação,descrição e tópicos: memória entre sessões do Claude Code
+ruvnet/ruflo,agente de programação,descrição: harness de agentes; tópicos claude e codex
+github/spec-kit,agente de programação,descrição e tópicos: desenvolvimento guiado por spec com Copilot
+Fission-AI/OpenSpec,agente de programação,descrição: desenvolvimento guiado por spec para assistentes de programação
+bmad-code-org/BMAD-METHOD,agente de programação,descrição: método de desenvolvimento ágil guiado por IA
+upstash/context7,agente de programação,descrição: documentação para LLMs e editores de código com IA
+ChromeDevTools/chrome-devtools-mcp,agente de programação,descrição: Chrome DevTools para agentes de programação
+NousResearch/hermes-agent,agente ou assistente de LLM,nome e tópicos: agente de IA geral
+Significant-Gravitas/AutoGPT,agente ou assistente de LLM,nome e tópicos: plataforma de agentes
+langgenius/dify,agente ou assistente de LLM,descrição: workflows agênticos e RAG
+open-webui/open-webui,agente ou assistente de LLM,descrição: interface de chat para LLMs
+langflow-ai/langflow,agente ou assistente de LLM,descrição: construção de agentes e workflows de IA
+langchain-ai/langchain,agente ou assistente de LLM,descrição: plataforma de engenharia de agentes
+langchain-ai/langgraph,agente ou assistente de LLM,descrição: framework de agentes
+browser-use/browser-use,agente ou assistente de LLM,descrição: agentes que usam o navegador
+CherryHQ/cherry-studio,agente ou assistente de LLM,descrição: chat com LLMs e agentes autônomos
+crewAIInc/crewAI,agente ou assistente de LLM,descrição: orquestração de agentes de IA
+agno-agi/agno,agente ou assistente de LLM,descrição: plataforma de agentes
+mem0ai/mem0,agente ou assistente de LLM,descrição: camada de memória para agentes de IA
+Mintplex-Labs/anything-llm,agente ou assistente de LLM,nome e descrição: agente local com LLM
+xtekky/gpt4free,agente ou assistente de LLM,descrição: acesso a vários modelos de linguagem
+infiniflow/ragflow,agente ou assistente de LLM,descrição: motor de RAG com agentes
+run-llama/llama_index,agente ou assistente de LLM,tópicos: framework de agentes e RAG
+CopilotKit/CopilotKit,agente ou assistente de LLM,descrição: frontend para agentes
+khoj-ai/khoj,agente ou assistente de LLM,descrição: assistente de IA com agentes
+AstrBotDevs/AstrBot,agente ou assistente de LLM,descrição: assistente e framework de agentes de IA
+zhayujie/CowAgent,agente ou assistente de LLM,descrição: assistente pessoal de IA e harness de agentes
+danielmiessler/Fabric,agente ou assistente de LLM,descrição: framework de prompts de IA
+janhq/jan,agente ou assistente de LLM,descrição: alternativa offline ao ChatGPT
+ItzCrazyKns/Vane,agente ou assistente de LLM,descrição: motor de respostas com IA
+lfnovo/open-notebook,agente ou assistente de LLM,descrição: implementação aberta do Notebook LM
+HKUDS/LightRAG,agente ou assistente de LLM,descrição: RAG
+VectifyAI/PageIndex,agente ou assistente de LLM,descrição e tópicos: RAG para agentes
+stanfordnlp/dspy,agente ou assistente de LLM,descrição: framework para programar modelos de linguagem
+BerriAI/litellm,agente ou assistente de LLM,descrição: gateway para APIs de LLM
+moeru-ai/airi,agente ou assistente de LLM,descrição e tópicos: companheiro de IA
+modelcontextprotocol/servers,agente ou assistente de LLM,nome: servidores MCP para LLMs
+microsoft/playwright-mcp,agente ou assistente de LLM,nome: servidor MCP do Playwright para agentes
