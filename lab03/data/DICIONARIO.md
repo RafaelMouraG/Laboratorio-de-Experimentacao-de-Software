@@ -67,6 +67,7 @@ Uma linha por par commit/rastro: um commit com trailer do Claude que veio de um 
 | `commits` | inteiro | commits | tamanho do compare com a release anterior |
 | `sem_anterior` | booleano | — | fórmula: não existe release estável anterior |
 | `ignorada_compare_404` | booleano | — | fórmula: compare da release foi ignorado por 404 |
+| `eh_corretiva` | booleano | — | heurística v4 de release corretiva (`metricas/corretiva.py`) |
 
 ## `funil.csv`
 

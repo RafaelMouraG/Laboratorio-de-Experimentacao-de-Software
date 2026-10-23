@@ -146,6 +146,7 @@ def test_para_no_limite_e_gera_os_csvs(tmp_path):
     assert len(releases) == 12
     assert releases[0]["commits"] == "1"
     assert releases[0]["sem_anterior"] == "False"
+    assert releases[0]["eh_corretiva"] in {"True", "False"}
 
     runs = ler(tmp_path / "data/runs.csv")
     assert len(runs) == 120  # o cancelled fica de fora

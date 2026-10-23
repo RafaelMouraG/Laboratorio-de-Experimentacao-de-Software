@@ -21,6 +21,7 @@ from datetime import date, datetime, time, timezone
 from pathlib import Path
 from typing import Iterable, Optional
 
+from lab03.metricas.corretiva import eh_corretiva
 from lab03.metricas.falhas import classificar
 from lab03.metricas.repositorio import CAMPOS_METRICAS, metricas_do_repo
 from lab03.pipeline import metadados, releases, runs
@@ -55,7 +56,7 @@ CAMPOS_REPOS = (
 )
 CAMPOS_RELEASES = (
     "repo", "tag_name", "published_at", "prerelease", "html_url", "commits",
-    "sem_anterior", "ignorada_compare_404",
+    "sem_anterior", "ignorada_compare_404", "eh_corretiva",
 )
 CAMPOS_RUNS = ("repo", *runs.CAMPOS, "classe")
 CAMPOS_TAGS = ("repo", "nome", "sha", "data")
@@ -268,7 +269,16 @@ def salvar_csvs(
     _escrever_csv(
         pasta / "releases.csv",
         CAMPOS_RELEASES,
-        ({**rel, "repo": r["repo"], "commits": len(rel["commits"])} for r in coletados for rel in r["releases"]),
+        (
+            {
+                **rel,
+                "repo": r["repo"],
+                "commits": len(rel["commits"]),
+                "eh_corretiva": eh_corretiva(rel),
+            }
+            for r in coletados
+            for rel in r["releases"]
+        ),
     )
     _escrever_csv(
         pasta / "runs.csv",

@@ -83,22 +83,24 @@ refazer a coleta pesada não gasta cota.
 
 ## Como reproduzir a análise
 
-Com as dependências instaladas e os arquivos `lab03/data/repos.csv` e
-`lab03/data/metricas.csv` commitados, execute da raiz do repositório:
+Com as dependências instaladas e os arquivos `lab03/data/repos.csv`,
+`lab03/data/metricas.csv` e `lab03/data/releases.csv` commitados, execute da raiz do repositório:
 
 ```bash
 python -m lab03.analise.rq01_04
 python -m lab03.analise.classificacao_c1
+python -m lab03.analise.rq08
 ```
 
 Os comandos geram os resumos, as distribuições das faixas DORA, as tabelas de contingência
 da classificação C1 em `lab03/analise/saida/` (CSV e LaTeX) e as figuras em
-`lab03/relatorio/figuras/` (PDF). O arquivo `classificacao_c1.csv` contém uma linha por
-repositório, suas quatro faixas e a classificação geral. Os comandos também imprimem os
-resultados no terminal. Para executar os testes relacionados:
+`lab03/relatorio/figuras/` (PDF e PNG). A RQ 08 também gera a rework rate por repositório,
+a correlação com a CFR (b) e as maiores divergências. O arquivo `classificacao_c1.csv` contém
+uma linha por repositório, suas quatro faixas e a classificação geral. Os comandos também
+imprimem os resultados no terminal. Para executar os testes relacionados:
 
 ```bash
-python -m pytest lab03/tests/test_comum.py lab03/tests/test_classificacao_c1.py
+python -m pytest lab03/tests/test_comum.py lab03/tests/test_classificacao_c1.py lab03/tests/test_rq08.py
 ```
 
 ## Artigo

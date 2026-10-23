@@ -696,6 +696,38 @@ correção, $\varepsilon^2 \leq 0{,}03$).
 \label{fig:rq06}
 \end{figure}
 
+\subsection{RQ 08}
+
+Calculamos a \textit{deployment rework rate} como a proporção de releases corretivas entre as
+releases da janela que têm uma anterior. Todos os 310 repositórios têm pelo menos uma release
+avaliável. A mediana é 0,50, com primeiro quartil de 0,316, terceiro quartil de 0,743 e IQR de
+0,428. Assim, em metade dos repositórios, entre 31,6\% e 74,3\% das releases avaliáveis foram
+classificadas como corretivas pela heurística v4.
+
+A associação com a CFR (b) é positiva e moderada (Spearman $\rho = 0{,}54$, $p < 0{,}001$,
+$n = 309$; Figura~\ref{fig:rq08}). A \textit{rework rate} é maior que a CFR (b) em 267
+repositórios, menor em 11 e igual em 31. O \texttt{expo/expo} fica fora da correlação porque não
+tem release avaliada na CFR (b). A diferença de nível ocorre porque as métricas atribuem o mesmo
+evento a unidades distintas: a \textit{rework rate} conta a própria release corretiva e não impõe
+prazo, enquanto a CFR (b) marca como falha a release anterior apenas se a correção chega em até
+sete dias; além disso, a CFR censura releases no fim da janela.
+
+As maiores divergências ilustram o efeito do prazo. \texttt{pingcap/tidb},
+\texttt{microsoft/terminal} e \texttt{qbittorrent/qBittorrent} têm \textit{rework rate} igual a
+1 e CFR (b) igual a 0. Todas as releases avaliáveis dos três foram classificadas como corretivas,
+mas nenhum intervalo entre releases foi de até sete dias: as medianas dos intervalos foram 49,2,
+39,9 e 21,7 dias, respectivamente. O mesmo padrão aparece em \texttt{llvm/llvm-project}
+(0,89 contra 0) e \texttt{pandas-dev/pandas} (0,86 contra 0). Portanto, a divergência não indica
+classificações contraditórias, mas a diferença entre contar trabalho corretivo e atribuir uma
+falha à entrega anterior dentro de uma janela temporal curta.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figuras/rq08_dispersao.png}
+\caption{RQ 08: rework rate × CFR (b). A linha tracejada indica igualdade entre as métricas}
+\label{fig:rq08}
+\end{figure}
+
 \section{Discussão}
 
 \paragraph{RQ 01.} A hipótese de uma concentração em \textit{Medium} e \textit{High} se confirma
@@ -779,6 +811,17 @@ TypeScript. Os efeitos ficam entre pequenos e moderados
 ($\varepsilon^2$ de 0,08 a 0,23), como a hipótese previa, e nenhum fator separa os grupos por
 completo. São associações e não causas, e o tipo de projeto, com só 59 repositórios em três grupos,
 não tem poder para mostrar diferenças pequenas.
+
+\paragraph{RQ 08.} A correlação moderada mostra que as duas métricas capturam parte do mesmo
+fenômeno, mas elas não são intercambiáveis. A \textit{rework rate} mede diretamente a proporção do
+fluxo de releases dedicada a correções; a CFR (b) tenta inferir quais entregas anteriores falharam,
+exige uma correção em até sete dias e sofre censura no fim da janela. Por isso, projetos com ciclos
+de release mais espaçados podem ter rework alto e CFR (b) igual a zero. As duas medidas ainda
+herdam integralmente os erros da classificação automática: a precisão de 0,673 da heurística v4
+passa direto para a métrica, de modo que falsos positivos inflam tanto o numerador da rework rate
+quanto a identificação de correções usada pela CFR (b). Os resultados devem ser lidos como proxies
+baseados no versionamento e nas notas das releases, e não como observação direta de retrabalho ou
+incidentes em produção.
 
 \bibliographystyle{sbc}
 \bibliography{referencias}

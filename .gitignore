@@ -7,3 +7,5 @@ lab03/data/cache/
 .coverage
 .pytest_cache/
 runs.csv
+releases_corretivas.csv
+releases_detalhe.jsonl
