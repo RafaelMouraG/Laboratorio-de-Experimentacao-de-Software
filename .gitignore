@@ -9,3 +9,14 @@ lab03/data/cache/
 runs.csv
 releases_corretivas.csv
 releases_detalhe.jsonl
+
+# Temporários da compilação do LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
