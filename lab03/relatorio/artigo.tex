@@ -23,21 +23,30 @@ Laboratório de Experimentação de Software (Prof. Danilo Maia)}
 
 \maketitle
 
-% Resumo e abstract provisórios: reescrever na entrega final, com os números.
 \begin{abstract}
 DORA metrics are the usual way to describe how fast and how safely a team delivers software, but
-open-source projects on GitHub do not record deployments or incidents. This study measures the four
-metrics in at least 300 popular repositories that use GitHub Actions, replacing deployments with
-published releases and incidents with failed CI runs and corrective releases, and checks how much
-the resulting classification depends on these choices.
+open-source projects on GitHub do not record deployments or incidents. We measured the four metrics
+in 310 popular repositories that use GitHub Actions, replacing deployments with published releases
+and incidents with failed CI runs and corrective releases. The typical repository publishes 0.46
+releases per week, has a median lead time of 354 hours, a CI failure rate of 4.7\% and recovers from
+a red build in 2.9 hours; 43\% are classified as Medium. The classification is unstable: between 32\%
+and 43\% of the repositories change category when the operational definition changes (weighted
+kappa from 0.39 to 0.52), and the choice of change failure rate weighs much more than the deployment
+unit. Repositories with commits made by coding agents publish slightly more often, but the intensity
+of use is not associated with any metric.
 \end{abstract}
 
 \begin{resumo}
 As métricas DORA são a forma mais usada de descrever o quão rápido e com quanta segurança um time
-entrega software, mas projetos open-source no GitHub não registram deploys nem incidentes. Este
-estudo mede as quatro métricas em pelo menos 300 repositórios populares que usam GitHub Actions,
-trocando deploy por release publicada e incidente por execução de CI com falha e por release
-corretiva, e verifica o quanto a classificação final depende dessas escolhas.
+entrega software, mas projetos open-source no GitHub não registram deploys nem incidentes. Medimos
+as quatro métricas em 310 repositórios populares que usam GitHub Actions, trocando deploy por release
+publicada e incidente por execução de CI com falha e por release corretiva. O repositório típico
+publica 0,46 release por semana, tem \textit{lead time} mediano de 354 horas, 4,7\% de falhas no CI e
+se recupera de um build vermelho em 2,9 horas; 43\% ficam em \textit{Medium}. A classificação é
+instável: entre 32\% e 43\% dos repositórios mudam de categoria quando a definição operacional muda
+(kappa ponderado de 0,39 a 0,52), e a escolha da taxa de falha pesa bem mais que a unidade de deploy.
+Repositórios com commits feitos por agentes de programação publicam um pouco mais, mas a intensidade
+de uso não se associa a nenhuma métrica.
 \end{resumo}
 
 \section{Introdução}
@@ -910,6 +919,41 @@ Holm ($p = 0{,}055$). Metade dos commits da janela não tem execução de CI pr�
 
 \section{Discussão}
 
+A Tabela~\ref{tab:hipoteses} resume cada hipótese da Introdução contra o que os dados mostraram. Os
+parágrafos seguintes detalham cada uma.
+
+\begin{table}[ht]
+\centering
+\caption{Hipóteses da Introdução e o resultado}
+\label{tab:hipoteses}
+\small
+\begin{tabular}{lp{0.18\textwidth}p{0.6\textwidth}}
+\hline
+RQ & Resultado & Justificativa \\
+\hline
+01 & Em parte & Metade em \textit{Medium}, mas 23,9\% em \textit{Low} \\
+02 & Em parte & Mediana da (a) dentro do previsto, mas (a) $>$ (b) só em 60,2\% e não em 90\% \\
+03 & Sim & CFR (a) em \textit{Elite} (4,7\%), CFR (b) em \textit{High} (25\%) e pouca concordância entre elas \\
+04 & Sim & Mediana de 2,91 horas, em \textit{High}; a cauda não foi verificada \\
+05 & Em parte & Variantes com respostas diferentes, mas sinal positivo na (a) e $\rho$ acima do previsto na (b) \\
+06 & Em parte & Associações parciais, mas idade e contribuidores pioram o desempenho, ao contrário do esperado \\
+07 & Em parte & Instabilidade do tamanho previsto, mas causada pela CFR e não pela unidade de deploy \\
+09 & Não & Nenhum efeito da intensidade de uso; diferença só entre ter e não ter rastro de IA \\
+\hline
+\end{tabular}
+\end{table}
+
+O que mais surpreendeu foi o peso da definição de CFR. Esperávamos que a unidade de deploy fosse a
+escolha mais sensível, e ela mexe pouco; trocar a CFR de CI pela de entrega, ao contrário, muda a faixa de
+CFR de dois terços da amostra. As duas medem fenômenos que quase não se tocam: CI vermelho no
+\texttt{main} é raro, e correção logo depois de uma release é comum. A segunda surpresa foi o
+\textit{lead time} por commit sair maior que o por release na mediana, contra a intuição de que a
+variante por release seria sempre a mais longa. A terceira foi a direção da idade na RQ 06: projetos
+mais antigos têm desempenho DORA pior, o que mostra que maturidade, nesse proxy, aparece como
+releases maiores e mais espaçadas, e não como entrega mais rápida. Por fim, a ausência de qualquer
+efeito da intensidade de uso de agentes de IA contraria tanto a nossa hipótese quanto a expectativa
+criada pelo relatório DORA de 2024.
+
 \paragraph{RQ 01.} A hipótese de uma concentração em \textit{Medium} e \textit{High} se confirma
 parcialmente: metade da amostra está em \textit{Medium}, como esperado para projetos que agrupam
 mudanças antes de publicar, mas 23,9\% ficam em \textit{Low}. Apenas 2,6\% alcançam \textit{Elite},
@@ -926,7 +970,11 @@ commit é uma observação e releases com muitos commits passam a ter mais peso.
 linhas de versão paralelas também podem inflar o compare entre releases, como observado na
 validação manual. Portanto, a divergência reflete tanto a definição quanto a estrutura de
 versionamento e de commits; não há um fator único que faça a variante (a) crescer em todos os
-projetos.
+projetos. O resto da hipótese se dividiu. A mediana da (a), 354 horas (pouco mais de duas semanas),
+caiu dentro da faixa prevista, e a parte em \textit{Low} ficou perto de um terço, como esperado (106
+de 309, 34,3\%). Já a (b) não ficou entre 40\% e 60\% da (a): a mediana dela é maior. A categoria de
+\textit{lead time} muda entre as variantes em 41,7\% dos repositórios (RQ 07), perto da metade
+prevista.
 
 \paragraph{RQ 03.} A mediana de 4,7\% da CFR (a) confirma a expectativa de uma taxa baixa para o
 proxy de CI, e a mediana de 25\% da CFR (b) fica na faixa \textit{High}, como previsto. A diferença
@@ -934,13 +982,17 @@ não deve ser lida como contradição entre CI e produção: a variante (a) cont
 que falharam, e não incidentes depois de um deploy. Ela pode incluir flakiness e falhas de
 dependências, enquanto mudanças barradas no CI podem nunca chegar aos usuários. A variante (b)
 aproxima falhas pós-entrega por releases corretivas, mas também não observa diretamente incidentes
-em produção e depende da heurística e da janela temporal adotadas.
+em produção e depende da heurística e da janela temporal adotadas. A hipótese também previa pouca
+concordância entre as variantes, e isso se confirmou com folga: trocar a (a) pela (b) muda a faixa de
+67,3\% dos repositórios, com kappa praticamente zero (RQ 07).
 
 \paragraph{RQ 04.} A mediana de recuperação de 2,91 horas confirma a hipótese de uma faixa
 \textit{High} (entre 1 e 24 horas). A proporção de episódios censurados é baixa na maior parte dos
 repositórios, embora 16 não tenham tido episódios observados e, portanto, não contribuam para esse
 resumo. O resultado descreve apenas falhas de CI após um sucesso conhecido; não é uma medida de
-recuperação de incidentes em produção.
+recuperação de incidentes em produção. A parte da hipótese sobre a cauda não foi verificada: o IQR
+de 5,53 horas é estreito perto do que esperávamos, e não separamos os workflows por função, então não
+dá para dizer se os episódios censurados se concentram nos workflows secundários.
 
 \paragraph{Classificação DORA de referência (C1).} A distribuição geral concentra-se em Medium
 (42,9\%) e High (32,6\%), mas a categoria final não deve ser lida como consenso das quatro métricas:
