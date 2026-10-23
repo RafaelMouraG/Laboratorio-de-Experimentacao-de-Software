@@ -361,7 +361,25 @@ depois da \texttt{v9.2.8}, e o \texttt{compare} entre as duas tem 5.188 commits.
 que mantêm mais de uma linha de versão ao mesmo tempo, e nesse caso o \texttt{compare} junta
 commits que não fazem parte daquela entrega.
 
-\section{Resultados}
+\subsection{Detecção de agentes de programação (RQ 09)}
+Um commit é marcado como feito com agente quando deixa rastro explícito, nas famílias de
+Robbes et al. \cite{robbes2026agentic}: autoria (trailer \texttt{Co-authored-by} do agente,
+``Generated with Claude Code'' ou autor que é a conta bot do agente), branch (PR aberto de um branch
+\texttt{copilot/}, \texttt{codex/}, \texttt{cursor/}, \texttt{claude/} ou \texttt{devin/}) e label
+do agente. A quarta família, arquivo de instruções do agente no repositório, marca o repositório e
+não o commit. Nos 310 repositórios foram 119.208 commits com pelo menos um rastro.
+
+A detecção tem recall baixo por construção, porque quem usa IA sem deixar marca fica como não
+adotante, mas a precisão pode ser medida. Sorteamos 100 commits marcados com semente fixa
+(\texttt{random\_state=42}), e cada integrante abriu os 100 no GitHub sozinho e decidiu se o commit
+foi mesmo feito com agente (sim, não ou incerto), sem ver o que a detecção tinha achado. Pelo
+consenso por maioria, os 100 foram feitos com agente, o que dá precisão de 100\%. Os três avaliadores
+concordaram em 86 commits. Dois marcaram sim em todos (um deixou um caso incerto) e o terceiro
+marcou não em 10 e incerto em 3, o que dá precisão de 89,7\% pelo julgamento dele sozinho. Sete
+dos 10 commits marcados como não foram detectados só pelo branch \texttt{codex/}, sem nenhuma marca
+na mensagem, que é o rastro mais fraco. O kappa de Fleiss não é informativo aqui ($-0{,}04$), porque
+quase todos os rótulos são sim e o kappa cai mesmo com concordância alta.
+
 
 \subsection{RQ 01}
 
