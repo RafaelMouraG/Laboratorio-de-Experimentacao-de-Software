@@ -380,6 +380,26 @@ dos 10 commits marcados como não foram detectados só pelo branch \texttt{codex
 na mensagem, que é o rastro mais fraco. O kappa de Fleiss não é informativo aqui ($-0{,}04$), porque
 quase todos os rótulos são sim e o kappa cai mesmo com concordância alta.
 
+A adoção de cada repositório é a proporção de commits com IA entre os commits da janela a partir do
+primeiro commit com IA. Os níveis de referência (C1) são os de Robbes et al.: nenhuma, experimental
+($< 1\%$), limitada (1\% a $< 5\%$), consistente (5\% a $< 20\%$) e disseminada ($\geq 20\%$). Como os
+autores não justificam esses cortes, testamos outras três classificações: nenhuma mais tercis entre
+os adotantes (C2), nenhuma mais quartis (C3) e uma que olha o arquivo de instruções do agente em vez
+da proporção, separando quem versiona o arquivo de quem só tem commits soltos (C4). Para os testes,
+os níveis vizinhos foram unidos em nenhuma, baixa e alta; na C2, o primeiro tercil é baixa e os
+outros dois, alta. Repositórios com menos de 10 commits depois da adoção ficam fora da análise por
+nível. A regra e os cortes foram commitados (\texttt{5dc0c72}) antes de qualquer cruzamento da
+classificação com as métricas DORA. A análise de commits com e sem IA dentro do mesmo repositório
+(análise 3) não depende dos níveis e foi feita antes desse commit.
+
+Na comparação de antes e depois da adoção (análise 2), o primeiro commit com IA só é procurado dentro
+da janela, então quem já usava IA antes de outubro de 2025 aparece como adotante no primeiro dia. Por
+isso exigimos pelo menos 91 dias sem rastro antes da adoção e 91 depois, com pelo menos 3 releases
+de cada lado para as métricas de release e 30 execuções de CI de cada lado para as de CI. Cada lado é
+tratado como uma janela própria. Na análise de robustez, retiramos os repositórios cujo produto é um
+agente de programação (17) ou um agente ou assistente baseado em LLM (31), classificados à mão pelo
+nome, pela descrição e pelos tópicos, com o motivo de cada um registrado no repositório.
+
 
 \subsection{RQ 01}
 
@@ -819,6 +839,75 @@ falha à entrega anterior dentro de uma janela temporal curta.
 \label{fig:rq08}
 \end{figure}
 
+\subsection{RQ 09}
+
+Dos 310 repositórios, 282 têm pelo menos um commit com IA na janela e 28 não têm nenhum. Dois
+adotantes ficaram fora da análise por nível por terem menos de 10 commits depois da adoção. Na
+classificação C1, ficaram 28 em nenhuma, 40 em experimental, 91 em limitada, 100 em consistente e
+49 em disseminada. As classificações baseadas na proporção concordam bem entre si (de C1 para C3,
+2,9\% mudam de grupo, $\kappa = 0{,}96$), mas a C4 mede outra coisa: de C1 para C4, 35,7\% mudam de
+grupo ($\kappa = 0{,}42$).
+
+\textbf{Análise 1, entre repositórios.} A proporção de commits com IA se correlaciona fracamente com
+a frequência de releases (Spearman $\rho = 0{,}16$, $p$ ajustado por Holm $= 0{,}022$, $n = 308$) e,
+no sentido inverso, com o \textit{lead time} (a) ($\rho = -0{,}15$, $p = 0{,}032$). Não há relação
+com a CFR (a) nem com a recuperação. As duas correlações somem quando se olha só os adotantes
+($\rho = 0{,}08$ e $-0{,}11$, sem significância), ou seja, o que separa os grupos é ter ou não algum
+commit com IA, e não quanto se usa. Por nível (Tabela~\ref{tab:rq09-niveis}), só a frequência difere
+na C1: mediana de 0,22 release por semana sem adoção, 0,46 na adoção baixa e 0,50 na alta
+($\varepsilon^2 = 0{,}03$, $\delta$ alta × nenhuma $= 0{,}38$, médio). As classificações C2 e C3 dão o
+mesmo resultado. Na C4, a frequência, o \textit{lead time} (a) e a CFR (a) diferem: quem versiona o
+arquivo do agente solta mais releases (mediana 0,58 contra 0,31 de quem só tem commits soltos), tem
+\textit{lead time} menor (272 contra 480 horas) e CFR (a) maior (5,6\% contra 3,5\%). Como fator da
+RQ 06, no mesmo Holm dos outros 16 testes, a adoção não é significativa em nenhuma métrica
+($p$ ajustado $= 0{,}076$ na frequência). Sem os 17 agentes de programação, a correlação com a
+frequência continua ($\rho = 0{,}15$, $p = 0{,}038$); sem eles e sem os 31 assistentes de LLM, ela
+some ($\rho = 0{,}11$, $p = 0{,}21$).
+
+\begin{table}[ht]
+\centering
+\caption{RQ 09: Kruskal-Wallis por grupo de adoção (nenhuma, baixa, alta), $p$ ajustado por Holm}
+\label{tab:rq09-niveis}
+\begin{tabular}{llrrr}
+\hline
+Classificação & Métrica & $p$ ajustado & $\varepsilon^2$ & $\delta$ alta × nenhuma \\
+\hline
+C1 & Releases/semana & 0,020 & 0,034 & 0,38 \\
+ & \textit{Lead time} (a) & 0,515 & 0,012 & $-0{,}22$ \\
+ & CFR (a) & 0,515 & 0,011 & 0,22 \\
+ & Recuperação & 0,515 & 0,005 & $-0{,}03$ \\
+C4 & Releases/semana & $<$0,001 & 0,111 & 0,45 \\
+ & \textit{Lead time} (a) & 0,014 & 0,033 & $-0{,}29$ \\
+ & CFR (a) & $<$0,001 & 0,060 & 0,27 \\
+ & Recuperação & 0,949 & 0,000 & 0,01 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Análise 2, antes e depois.} Dos 282 adotantes, 105 tinham pelo menos 91 dias de cada lado da
+adoção; 76 entraram nas métricas de release e 89 nas de CI. Nenhuma métrica muda de forma
+significativa entre antes e depois (Wilcoxon pareado, todos os $p$ ajustados iguais a 1, exceto a
+recuperação, com $p$ ajustado de 0,35). As medianas quase não se movem: 0,42 para 0,45 release por
+semana e 4,3\% para 3,6\% de CFR (a). Por trimestre desde a adoção, o Mann-Kendall só acusa tendência
+no \textit{lead time} (b), de queda ($\tau = -0{,}87$, $p = 0{,}024$), mas com o conjunto de repositórios
+mudando de um trimestre para o outro e só 11 no primeiro (Figura~\ref{fig:rq09}).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figuras/rq09_antes_depois.pdf}
+\caption{RQ 09: métricas DORA antes e depois do primeiro commit com IA, por repositório}
+\label{fig:rq09}
+\end{figure}
+
+\textbf{Análise 3, commits com e sem IA no mesmo repositório.} Comparando, dentro de cada
+repositório, os commits com IA e os sem IA feitos depois da adoção (Wilcoxon pareado entre
+repositórios), o \textit{lead time} não difere (mediana de 221 contra 196 horas, $n = 224$,
+$p = 0{,}62$), nem a proporção de commits que entram numa release que falhou pela CFR (b) (23\% contra
+26\%, $p = 0{,}98$). A execução de CI disparada por commits com IA falha um pouco menos (12,9\% contra
+15,1\%, $n = 207$, $p = 0{,}018$, rank-biserial $-0{,}19$), mas a diferença não sobrevive à correção de
+Holm ($p = 0{,}055$). Metade dos commits da janela não tem execução de CI própria, porque o CI roda por
+\textit{push} e não por commit.
+
 \section{Discussão}
 
 \paragraph{RQ 01.} A hipótese de uma concentração em \textit{Medium} e \textit{High} se confirma
@@ -927,6 +1016,22 @@ passa direto para a métrica, de modo que falsos positivos inflam tanto o numera
 quanto a identificação de correções usada pela CFR (b). Os resultados devem ser lidos como proxies
 baseados no versionamento e nas notas das releases, e não como observação direta de retrabalho ou
 incidentes em produção.
+
+\paragraph{RQ 09.} A hipótese não se confirma. Esperávamos \textit{lead time} igual ou menor e CFR (a)
+maior nos adotantes, puxados por lotes maiores, como no relatório DORA de 2024. As direções até
+aparecem na comparação entre repositórios, mas só são significativas na C4, e nenhuma das três
+análises mostra efeito da intensidade de uso: entre adotantes as correlações somem, antes e depois da
+adoção nada muda, e dentro do mesmo repositório o commit com IA não demora mais nem quebra mais o CI.
+O que aparece é uma diferença entre ter e não ter rastro de IA, e ela tem explicação mais simples que
+o efeito da ferramenta. O grupo sem IA tem só 28 repositórios; repositório mais ativo tem mais chance
+de ter algum commit marcado; e a diferença some quando saem os projetos que são eles mesmos
+ferramentas de IA. A C4 conta outra
+história: versionar o arquivo de instruções do agente parece marcar projetos que organizaram o
+trabalho em torno do agente, e são esses que soltam mais releases, com \textit{lead time} menor e CFR
+(a) maior. Como é um corte transversal, não dá para dizer
+se o agente causa isso ou se projetos com esse perfil adotam o agente. A detecção também pesa: a
+precisão é alta, mas quem usa IA sem deixar marca fica entre os não adotantes, o que aproxima os
+grupos e esconde diferenças pequenas.
 
 \bibliographystyle{sbc}
 \bibliography{referencias}
