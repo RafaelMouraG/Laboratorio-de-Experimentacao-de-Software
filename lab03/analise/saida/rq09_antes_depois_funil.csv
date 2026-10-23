@@ -1,0 +1,8 @@
+etapa,restantes,descartados,motivo
+repositórios no repos.csv,310,0,
+com algum commit com IA,282,28,nenhum commit com IA na janela
+primeiro commit com IA dentro da janela,282,0,primeiro commit com IA fora da janela
+pelo menos 91 dias antes da adoção,120,162,menos de 91 dias entre o início da janela (ou a criação do repositório) e a adoção
+pelo menos 91 dias depois da adoção,105,15,adoção nos últimos 91 dias da janela
+métricas de release: 3+ releases de cada lado,76,29,menos de 3 releases em algum lado
+métricas de CI: 30+ runs válidos de cada lado,89,16,menos de 30 runs válidos em algum lado

@@ -1,0 +1,6 @@
+metrica,primeiro_trimestre,ultimo_trimestre,pontos,tendencia,tau,s,p_valor,inclinacao_sen
+releases_por_semana,-3,2,6,no trend,-0.06666666666666667,-1.0,1.0,0.0
+lead_time_release_horas,-3,2,6,no trend,-0.06666666666666667,-1.0,1.0,-24.6695138888889
+lead_time_commit_horas,-3,2,6,decreasing,-0.8666666666666667,-13.0,0.024170547174545254,-50.20361111111106
+cfr_ci,-3,2,6,no trend,0.3333333333333333,5.0,0.4523703606773608,0.0026819785441716468
+recuperacao_horas,-3,2,6,no trend,0.06666666666666667,1.0,1.0,0.0567361111111111
