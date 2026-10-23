@@ -1,0 +1,14 @@
+snapshot_date,sprint,issue,titulo,status,assignee,state,url
+2026-10-23,S03,115,Resultados e Discussão: fechamento do artigo,Doing,Athoosz;RafaelMouraG;mateusdsoc,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/115
+2026-10-23,S03,116,Snapshot do board da S03,Doing,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/116
+2026-10-23,S03,108,Estrutura da análise e descritiva das RQ 01 a RQ 04,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/108
+2026-10-23,S03,109,Classificação DORA de referência (C1),Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/109
+2026-10-23,S03,110,RQ 05: frequência de deploy × taxa de falha,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/110
+2026-10-23,S03,111,RQ 06: características dos repositórios × desempenho DORA,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/111
+2026-10-23,S03,112,Coleta das unidades de deploy alternativas (pré-release e tag),Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/112
+2026-10-23,S03,113,RQ 07: análise de sensibilidade da classificação DORA,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/113
+2026-10-23,S03,114,RQ 08 (bônus): rework rate,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/114
+2026-10-23,S03,117,[Extra] RQ 09: coleta dos rastros de adoção de agentes de IA,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/117
+2026-10-23,S03,118,"[Extra] RQ 09: níveis de adoção, robustez e análises 1 e 2",Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/118
+2026-10-23,S03,119,"[Extra] RQ 09: análise 3, commits com IA × sem IA no mesmo repositório",Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/119
+2026-10-23,S03,120,"[Extra] RQ 09: precisão da detecção, hipótese e texto no artigo",Done,Athoosz;RafaelMouraG;mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/120
