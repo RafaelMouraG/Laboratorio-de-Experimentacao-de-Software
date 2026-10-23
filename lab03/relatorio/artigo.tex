@@ -142,7 +142,11 @@ quando a seguinte sai em até 7 dias e é corretiva; releases dos últimos 7 dia
 censuradas. Um episódio de recuperação vai da primeira falha de um workflow depois de um sucesso até o
 sucesso seguinte; episódios sem sucesso posterior são censurados e ficam fora da mediana. A
 classificação geral (C1) é a mediana das faixas de frequência, \textit{lead time} (a) e CFR (a),
-arredondada para baixo. A RQ 07 troca a unidade de deploy: na C2 as pré-releases também contam, e na
+arredondada para baixo. O enunciado usa as quatro métricas, mas deixamos a recuperação de fora: ela
+vem só do CI e não muda entre as combinações da RQ 07, e, como fica em \textit{High} em 70\% da
+amostra, puxaria a nota de todos para o meio e esconderia as diferenças entre as definições. Com as
+quatro métricas, 68 repositórios (22\%) mudariam de categoria, 56 deles para cima (os \textit{Low}
+cairiam de 55 para 19). A RQ 07 troca a unidade de deploy: na C2 as pré-releases também contam, e na
 C3 a unidade é a tag com \texttt{X.Y} ou \texttt{X.Y.Z} no nome, datada pelo commit apontado (sem esse
 filtro entrariam milhares de tags criadas pelo CI, como no \texttt{pytorch/pytorch}).
 
@@ -216,6 +220,19 @@ primeiro, nos níveis de Robbes et al. (C1) e em três alternativas: tercis (C2)
 adotantes e versionar ou não o arquivo de instruções (C4). Essas regras foram commitadas antes de
 qualquer cruzamento com as métricas. A comparação de antes e depois exige 91 dias sem rastro antes da
 adoção e 91 depois.
+
+\paragraph{Contribuições além do enunciado.} O que o grupo acrescentou por conta própria:
+\begin{itemize}
+\item \textbf{RQ 09}, uma questão nova sobre agentes de programação, com detecção validada à mão,
+quatro classificações de adoção e três análises (entre repositórios, antes e depois da adoção e
+commits com e sem agente no mesmo repositório).
+\item \textbf{Notas da release na heurística corretiva (v4).} O enunciado sugere olhar a versão e as
+mensagens de commit; somar as notas da release levou o F1 de 0,565 (v1) para 0,756.
+\item \textbf{Uma escolha de cada vez na RQ 07.} Além dos pares de combinações pedidos, mudamos uma
+definição por vez, o que mostrou que a CFR pesa mais que a unidade de deploy.
+\item \textbf{Os cinco fatores na RQ 06} (o mínimo era três), com delta de Cliff entre os grupos dos
+extremos para mostrar a direção de cada efeito.
+\end{itemize}
 
 \section{Resultados}
 
@@ -438,8 +455,7 @@ quartil mais novo são Python ou TypeScript. Na RQ 09, o primeiro commit com age
 dentro da janela, então quem já usava antes aparece como adotante no primeiro dia, e a regra de 91
 dias tira 162 repositórios da comparação de antes e depois. Sem grupo de controle, a queda do
 \textit{lead time} (b) depois da adoção não se separa de uma tendência do período. O GitHub não
-devolveu execuções de CI de janeiro a junho de 2025 para repositórios com CI ativo, o que sugere um
-limite de retenção; a nossa janela é posterior, mas isso limita repetir o estudo para períodos antigos.
+devolveu execuções de CI do primeiro semestre de 2025, o que impede repetir o estudo em janelas antigas.
 
 \paragraph{Externa.} A amostra são os 310 projetos mais estrelados que passam nos filtros (37 mil a
 254 mil estrelas), e não todos os que têm mil estrelas ou mais, nem projetos corporativos. O filtro de
