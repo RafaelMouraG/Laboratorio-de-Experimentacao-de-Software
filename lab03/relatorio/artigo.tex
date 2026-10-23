@@ -271,6 +271,16 @@ seguinte. Episódios sem sucesso posterior são censurados: entram na contagem, 
 não na mediana. A classificação geral usa a mediana inteira das faixas de
 frequência de releases, lead time (a) e CFR (a).
 
+A RQ 07 usa mais duas unidades de deploy. Na C2 as pré-releases também contam como entrega, e a
+entrega anterior de cada uma pode ser uma pré-release. Na C3 a unidade é a tag, listada pela GraphQL
+e datada pelo commit para o qual aponta; várias tags no mesmo commit contam como uma entrega só.
+Ficam só as tags com \texttt{X.Y} ou \texttt{X.Y.Z} no nome ou com release publicada de mesmo
+nome. Sem esse filtro, a C3 contaria como entrega as tags que o próprio CI cria, como as mais de
+3 mil \texttt{viable/strict} e \texttt{ciflow} do \texttt{pytorch/pytorch}, e a coleta passaria de
+dois dias de cota. Tag não tem notas, então na C3 a heurística corretiva fica só com a regra do
+patch (v3). As três combinações usam a mesma regra de classificação geral da C1, trocando só a
+definição de cada nota.
+
 \subsection{Heurística de release corretiva}
 Uma release é corretiva quando o objetivo principal dela é corrigir um defeito recente. Como isso
 não está em nenhum campo da API, a decisão é de uma heurística, avaliada contra o consenso dos três
@@ -587,7 +597,6 @@ Recuperação & Elite & 10 & 11 & 0 & 0 \\
 \label{fig:c1}
 \end{figure}
 
-% A RQ 07 entra depois da RQ 06 (#113).
 \subsection{RQ 05}
 
 Calculamos o Spearman entre releases por semana e cada variante da CFR, tirando os repositórios
@@ -695,6 +704,70 @@ correção, $\varepsilon^2 \leq 0{,}03$).
 \caption{RQ 06: combinações fator × métrica significativas depois do Holm. Eixo y em escala log}
 \label{fig:rq06}
 \end{figure}
+
+\subsection{RQ 07}
+
+A Tabela~\ref{tab:rq07-pares} compara as três combinações. Entram em cada par os repositórios
+classificados nas duas; só um ficou sem classificação na C2, porque não tem \textit{lead time} (b)
+nem CFR (b). Entre 32\% e 43\% dos repositórios mudam de categoria em cada par, e 166 dos 309
+classificados nas três (53,7\%) mudam em pelo menos um. O kappa ponderado vai de 0,39 (C1 × C2) a
+0,52 (C1 × C3).
+
+\begin{table}[ht]
+\centering
+\caption{RQ 07: repositórios que mudam de categoria geral e kappa de Cohen com peso linear}
+\label{tab:rq07-pares}
+\begin{tabular}{lrrrr}
+\hline
+Par & $n$ & Mudaram & \% & $\kappa$ \\
+\hline
+C1 × C2 & 309 & 132 & 42,7 & 0,39 \\
+C1 × C3 & 310 & 120 & 38,7 & 0,52 \\
+C2 × C3 & 309 & 99 & 32,0 & 0,51 \\
+\hline
+\end{tabular}
+\end{table}
+
+As duas combinações mexem na classificação em direções opostas. A C3 sobe a categoria de 89
+repositórios e desce a de 31, e a distribuição vai para cima: 31 \textit{Elite} e 23 \textit{Low},
+contra 21 e 55 na C1. A C2 desce mais do que sobe (72 contra 60) e fica com 10 \textit{Elite} e 53
+\textit{Low}. Quase todas as mudanças são para a categoria do lado: 105 das 132 de C1 para C2 (80\%)
+e 110 das 120 de C1 para C3 (92\%). Saltos de três categorias aconteceram uma vez em cada par
+(Figura~\ref{fig:rq07}).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.82\textwidth]{figuras/rq07_transicoes.pdf}
+\caption{RQ 07: transição de categoria geral de C1 para C2 e de C1 para C3 (contagem de repositórios)}
+\label{fig:rq07}
+\end{figure}
+
+Para ver qual escolha pesa mais, a Tabela~\ref{tab:rq07-escolhas} muda uma definição de cada vez e
+compara a faixa da métrica afetada. A escolha da CFR é a que mais mexe: com a unidade fixa em
+release, trocar a CFR (a) pela (b) muda a faixa de 67\% dos repositórios, quase sempre para pior
+(182 pioram e 26 melhoram), com kappa praticamente zero. Depois vem o \textit{lead time} (a) contra
+o (b), com 42\% de mudança. A unidade de deploy pesa menos. Trocar release por tag muda a faixa de
+frequência de 23\% dos repositórios, quase sempre para cima (64 sobem e 6 descem), e a mediana de
+entregas por semana passa de 0,46 para 0,60. Incluir as pré-releases muda só 12\%.
+
+\begin{table}[ht]
+\centering
+\caption{RQ 07: uma escolha de definição de cada vez, faixa da métrica afetada}
+\label{tab:rq07-escolhas}
+\begin{tabular}{llrrr}
+\hline
+Métrica & Escolha & $n$ & \% mudou & $\kappa$ \\
+\hline
+Frequência & release × release + pré-release & 310 & 11,6 & 0,85 \\
+ & release × tag & 310 & 22,6 & 0,67 \\
+\textit{Lead time} & (a) × (b), unidade release & 309 & 41,7 & 0,54 \\
+ & (b): release × release + pré-release & 309 & 11,7 & 0,87 \\
+ & (b): release × tag & 309 & 20,1 & 0,77 \\
+CFR & (a) × (b), unidade release & 309 & 67,3 & 0,00 \\
+ & (b): release × release + pré-release & 309 & 12,6 & 0,88 \\
+\hline
+\end{tabular}
+\end{table}
 
 \subsection{RQ 08}
 
@@ -811,6 +884,20 @@ TypeScript. Os efeitos ficam entre pequenos e moderados
 ($\varepsilon^2$ de 0,08 a 0,23), como a hipótese previa, e nenhum fator separa os grupos por
 completo. São associações e não causas, e o tipo de projeto, com só 59 repositórios em três grupos,
 não tem poder para mostrar diferenças pequenas.
+
+\paragraph{RQ 07.} A hipótese acertou o tamanho da instabilidade e errou a causa. A proporção de
+repositórios que mudam de categoria em pelo menos um par (53,7\%) ficou um pouco acima da faixa
+esperada de 30\% a 50\%, e dois dos três kappas ficaram dentro da faixa moderada prevista (0,52 e
+0,51); o de C1 × C2, 0,39, ficou logo abaixo. Também se confirmou que as trocas são quase sempre
+para a categoria do lado e que a tag faz a frequência subir. O que errou foi apostar na unidade de
+deploy como a escolha que mais pesa. Quem mais pesa é a definição de CFR, e por um motivo que já
+aparecia na RQ 03: a CFR (a) conta \textit{runs} de CI vermelhos, que são raros no \texttt{main}
+(mediana de 4,7\%), enquanto a CFR (b) conta releases corrigidas em até uma semana, que são comuns
+(mediana de 25\%). As duas medem coisas diferentes, e a C2 junta as duas escolhas que puxam para
+baixo (\textit{lead time} (b) e CFR (b)), por isso é a que mais discorda da C1. Para as RQ 01 a 06,
+isso quer dizer que as tendências gerais se sustentam, porque quase nenhum repositório pula de
+\textit{Elite} para \textit{Low}, mas a categoria exata de cada repositório não, e qualquer
+conclusão sobre falha depende de qual CFR foi usada.
 
 \paragraph{RQ 08.} A correlação moderada mostra que as duas métricas capturam parte do mesmo
 fenômeno, mas elas não são intercambiáveis. A \textit{rework rate} mede diretamente a proporção do

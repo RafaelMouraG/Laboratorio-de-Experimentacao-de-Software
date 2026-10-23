@@ -1,0 +1,8 @@
+escolha,metrica,n,mudaram,pct_mudaram,kappa
+unidade: release x release + pré,frequência,310,36,11.612903225806452,0.8459405733417033
+unidade: release x tag,frequência,310,70,22.58064516129032,0.6653988486842105
+"lead time: (a) x (b), unidade release",lead time,309,129,41.74757281553398,0.5448724505451794
+lead time (b): release x release + pré,lead time,309,36,11.650485436893204,0.8660328087032798
+lead time (b): release x tag,lead time,309,62,20.06472491909385,0.7703894121663688
+"CFR: (a) x (b), unidade release",CFR,309,208,67.31391585760518,0.0013598932231988492
+CFR (b): release x release + pré,CFR,309,39,12.62135922330097,0.8793440062475595

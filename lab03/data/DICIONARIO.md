@@ -149,3 +149,28 @@ cada pacote), fica a primeira pelo nome.
 | `commits` | inteiro | commits | tamanho do compare com a tag anterior pela data, mesmo fora da janela |
 | `sem_anterior` | booleano | — | fórmula: não existe tag anterior |
 | `ignorada_compare_404` | booleano | — | fórmula: compare da tag foi ignorado por 404 |
+
+## `metricas_c2.csv` e `metricas_c3.csv`
+
+Métricas de cada repositório nas unidades de deploy alternativas da RQ 07, gravadas por
+`python -m lab03.pipeline.alternativas` junto com o `releases_pre.csv` (C2) e o `tags.csv` (C3). As
+funções são as mesmas do `metricas.csv`; muda só o que conta como entrega. A CFR (a) e o tempo de
+recuperação não dependem da unidade e ficam só no `metricas.csv`. Na C3 a tag não tem notas, e a
+heurística sem notas fica igual à v3 (só o patch).
+
+| Coluna | Tipo | Unidade | Origem |
+|---|---|---|---|
+| `repo` | texto | `owner/name` | repositório do `repos.csv` |
+| `entregas` | inteiro | entregas | linhas do repo no `releases_pre.csv` ou no `tags.csv`; vazio se a coleta do repo deu erro |
+| `entregas_por_semana` | real | entregas/semana | entregas na janela / duração da janela em semanas |
+| `faixa_frequencia` | inteiro | faixa DORA 1–4 | `faixa_frequencia(entregas_por_semana)` |
+| `lead_time_release_horas` | real | horas | variante (a): mediana de `published_at - commit mais antigo` por entrega |
+| `lead_time_release_avaliadas` | inteiro | entregas | entregas com anterior e commits válidos |
+| `faixa_lead_time_release` | inteiro | faixa DORA 1–4 | `faixa_lead_time` da variante (a) |
+| `lead_time_commit_horas` | real | horas | variante (b): mediana de `published_at - commit` de todos os commits |
+| `lead_time_commit_avaliadas` | inteiro | commits | commits válidos usados na mediana |
+| `faixa_lead_time_commit` | inteiro | faixa DORA 1–4 | `faixa_lead_time` da variante (b) |
+| `cfr_entrega` | fração real | 0 a 1 | CFR (b), `cfr_entrega_falharam / cfr_entrega_avaliadas` |
+| `cfr_entrega_avaliadas` | inteiro | entregas | publicadas pelo menos 7 dias antes do fim da janela |
+| `cfr_entrega_falharam` | inteiro | entregas | avaliadas cuja entrega seguinte sai em até 7 dias e é corretiva |
+| `faixa_cfr_entrega` | inteiro | faixa DORA 1–4 | `faixa_cfr(cfr_entrega)` |
