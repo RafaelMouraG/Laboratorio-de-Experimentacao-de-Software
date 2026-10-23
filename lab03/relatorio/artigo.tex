@@ -23,21 +23,30 @@ Laboratório de Experimentação de Software (Prof. Danilo Maia)}
 
 \maketitle
 
-% Resumo e abstract provisórios: reescrever na entrega final, com os números.
 \begin{abstract}
 DORA metrics are the usual way to describe how fast and how safely a team delivers software, but
-open-source projects on GitHub do not record deployments or incidents. This study measures the four
-metrics in at least 300 popular repositories that use GitHub Actions, replacing deployments with
-published releases and incidents with failed CI runs and corrective releases, and checks how much
-the resulting classification depends on these choices.
+open-source projects on GitHub do not record deployments or incidents. We measured the four metrics
+in 310 popular repositories that use GitHub Actions, replacing deployments with published releases
+and incidents with failed CI runs and corrective releases. The typical repository publishes 0.46
+releases per week, has a median lead time of 354 hours, a CI failure rate of 4.7\% and recovers from
+a red build in 2.9 hours; 43\% are classified as Medium. The classification is unstable: between 32\%
+and 43\% of the repositories change category when the operational definition changes (weighted
+kappa from 0.39 to 0.52), and the choice of change failure rate weighs much more than the deployment
+unit. Repositories with commits made by coding agents publish slightly more often, but the intensity
+of use is not associated with any metric.
 \end{abstract}
 
 \begin{resumo}
 As métricas DORA são a forma mais usada de descrever o quão rápido e com quanta segurança um time
-entrega software, mas projetos open-source no GitHub não registram deploys nem incidentes. Este
-estudo mede as quatro métricas em pelo menos 300 repositórios populares que usam GitHub Actions,
-trocando deploy por release publicada e incidente por execução de CI com falha e por release
-corretiva, e verifica o quanto a classificação final depende dessas escolhas.
+entrega software, mas projetos open-source no GitHub não registram deploys nem incidentes. Medimos
+as quatro métricas em 310 repositórios populares que usam GitHub Actions, trocando deploy por release
+publicada e incidente por execução de CI com falha e por release corretiva. O repositório típico
+publica 0,46 release por semana, tem \textit{lead time} mediano de 354 horas, 4,7\% de falhas no CI e
+se recupera de um build vermelho em 2,9 horas; 43\% ficam em \textit{Medium}. A classificação é
+instável: entre 32\% e 43\% dos repositórios mudam de categoria quando a definição operacional muda
+(kappa ponderado de 0,39 a 0,52), e a escolha da taxa de falha pesa bem mais que a unidade de deploy.
+Repositórios com commits feitos por agentes de programação publicam um pouco mais, mas a intensidade
+de uso não se associa a nenhuma métrica.
 \end{resumo}
 
 \section{Introdução}
@@ -380,6 +389,26 @@ dos 10 commits marcados como não foram detectados só pelo branch \texttt{codex
 na mensagem, que é o rastro mais fraco. O kappa de Fleiss não é informativo aqui ($-0{,}04$), porque
 quase todos os rótulos são sim e o kappa cai mesmo com concordância alta.
 
+A adoção de cada repositório é a proporção de commits com IA entre os commits da janela a partir do
+primeiro commit com IA. Os níveis de referência (C1) são os de Robbes et al.: nenhuma, experimental
+($< 1\%$), limitada (1\% a $< 5\%$), consistente (5\% a $< 20\%$) e disseminada ($\geq 20\%$). Como os
+autores não justificam esses cortes, testamos outras três classificações: nenhuma mais tercis entre
+os adotantes (C2), nenhuma mais quartis (C3) e uma que olha o arquivo de instruções do agente em vez
+da proporção, separando quem versiona o arquivo de quem só tem commits soltos (C4). Para os testes,
+os níveis vizinhos foram unidos em nenhuma, baixa e alta; na C2, o primeiro tercil é baixa e os
+outros dois, alta. Repositórios com menos de 10 commits depois da adoção ficam fora da análise por
+nível. A regra e os cortes foram commitados (\texttt{5dc0c72}) antes de qualquer cruzamento da
+classificação com as métricas DORA. A análise de commits com e sem IA dentro do mesmo repositório
+(análise 3) não depende dos níveis e foi feita antes desse commit.
+
+Na comparação de antes e depois da adoção (análise 2), o primeiro commit com IA só é procurado dentro
+da janela, então quem já usava IA antes de outubro de 2025 aparece como adotante no primeiro dia. Por
+isso exigimos pelo menos 91 dias sem rastro antes da adoção e 91 depois, com pelo menos 3 releases
+de cada lado para as métricas de release e 30 execuções de CI de cada lado para as de CI. Cada lado é
+tratado como uma janela própria. Na análise de robustez, retiramos os repositórios cujo produto é um
+agente de programação (17) ou um agente ou assistente baseado em LLM (31), classificados à mão pelo
+nome, pela descrição e pelos tópicos, com o motivo de cada um registrado no repositório.
+
 
 \subsection{RQ 01}
 
@@ -583,26 +612,26 @@ nitidez.
 \hline
 Métrica & Faixa & Elite & High & Medium & Low \\
 \hline
-Releases/semana & Elite & 8 & 8 & 5 & 0 \\
- & High & 0 & 61 & 34 & 6 \\
- & Medium & 0 & 1 & 117 & 15 \\
- & Low & 0 & 1 & 1 & 53 \\
+Releases/semana & Elite & 8 & 0 & 0 & 0 \\
+ & High & 8 & 61 & 1 & 1 \\
+ & Medium & 5 & 34 & 117 & 1 \\
+ & Low & 0 & 6 & 15 & 53 \\
 \hline
-\textit{Lead time} (a) & Elite & 18 & 2 & 1 & 0 \\
- & High & 5 & 69 & 11 & 15 \\
- & Medium & 0 & 3 & 94 & 36 \\
- & Low & 0 & 0 & 0 & 55 \\
+\textit{Lead time} (a) & Elite & 18 & 5 & 0 & 0 \\
+ & High & 2 & 69 & 3 & 0 \\
+ & Medium & 1 & 11 & 94 & 0 \\
+ & Low & 0 & 15 & 36 & 55 \\
  & Sem nota & 0 & 1 & 0 & 0 \\
 \hline
-CFR (a) & Elite & 21 & 0 & 0 & 0 \\
- & High & 82 & 15 & 3 & 1 \\
- & Medium & 109 & 14 & 6 & 4 \\
- & Low & 47 & 5 & 1 & 2 \\
+CFR (a) & Elite & 21 & 82 & 109 & 47 \\
+ & High & 0 & 15 & 14 & 5 \\
+ & Medium & 0 & 3 & 6 & 1 \\
+ & Low & 0 & 1 & 4 & 2 \\
 \hline
-Recuperação & Elite & 10 & 11 & 0 & 0 \\
- & High & 22 & 70 & 4 & 0 \\
- & Medium & 20 & 97 & 10 & 1 \\
- & Low & 9 & 29 & 10 & 1 \\
+Recuperação & Elite & 10 & 22 & 20 & 9 \\
+ & High & 11 & 70 & 97 & 29 \\
+ & Medium & 0 & 4 & 10 & 10 \\
+ & Low & 0 & 0 & 1 & 1 \\
  & Sem nota & 0 & 5 & 5 & 6 \\
 \hline
 \end{tabular}
@@ -819,7 +848,111 @@ falha à entrega anterior dentro de uma janela temporal curta.
 \label{fig:rq08}
 \end{figure}
 
+\subsection{RQ 09}
+
+Dos 310 repositórios, 282 têm pelo menos um commit com IA na janela e 28 não têm nenhum. Dois
+adotantes ficaram fora da análise por nível por terem menos de 10 commits depois da adoção. Na
+classificação C1, ficaram 28 em nenhuma, 40 em experimental, 91 em limitada, 100 em consistente e
+49 em disseminada. As classificações baseadas na proporção concordam bem entre si (de C1 para C3,
+2,9\% mudam de grupo, $\kappa = 0{,}96$), mas a C4 mede outra coisa: de C1 para C4, 35,7\% mudam de
+grupo ($\kappa = 0{,}42$).
+
+\textbf{Análise 1, entre repositórios.} A proporção de commits com IA se correlaciona fracamente com
+a frequência de releases (Spearman $\rho = 0{,}16$, $p$ ajustado por Holm $= 0{,}022$, $n = 308$) e,
+no sentido inverso, com o \textit{lead time} (a) ($\rho = -0{,}15$, $p = 0{,}032$). Não há relação
+com a CFR (a) nem com a recuperação. As duas correlações somem quando se olha só os adotantes
+($\rho = 0{,}08$ e $-0{,}11$, sem significância), ou seja, o que separa os grupos é ter ou não algum
+commit com IA, e não quanto se usa. Por nível (Tabela~\ref{tab:rq09-niveis}), só a frequência difere
+na C1: mediana de 0,22 release por semana sem adoção, 0,46 na adoção baixa e 0,50 na alta
+($\varepsilon^2 = 0{,}03$, $\delta$ alta × nenhuma $= 0{,}38$, médio). As classificações C2 e C3 dão o
+mesmo resultado. Na C4, a frequência, o \textit{lead time} (a) e a CFR (a) diferem: quem versiona o
+arquivo do agente solta mais releases (mediana 0,58 contra 0,31 de quem só tem commits soltos), tem
+\textit{lead time} menor (272 contra 480 horas) e CFR (a) maior (5,6\% contra 3,5\%). Como fator da
+RQ 06, no mesmo Holm dos outros 16 testes, a adoção não é significativa em nenhuma métrica
+($p$ ajustado $= 0{,}076$ na frequência). Sem os 17 agentes de programação, a correlação com a
+frequência continua ($\rho = 0{,}15$, $p = 0{,}038$); sem eles e sem os 31 assistentes de LLM, ela
+some ($\rho = 0{,}11$, $p = 0{,}21$).
+
+\begin{table}[ht]
+\centering
+\caption{RQ 09: Kruskal-Wallis por grupo de adoção (nenhuma, baixa, alta), $p$ ajustado por Holm}
+\label{tab:rq09-niveis}
+\begin{tabular}{llrrr}
+\hline
+Classificação & Métrica & $p$ ajustado & $\varepsilon^2$ & $\delta$ alta × nenhuma \\
+\hline
+C1 & Releases/semana & 0,020 & 0,034 & 0,38 \\
+ & \textit{Lead time} (a) & 0,515 & 0,012 & $-0{,}22$ \\
+ & CFR (a) & 0,515 & 0,011 & 0,22 \\
+ & Recuperação & 0,515 & 0,005 & $-0{,}03$ \\
+C4 & Releases/semana & $<$0,001 & 0,111 & 0,45 \\
+ & \textit{Lead time} (a) & 0,014 & 0,033 & $-0{,}29$ \\
+ & CFR (a) & $<$0,001 & 0,060 & 0,27 \\
+ & Recuperação & 0,949 & 0,000 & 0,01 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Análise 2, antes e depois.} Dos 282 adotantes, 105 tinham pelo menos 91 dias de cada lado da
+adoção; 76 entraram nas métricas de release e 89 nas de CI. Nenhuma métrica muda de forma
+significativa entre antes e depois (Wilcoxon pareado, todos os $p$ ajustados iguais a 1, exceto a
+recuperação, com $p$ ajustado de 0,35). As medianas quase não se movem: 0,42 para 0,45 release por
+semana e 4,3\% para 3,6\% de CFR (a). Por trimestre desde a adoção, o Mann-Kendall só acusa tendência
+no \textit{lead time} (b), de queda ($\tau = -0{,}87$, $p = 0{,}024$), mas com o conjunto de repositórios
+mudando de um trimestre para o outro e só 11 no primeiro (Figura~\ref{fig:rq09}).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figuras/rq09_antes_depois.pdf}
+\caption{RQ 09: métricas DORA antes e depois do primeiro commit com IA, por repositório}
+\label{fig:rq09}
+\end{figure}
+
+\textbf{Análise 3, commits com e sem IA no mesmo repositório.} Comparando, dentro de cada
+repositório, os commits com IA e os sem IA feitos depois da adoção (Wilcoxon pareado entre
+repositórios), o \textit{lead time} não difere (mediana de 221 contra 196 horas, $n = 224$,
+$p = 0{,}62$), nem a proporção de commits que entram numa release que falhou pela CFR (b) (23\% contra
+26\%, $p = 0{,}98$). A execução de CI disparada por commits com IA falha um pouco menos (12,9\% contra
+15,1\%, $n = 207$, $p = 0{,}018$, rank-biserial $-0{,}19$), mas a diferença não sobrevive à correção de
+Holm ($p = 0{,}055$). Metade dos commits da janela não tem execução de CI própria, porque o CI roda por
+\textit{push} e não por commit.
+
 \section{Discussão}
+
+A Tabela~\ref{tab:hipoteses} resume cada hipótese da Introdução contra o que os dados mostraram. Os
+parágrafos seguintes detalham cada uma.
+
+\begin{table}[ht]
+\centering
+\caption{Hipóteses da Introdução e o resultado}
+\label{tab:hipoteses}
+\small
+\begin{tabular}{lp{0.18\textwidth}p{0.6\textwidth}}
+\hline
+RQ & Resultado & Justificativa \\
+\hline
+01 & Em parte & Metade em \textit{Medium}, mas 23,9\% em \textit{Low} \\
+02 & Em parte & Mediana da (a) dentro do previsto, mas (a) $>$ (b) só em 60,2\% e não em 90\% \\
+03 & Sim & CFR (a) em \textit{Elite} (4,7\%), CFR (b) em \textit{High} (25\%) e pouca concordância entre elas \\
+04 & Sim & Mediana de 2,91 horas, em \textit{High}; a cauda não foi verificada \\
+05 & Em parte & Variantes com respostas diferentes, mas sinal positivo na (a) e $\rho$ acima do previsto na (b) \\
+06 & Em parte & Associações parciais, mas idade e contribuidores pioram o desempenho, ao contrário do esperado \\
+07 & Em parte & Instabilidade do tamanho previsto, mas causada pela CFR e não pela unidade de deploy \\
+09 & Não & Nenhum efeito da intensidade de uso; diferença só entre ter e não ter rastro de IA \\
+\hline
+\end{tabular}
+\end{table}
+
+O que mais surpreendeu foi o peso da definição de CFR. Esperávamos que a unidade de deploy fosse a
+escolha mais sensível, e ela mexe pouco; trocar a CFR de CI pela de entrega, ao contrário, muda a faixa de
+CFR de dois terços da amostra. As duas medem fenômenos que quase não se tocam: CI vermelho no
+\texttt{main} é raro, e correção logo depois de uma release é comum. A segunda surpresa foi o
+\textit{lead time} por commit sair maior que o por release na mediana, contra a intuição de que a
+variante por release seria sempre a mais longa. A terceira foi a direção da idade na RQ 06: projetos
+mais antigos têm desempenho DORA pior, o que mostra que maturidade, nesse proxy, aparece como
+releases maiores e mais espaçadas, e não como entrega mais rápida. Por fim, a ausência de qualquer
+efeito da intensidade de uso de agentes de IA contraria tanto a nossa hipótese quanto a expectativa
+criada pelo relatório DORA de 2024.
 
 \paragraph{RQ 01.} A hipótese de uma concentração em \textit{Medium} e \textit{High} se confirma
 parcialmente: metade da amostra está em \textit{Medium}, como esperado para projetos que agrupam
@@ -837,7 +970,11 @@ commit é uma observação e releases com muitos commits passam a ter mais peso.
 linhas de versão paralelas também podem inflar o compare entre releases, como observado na
 validação manual. Portanto, a divergência reflete tanto a definição quanto a estrutura de
 versionamento e de commits; não há um fator único que faça a variante (a) crescer em todos os
-projetos.
+projetos. O resto da hipótese se dividiu. A mediana da (a), 354 horas (pouco mais de duas semanas),
+caiu dentro da faixa prevista, e a parte em \textit{Low} ficou perto de um terço, como esperado (106
+de 309, 34,3\%). Já a (b) não ficou entre 40\% e 60\% da (a): a mediana dela é maior. A categoria de
+\textit{lead time} muda entre as variantes em 41,7\% dos repositórios (RQ 07), perto da metade
+prevista.
 
 \paragraph{RQ 03.} A mediana de 4,7\% da CFR (a) confirma a expectativa de uma taxa baixa para o
 proxy de CI, e a mediana de 25\% da CFR (b) fica na faixa \textit{High}, como previsto. A diferença
@@ -845,13 +982,17 @@ não deve ser lida como contradição entre CI e produção: a variante (a) cont
 que falharam, e não incidentes depois de um deploy. Ela pode incluir flakiness e falhas de
 dependências, enquanto mudanças barradas no CI podem nunca chegar aos usuários. A variante (b)
 aproxima falhas pós-entrega por releases corretivas, mas também não observa diretamente incidentes
-em produção e depende da heurística e da janela temporal adotadas.
+em produção e depende da heurística e da janela temporal adotadas. A hipótese também previa pouca
+concordância entre as variantes, e isso se confirmou com folga: trocar a (a) pela (b) muda a faixa de
+67,3\% dos repositórios, com kappa praticamente zero (RQ 07).
 
 \paragraph{RQ 04.} A mediana de recuperação de 2,91 horas confirma a hipótese de uma faixa
 \textit{High} (entre 1 e 24 horas). A proporção de episódios censurados é baixa na maior parte dos
 repositórios, embora 16 não tenham tido episódios observados e, portanto, não contribuam para esse
 resumo. O resultado descreve apenas falhas de CI após um sucesso conhecido; não é uma medida de
-recuperação de incidentes em produção.
+recuperação de incidentes em produção. A parte da hipótese sobre a cauda não foi verificada: o IQR
+de 5,53 horas é estreito perto do que esperávamos, e não separamos os workflows por função, então não
+dá para dizer se os episódios censurados se concentram nos workflows secundários.
 
 \paragraph{Classificação DORA de referência (C1).} A distribuição geral concentra-se em Medium
 (42,9\%) e High (32,6\%), mas a categoria final não deve ser lida como consenso das quatro métricas:
@@ -927,6 +1068,22 @@ passa direto para a métrica, de modo que falsos positivos inflam tanto o numera
 quanto a identificação de correções usada pela CFR (b). Os resultados devem ser lidos como proxies
 baseados no versionamento e nas notas das releases, e não como observação direta de retrabalho ou
 incidentes em produção.
+
+\paragraph{RQ 09.} A hipótese não se confirma. Esperávamos \textit{lead time} igual ou menor e CFR (a)
+maior nos adotantes, puxados por lotes maiores, como no relatório DORA de 2024. As direções até
+aparecem na comparação entre repositórios, mas só são significativas na C4, e nenhuma das três
+análises mostra efeito da intensidade de uso: entre adotantes as correlações somem, antes e depois da
+adoção nada muda, e dentro do mesmo repositório o commit com IA não demora mais nem quebra mais o CI.
+O que aparece é uma diferença entre ter e não ter rastro de IA, e ela tem explicação mais simples que
+o efeito da ferramenta. O grupo sem IA tem só 28 repositórios; repositório mais ativo tem mais chance
+de ter algum commit marcado; e a diferença some quando saem os projetos que são eles mesmos
+ferramentas de IA. A C4 conta outra
+história: versionar o arquivo de instruções do agente parece marcar projetos que organizaram o
+trabalho em torno do agente, e são esses que soltam mais releases, com \textit{lead time} menor e CFR
+(a) maior. Como é um corte transversal, não dá para dizer
+se o agente causa isso ou se projetos com esse perfil adotam o agente. A detecção também pesa: a
+precisão é alta, mas quem usa IA sem deixar marca fica entre os não adotantes, o que aproxima os
+grupos e esconde diferenças pequenas.
 
 \bibliographystyle{sbc}
 \bibliography{referencias}
