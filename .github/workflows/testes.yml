@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - "lab03/**"
+      - "lab04/**"
       - "requirements.txt"
       - ".github/workflows/testes.yml"
   pull_request:
     paths:
       - "lab03/**"
+      - "lab04/**"
       - "requirements.txt"
       - ".github/workflows/testes.yml"
 
@@ -30,3 +32,9 @@ jobs:
 
       - name: Executar testes
         run: pytest lab03/tests --cov=lab03/metricas --cov-report=term-missing --cov-fail-under=80
+
+      - name: Testes do lab04
+        run: pytest lab04/tests
+
+      - name: Comando único do lab04
+        run: python -m lab04

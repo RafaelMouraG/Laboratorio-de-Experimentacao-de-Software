@@ -10,6 +10,7 @@ servem para todos eles, por isso moram na raiz do repositório e não dentro de 
 | Lab01 | https://github.com/users/RafaelMouraG/projects/6 | `6` | `PVT_kwHOBl12sM4BgDN4` |
 | Lab02 | https://github.com/users/RafaelMouraG/projects/7 | `7` | `PVT_kwHOBl12sM4Bi3ar` |
 | Lab03 | https://github.com/users/RafaelMouraG/projects/10 | `10` | `PVT_kwHOBl12sM4Bl2H9` |
+| Lab04 | https://github.com/users/RafaelMouraG/projects/12 | `12` | `PVT_kwHOBl12sM4BqPYx` |
 
 Todos são do usuário `RafaelMouraG` (não é organização).
 

@@ -21,6 +21,7 @@
 | 01 | Características de repositórios populares + setup do Kanban | 15 | [`lab01/`](lab01/README.md) |
 | 02 | Assistentes de IA vs. codificação manual | 20 | [`lab02/`](lab02/README.md) |
 | 03 | Mineração de métricas DORA | 20 | [`lab03/`](lab03/README.md) |
+| 04 | Testes de hipótese: cenário, simulação e visualização | 20 | [`lab04/`](lab04/README.md) |
 
 Cada laboratório é autocontido: enunciado, scripts (`src/`), dados coletados (`data/`) e relatório
 (`relatorio/`) ficam dentro da pasta do lab.
@@ -36,7 +37,7 @@ README.md              este arquivo
 requirements.txt       dependências de todos os labs
 kanban/                board do grupo: script de snapshot e a série de CSVs por sprint
 lab01/                 Lab01 — enunciado, src/ e data/
-lab02/, lab03/         demais laboratórios, no mesmo padrão
+lab02/ a lab04/        demais laboratórios, no mesmo padrão
 ```
 
 ## Links do grupo
@@ -46,6 +47,7 @@ lab02/, lab03/         demais laboratórios, no mesmo padrão
   - Lab01: https://github.com/users/RafaelMouraG/projects/6
   - Lab02: https://github.com/users/RafaelMouraG/projects/7
   - Lab03: https://github.com/users/RafaelMouraG/projects/10
+  - Lab04: https://github.com/users/RafaelMouraG/projects/12
 
 ## Convenção de commits
 
