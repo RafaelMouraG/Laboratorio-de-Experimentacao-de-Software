@@ -9,6 +9,7 @@ lab03/data/cache/
 runs.csv
 releases_corretivas.csv
 releases_detalhe.jsonl
+lab04/dashboard/index.html
 
 # Temporários da compilação do LaTeX
 *.aux
