@@ -171,3 +171,77 @@ por grupo, se o efeito real for desse tamanho, o Mann-Whitney o detecta em três
 amostras, e um Welch não significativo seria o resultado esperado, não evidência de que o bot não
 muda nada. Para um efeito menor, de ×2, nem o Mann-Whitney passa de 22%: detectá-lo pediria bem
 mais PRs por grupo.
+
+## Q3: dados que violam os pressupostos
+
+Quatro situações, cada uma mudando uma coisa no cenário base, com a mesma grade de efeitos da Q2.
+As tabelas são geradas por `python -m lab04.simulacao.q3` e não devem ser editadas à mão.
+
+<!-- q3:inicio -->
+10000 repetições por ponto, semente 42. ↓ e ↑: fora da faixa α ± margem de 95%.
+
+**Efeito zero.** É erro tipo I quando a H₀ do teste é verdadeira; em `dispersoes` a do Welch é falsa (marcado com \*).
+
+| Situação | O que muda | Welch, α = 5% | Mann-Whitney, α = 5% | Welch, α = 1% | Mann-Whitney, α = 1% |
+|---|---|---|---|---|---|
+| `base` | cenário base, para comparar | 1.6% ↓ | 4.4% ↓ | 0.1% ↓ | 0.8% |
+| `assimetria` | σ = 3.20 nos dois grupos | 0.9% ↓ | 5.0% | 0.0% ↓ | 1.0% |
+| `outliers` | 5% dos PRs × 50 | 1.0% ↓ | 4.5% ↓ | 0.0% ↓ | 0.8% |
+| `n_pequeno` | n = 10 por grupo | 1.0% ↓ | 4.3% ↓ | 0.0% ↓ | 0.7% ↓ |
+| `dispersoes` | mesma mediana, σ = 2.34 com bot e 1.93 sem | 2.9% ↓\* | 5.2% | 0.2% ↓\* | 1.0% |
+
+**Poder, α = 5%.** Na mediana ×2 e ×5 e o efeito em que cada teste chega a 80%.
+
+| Situação | Welch, ×2 | Mann-Whitney, ×2 | Welch, ×5 | Mann-Whitney, ×5 | Welch chega a 80% em | Mann-Whitney chega a 80% em |
+|---|---|---|---|---|---|---|
+| `base` | 6% | 22% | 25% | 80% | não chega | ×5.0 |
+| `assimetria` | 2% | 12% | 4% | 46% | não chega | ×11.5 |
+| `outliers` | 3% | 20% | 11% | 74% | não chega | ×5.6 |
+| `n_pequeno` | 2% | 9% | 5% | 31% | não chega | ×20.5 |
+| `dispersoes` | 11% | 23% | 31% | 79% | não chega | ×5.1 |
+
+**`dispersoes`, os dois pontos.** Com efeito zero as medianas são iguais e a média do grupo com bot é ×2.38 a do sem bot. Com efeito -0.865 (mediana com bot ×0.42) as médias são iguais.
+
+| Ponto | H₀ do Welch | H₀ do Mann-Whitney | Welch, α = 5% | Mann-Whitney, α = 5% | Welch, α = 1% | Mann-Whitney, α = 1% |
+|---|---|---|---|---|---|---|
+| medianas iguais | falsa | verdadeira | 2.9% ↓ | 5.2% | 0.2% ↓ | 1.0% |
+| médias iguais | verdadeira | falsa | 4.4% ↓ | 31.6% ↑ | 0.5% ↓ | 13.1% ↑ |
+<!-- q3:fim -->
+
+**O Mann-Whitney segura o α em todas as situações; o Welch fica conservador em todas.** Sob H₀ os
+dois grupos são idênticos, e qualquer ordem dos postos é igualmente provável, então mudar a forma
+da distribuição não mexe no erro tipo I do Mann-Whitney. A exceção pequena é n = 10, com 4,3%: ali
+a aproximação normal de U com correção de continuidade (a escolha do `testes.py`) fica um pouco
+conservadora, e 200.000 repetições confirmam (4,35%). O Welch, que já rejeitava 1,6% no base, cai
+para cerca de 1% com mais assimetria, outliers ou n pequeno.
+
+**Por que cada situação pesa mais num teste que no outro:**
+
+- **`assimetria`:** um σ maior no log alonga a cauda, e a média e o desvio padrão do Welch passam
+  a ser decididos por um ou dois PRs. Nos postos, a ordem dos PRs é a mesma com qualquer σ, só a
+  sobreposição dos grupos aumenta. Por isso o Mann-Whitney perde poder (80% → 46% em ×5), mas o
+  Welch quase some (25% → 4%).
+- **`outliers`:** um PR multiplicado por 50 entra no Welch com todo o seu tamanho, puxando a média
+  e o desvio do seu grupo. No Mann-Whitney ele vale no máximo o posto mais alto, por maior que
+  seja o fator. O Welch cai de 25% para 11% em ×5; o Mann-Whitney, de 80% para
+  74%, porque um outlier do grupo sem bot ainda troca de lugar com PRs do outro grupo.
+- **`n_pequeno`:** com 10 PRs por grupo, a média amostral de uma lognormal com σ = 2,1 está longe
+  de normal, e o t de Welch, que conta com isso, fica ainda mais conservador. O Mann-Whitney não
+  supõe nada sobre a média, mas com menos pares para comparar também perde poder: precisa da
+  mediana ×20 para chegar a 80%. Os dois sofrem, mas o Welch mais: em ×5 cai de 25% para 5%,
+  enquanto o Mann-Whitney cai de 80% para 31%.
+- **`dispersoes`:** aqui os testes não respondem à mesma pergunta, e a H₀ verdadeira depende do
+  teste. Com efeito zero as medianas são iguais e P(X > Y) = 1/2, então a H₀ do Mann-Whitney é
+  verdadeira e ele rejeita 5,2%, dentro da faixa. A média do grupo com bot é 2,4 vezes a do sem
+  bot, então a H₀ do Welch é falsa, e mesmo assim ele rejeita só 2,9%, abaixo do próprio α: um
+  teste com poder menor que α diante de uma diferença real de médias. No ponto em que as médias
+  ficam iguais (mediana do grupo com bot ×0,42) os papéis se invertem: o Welch rejeita 4,4%, perto
+  de α, e o Mann-Whitney rejeita 32%, o que é poder, porque agora um grupo tende a ter tempos
+  menores. Para o G3, isso quer dizer que "o Mann-Whitney rejeitou e o Welch não" pode significar
+  "a mediana mudou e a média não", e não um erro de um dos testes.
+
+**O palpite errou num ponto.** O `cenario.md` esperava, em `dispersoes`, o Welch rejeitando bem
+acima de 5%, e o Mann-Whitney um pouco fora. Foi o contrário: com o σ real a diferença de médias
+existe, mas é a mesma cauda longa que a cria que deixa o Welch sem poder para vê-la, e o
+Mann-Whitney ficou em α. O resto do palpite se confirmou, com o Welch perdendo por mais do que
+apostamos.
