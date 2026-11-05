@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from lab04.dashboard.pagina import gerar
-from lab04.simulacao import motor, q1, q2
+from lab04.simulacao import motor, q1, q2, q3
 
 
 def main() -> int:
-    motor.gravar(q1.rodar())
-    motor.gravar(q2.rodar())
+    for questao in (q1, q2, q3):
+        motor.gravar(questao.rodar())
     print(f"simulações em {motor.SAIDA}")
     print(f"dashboard em {gerar()}")
     return 0
