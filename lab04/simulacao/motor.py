@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from lab04.simulacao import parametros
-from lab04.simulacao.gerador import Cenario, gerar
+from lab04.simulacao.gerador import Cenario, contaminar, gerar
 from lab04.simulacao.testes import mann_whitney, welch
 
 SEMENTE = 42
@@ -70,6 +70,9 @@ def simular(
     """
     rng = gerador(situacao, efeito, semente)
     com, sem = gerar(rng, cenario.n, cenario.mu, cenario.sigma, efeito, repeticoes=n_rep)
+    if cenario.outliers:
+        com = contaminar(rng, com, cenario.outliers, cenario.fator)
+        sem = contaminar(rng, sem, cenario.outliers, cenario.fator)
     linhas = [
         {"situacao": situacao, "efeito": float(efeito), "teste": teste, "alfa": alfa,
          "rejeicoes": r, "n_rep": n_rep}
