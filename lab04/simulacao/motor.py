@@ -88,11 +88,20 @@ def margem(p: float, n_rep: int = N_REP) -> float:
     return Z_95 * math.sqrt(p * (1 - p) / n_rep)
 
 
+def ler(caminho: Path = SAIDA) -> pd.DataFrame:
+    """Lê o `simulacoes.csv` com os floats exatos.
+
+    O leitor padrão do pandas pode errar o último bit de um float, e aí o efeito lido não bate com
+    o da grade: `gravar` duplicaria a linha em vez de trocar, e a busca por efeito falharia.
+    """
+    return pd.read_csv(caminho, float_precision="round_trip")
+
+
 def gravar(novas: pd.DataFrame, caminho: Path = SAIDA) -> pd.DataFrame:
     """Junta `novas` ao CSV, trocando as linhas com a mesma situação, efeito, teste e α."""
     novas = novas[COLUNAS]
     if caminho.exists():
-        antigas = pd.read_csv(caminho)
+        antigas = ler(caminho)
         chaves = pd.MultiIndex.from_frame(novas[CHAVE])
         antigas = antigas[~pd.MultiIndex.from_frame(antigas[CHAVE]).isin(chaves)]
         novas = pd.concat([antigas, novas], ignore_index=True)

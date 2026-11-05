@@ -70,14 +70,14 @@ def test_gravar_troca_so_as_combinacoes_que_rodaram(tmp_path):
     motor.gravar(b, caminho)
     a2 = motor.simular("a", CENARIO, efeito=0.0, n_rep=200)
     gravado = motor.gravar(a2, caminho)
-    assert list(pd.read_csv(caminho).columns) == motor.COLUNAS
+    assert list(motor.ler(caminho).columns) == motor.COLUNAS
     assert len(gravado) == 2 * len(a)
     assert (gravado.loc[gravado["situacao"] == "a", "n_rep"] == 200).all()
     assert (gravado.loc[gravado["situacao"] == "b", "n_rep"] == 100).all()
 
 
 def test_csv_versionado_tem_a_q1_atualizada():
-    csv = pd.read_csv(motor.SAIDA)
+    csv = motor.ler()
     base = csv[(csv["situacao"] == q1.SITUACAO) & (csv["efeito"] == 0.0)].set_index(["teste", "alfa"])
     for _, l in q1.rodar().iterrows():
         assert base.loc[(l.teste, l.alfa), "rejeicoes"] == l.rejeicoes
@@ -87,3 +87,11 @@ def test_tabela_da_q1_no_readme_esta_atualizada():
     texto = q1.README.read_text(encoding="utf-8")
     bloco = texto.split(q1.INICIO, 1)[1].split(q1.FIM, 1)[0].strip()
     assert bloco == q1.tabela(q1.rodar())
+
+
+def test_gravar_de_novo_com_efeito_irracional_nao_duplica(tmp_path):
+    caminho = tmp_path / "simulacoes.csv"
+    r = motor.simular("a", CENARIO, efeito=0.22314355131420976, n_rep=100)
+    motor.gravar(r, caminho)
+    assert len(motor.gravar(r, caminho)) == len(r)
+    assert set(motor.ler(caminho)["efeito"]) == {0.22314355131420976}
