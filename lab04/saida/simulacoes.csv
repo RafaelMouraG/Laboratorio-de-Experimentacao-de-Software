@@ -1,0 +1,5 @@
+situacao,efeito,teste,alfa,rejeicoes,n_rep
+base,0.0,mann_whitney,0.01,84,10000
+base,0.0,mann_whitney,0.05,438,10000
+base,0.0,welch,0.01,7,10000
+base,0.0,welch,0.05,156,10000
