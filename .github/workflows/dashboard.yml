@@ -1,0 +1,63 @@
+name: dashboard
+
+# Gera o dashboard do lab04 com o comando único e publica no GitHub Pages.
+# O HTML continua fora do git: quem publica é este workflow, a cada push na main.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lab04/**"
+      - "requirements.txt"
+      - ".github/workflows/dashboard.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: python -m pip install -r requirements.txt
+
+      - name: Gerar o dashboard
+        run: python -m lab04
+
+      # Só o HTML gerado vai para o site, não o resto da pasta dashboard/.
+      - name: Montar o site
+        run: |
+          mkdir -p _site
+          cp lab04/dashboard/index.html _site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
