@@ -17,7 +17,7 @@ Da raiz do repositório:
 python -m lab04
 ```
 
-O comando roda tudo, com semente fixa, e grava o dashboard em `lab04/dashboard/index.html`, que abre
+O comando roda tudo, com semente fixa, regrava `lab04/saida/simulacoes.csv` e grava o dashboard em `lab04/dashboard/index.html`, que abre
 direto no navegador. Esse HTML é gerado, por isso fica fora do git. A versão publicada é gerada pelo
 workflow `.github/workflows/dashboard.yml`, com o mesmo comando, a cada push na `main`.
 
@@ -27,6 +27,7 @@ workflow `.github/workflows/dashboard.yml`, com o mesmo comando, a cada push na 
 |---|---|
 | `data/` | Os PRs coletados, em CSV, e o script da coleta |
 | `simulacao/` | Gerador dos dados simulados, os dois testes e o motor das repetições |
+| `saida/` | `simulacoes.csv`, com as rejeições de cada teste em cada situação, efeito e α |
 | `dashboard/` | Código que monta a página |
 | `tests/` | Testes, com `pytest lab04/tests` |
 
@@ -77,3 +78,41 @@ um PR de cada grupo, o com bot demora mais em cerca de 73% dos pares ((1 + δ) /
 sai pequeno porque poucos PRs muito lentos inflam o desvio padrão das horas brutas, e o sinal do
 deslocamento se perde nesse ruído. Isso bate com o palpite do `cenario.md`, mas é um conjunto só.
 Quantas vezes isso acontece é o que a Q2 mede com 10.000 repetições.
+
+## Q1: erro tipo I
+
+O motor (`simulacao/motor.py`) repete o gerador e os dois testes 10.000 vezes por combinação de
+situação e efeito, com os mesmos dados indo para o Welch e para o Mann-Whitney. Cada combinação tem
+uma semente própria, derivada da 42 e do nome da combinação, então acrescentar uma situação não
+muda as que já rodaram. Tudo vai para `saida/simulacoes.csv`, em formato longo, com α = 5% e 1%.
+
+Com 10.000 repetições, a taxa de rejeição de um teste exato fica dentro de α ± 1,96·√(α(1 − α)/10.000)
+em 95% das vezes: cerca de ±0,43 ponto percentual em 5% e ±0,20 em 1%. Fora dessa faixa, o desvio é
+do teste, não do sorteio. A tabela é gerada por `python -m lab04.simulacao.q1` e não deve ser
+editada à mão.
+
+<!-- q1:inicio -->
+10000 repetições, cenário base com efeito zero (H₀ verdadeira para os dois testes), semente 42.
+
+| Teste | α | Rejeições | Erro tipo I | Faixa esperada (α ± margem de 95%) | Leitura |
+|---|---|---|---|---|---|
+| t de Welch | 5.00% | 156 | 1.56% | 4.57% a 5.43% | abaixo da faixa |
+| Mann-Whitney | 5.00% | 438 | 4.38% | 4.57% a 5.43% | abaixo da faixa |
+| t de Welch | 1.00% | 7 | 0.07% | 0.80% a 1.20% | abaixo da faixa |
+| Mann-Whitney | 1.00% | 84 | 0.84% | 0.80% a 1.20% | dentro da faixa |
+<!-- q1:fim -->
+
+**Welch: conservador, e muito.** Rejeita 1,6% das vezes em vez de 5%, e 0,07% em vez de 1%, bem
+abaixo da faixa nos dois α. O palpite do `cenario.md` acertou a direção, mas não o tamanho: com
+σ = 2,1 no log, quando um PR muito lento cai num grupo, ele puxa a média desse grupo e infla o
+desvio padrão ao mesmo tempo, então o |t| quase não cresce e raramente passa do valor crítico. Um teste
+conservador parece seguro, mas o mesmo motivo que segura o erro tipo I tira poder, que é o que a Q2
+mede.
+
+**Mann-Whitney: em α, a menos do sorteio.** A 1% fica dentro da faixa. A 5%, os 4,38% ficam um
+pouco abaixo, mas isso é a semente: rodando 200.000 repetições com outra semente, a taxa sai em
+4,88%. Essa sobra abaixo de 5% vem da correção de continuidade da aproximação normal de U, que
+deixa o teste levemente conservador. A faixa de 95% também erra uma vez em vinte, e aqui são
+quatro faixas: uma delas cair fora sem o teste ter problema não é surpresa. Para um teste em
+postos, a cauda longa não importa: sob H₀ os grupos são idênticos, e qualquer ordem dos postos é
+igualmente provável, seja qual for a distribuição.

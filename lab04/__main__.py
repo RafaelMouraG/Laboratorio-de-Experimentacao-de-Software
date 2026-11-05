@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from lab04.dashboard.pagina import gerar
+from lab04.simulacao import motor, q1
 
 
 def main() -> int:
+    motor.gravar(q1.rodar())
+    print(f"simulações em {motor.SAIDA}")
     print(f"dashboard em {gerar()}")
     return 0
 
