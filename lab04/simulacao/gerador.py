@@ -18,11 +18,17 @@ from lab04.simulacao.parametros import Parametros, sigma_comum
 
 @dataclass(frozen=True)
 class Cenario:
-    """O que o gerador precisa para um cenário: n e σ de cada grupo e o μ de referência."""
+    """O que o gerador precisa para um cenário: n e σ de cada grupo e o μ de referência.
+
+    `outliers` é a fração de PRs, nos dois grupos, que tem o tempo multiplicado por `fator`
+    depois de sorteado (ver `contaminar`). Zero deixa a lognormal pura.
+    """
 
     n: tuple[int, int]
     mu: float
     sigma: tuple[float, float]
+    outliers: float = 0.0
+    fator: float = 1.0
 
 
 def cenario_base(parametros: dict[str, Parametros]) -> Cenario:
@@ -67,3 +73,16 @@ def gerar(
     com = rng.lognormal(mu + efeito, s_com, size=(repeticoes, n_com))
     sem = rng.lognormal(mu, s_sem, size=(repeticoes, n_sem))
     return com, sem
+
+
+def contaminar(rng: np.random.Generator, horas: np.ndarray, fracao: float, fator: float) -> np.ndarray:
+    """Multiplica por `fator` cada tempo com probabilidade `fracao`, imitando PRs esquecidos abertos.
+
+    O sorteio é PR a PR, então o número de outliers varia entre os conjuntos, como varia na prática.
+    Aplicado aos dois grupos com a mesma fração, mantém H₀ verdadeira com efeito zero.
+    """
+    if not 0 <= fracao < 1:
+        raise ValueError("fracao precisa estar em [0, 1)")
+    if fator <= 0:
+        raise ValueError("fator precisa ser positivo")
+    return np.where(rng.random(horas.shape) < fracao, horas * fator, horas)
