@@ -6,6 +6,8 @@ from pathlib import Path
 
 REPOSITORIO = "https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software"
 BOARD = "https://github.com/users/RafaelMouraG/projects/12"
+# Publicado pelo .github/workflows/dashboard.yml a cada push na main.
+DASHBOARD = "https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/"
 DESTINO = Path(__file__).with_name("index.html")
 
 MODELO = """<!doctype html>
@@ -17,12 +19,12 @@ MODELO = """<!doctype html>
 </head>
 <body>
 <h1>Lab04: t de Welch × Mann-Whitney no tempo até o merge</h1>
-<p><a href="{repositorio}">Repositório</a> | <a href="{board}">GitHub Projects</a></p>
+<p><a href="{dashboard}">Dashboard publicado</a> | <a href="{repositorio}">Repositório</a> | <a href="{board}">GitHub Projects</a></p>
 </body>
 </html>
 """
 
 
 def gerar(destino: Path = DESTINO) -> Path:
-    destino.write_text(MODELO.format(repositorio=REPOSITORIO, board=BOARD), encoding="utf-8")
+    destino.write_text(MODELO.format(dashboard=DASHBOARD, repositorio=REPOSITORIO, board=BOARD), encoding="utf-8")
     return destino

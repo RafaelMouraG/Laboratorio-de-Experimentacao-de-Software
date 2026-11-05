@@ -4,6 +4,7 @@ Comparamos o t de Welch e o Mann-Whitney no tempo até o merge de PRs, com e sem
 dados reais calibram a simulação e, como somos nós que geramos os dados simulados, dá para medir
 quantas vezes cada teste acerta ou erra.
 
+- **Dashboard:** https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/
 - **Board:** https://github.com/users/RafaelMouraG/projects/12
 
 > Setup do ambiente (`.env`, `.venv`, dependências) está no [README da raiz](../README.md).
@@ -17,7 +18,8 @@ python -m lab04
 ```
 
 O comando roda tudo, com semente fixa, e grava o dashboard em `lab04/dashboard/index.html`, que abre
-direto no navegador. Esse HTML é gerado, por isso fica fora do git.
+direto no navegador. Esse HTML é gerado, por isso fica fora do git. A versão publicada é gerada pelo
+workflow `.github/workflows/dashboard.yml`, com o mesmo comando, a cada push na `main`.
 
 ## Pastas
 
