@@ -77,11 +77,12 @@ def tabela(parametros: dict[str, Parametros]) -> str:
     return "\n".join(linhas)
 
 
-def reescrever(cenario: Path, conteudo: str) -> None:
-    texto = cenario.read_text(encoding="utf-8")
-    antes, resto = texto.split(INICIO, 1)
-    _, depois = resto.split(FIM, 1)
-    cenario.write_text(f"{antes}{INICIO}\n{conteudo}\n{FIM}{depois}", encoding="utf-8")
+def reescrever(arquivo: Path, conteudo: str, inicio: str = INICIO, fim: str = FIM) -> None:
+    """Troca só o que está entre os marcadores `inicio` e `fim` do arquivo."""
+    texto = arquivo.read_text(encoding="utf-8")
+    antes, resto = texto.split(inicio, 1)
+    _, depois = resto.split(fim, 1)
+    arquivo.write_text(f"{antes}{inicio}\n{conteudo}\n{fim}{depois}", encoding="utf-8")
 
 
 def main() -> int:
