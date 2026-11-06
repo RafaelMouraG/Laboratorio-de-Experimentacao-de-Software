@@ -1,0 +1,17 @@
+snapshot_date,sprint,issue,titulo,status,assignee,state,url
+2026-11-06,S01,151,G3 e G4 no dashboard,Backlog,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/151
+2026-11-06,S01,152,Snapshot do board da S02 do Lab04,Backlog,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/152
+2026-11-06,S01,153,Os dois testes nos dados reais,Backlog,mateusdsoc,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/153
+2026-11-06,S01,154,Textos e conclusão do dashboard,Backlog,RafaelMouraG,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/154
+2026-11-06,S01,156,Roteiro das 15 perguntas da apresentação,Backlog,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/156
+2026-11-06,S01,157,Snapshot final do board do Lab04,Backlog,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/157
+2026-11-06,S01,147,Snapshot do board da S01 do Lab04,To Do,Athoosz,OPEN,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/147
+2026-11-06,S01,142,"Estrutura do lab04, comando único e CI",Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/142
+2026-11-06,S01,143,"Coleta dos PRs reais do langflow, com e sem CodeRabbit",Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/143
+2026-11-06,S01,144,"Cenário: pergunta, hipóteses, parâmetros e palpite",Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/144
+2026-11-06,S01,145,Gerador de dados e os dois testes num conjunto simulado,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/145
+2026-11-06,S01,146,Dashboard com o G1 e o G2,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/146
+2026-11-06,S01,148,Q1: motor da simulação e erro tipo I,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/148
+2026-11-06,S01,149,Q2: curvas de poder,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/149
+2026-11-06,S01,150,Q3: dados que violam os pressupostos,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/150
+2026-11-06,S01,155,Publicação do dashboard no GitHub Pages,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/155
