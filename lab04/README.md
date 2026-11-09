@@ -17,9 +17,19 @@ Da raiz do repositório:
 python -m lab04
 ```
 
-O comando roda tudo, com semente fixa, regrava `lab04/saida/simulacoes.csv` e grava o dashboard em `lab04/dashboard/index.html`, que abre
-direto no navegador. Esse HTML é gerado, por isso fica fora do git. A versão publicada é gerada pelo
-workflow `.github/workflows/dashboard.yml`, com o mesmo comando, a cada push na `main`.
+O comando lê os dados versionados, sem repetir as 10.000 simulações, e grava o dashboard em
+`lab04/dashboard/index.html`, que abre direto no navegador. Esse HTML é gerado, por isso fica fora
+do git. A versão publicada é gerada pelo workflow `.github/workflows/dashboard.yml`, com o mesmo
+comando, a cada push na `main`.
+
+Para recalcular as simulações e atualizar o CSV antes de gerar o dashboard:
+
+```bash
+python -m lab04.simulacao.q1
+python -m lab04.simulacao.q2
+python -m lab04.simulacao.q3
+python -m lab04
+```
 
 ## Pastas
 

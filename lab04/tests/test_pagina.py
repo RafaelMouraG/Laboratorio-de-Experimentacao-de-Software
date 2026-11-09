@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from scipy import stats
 
+from lab04.dashboard import pagina
 from lab04.dashboard.pagina import BOARD, DASHBOARD, REPOSITORIO, gerar, resumo_g2
 from lab04.simulacao.testes import mann_whitney, welch
 
@@ -22,13 +23,14 @@ def test_pagina_tem_as_sete_secoes_na_ordem_e_os_avisos(tmp_path):
     ids = ["pergunta", "g1", "g2", "g3", "g4", "dados-reais", "conclusao"]
     posicoes = [html.index(f'<section id="{id_secao}">') for id_secao in ids]
     assert posicoes == sorted(posicoes)
-    assert html.count("S02") >= 2
+    assert 'class="selo">S02<' not in html
     assert html.count("entrega final") >= 3
 
 
-def test_g1_e_g2_sao_plotly_autocontidos_e_rotulados(tmp_path):
+def test_graficos_g1_a_g4_sao_plotly_autocontidos_e_rotulados(tmp_path):
     html = gerar(tmp_path / "index.html").read_text(encoding="utf-8")
-    assert 'id="grafico-g1"' in html and 'id="grafico-g2"' in html
+    for grafico in ("g1", "g2", "g3", "g4"):
+        assert f'id="grafico-{grafico}"' in html
     assert "plotly.js" in html.lower()
     for rotulo in [
         "Tempo até o merge (horas, escala log)",
@@ -38,9 +40,30 @@ def test_g1_e_g2_sao_plotly_autocontidos_e_rotulados(tmp_path):
         "Densidade de probabilidade",
         "t de Welch",
         "Mann-Whitney",
+        "faixa de ruído de ±0,4 p.p.",
+        "α = 1%",
     ]:
         # O Plotly serializa caracteres não ASCII como escapes dentro do JavaScript.
         assert rotulo in html or json.dumps(rotulo)[1:-1] in html
+
+
+def test_textos_g3_e_g4_refletem_as_taxas_e_os_poderes_do_csv(tmp_path):
+    html = gerar(tmp_path / "index.html").read_text(encoding="utf-8")
+    assert "1,56%" in html
+    assert "4,38%" in html
+    assert "0,07%" in html
+    assert "0,84%" in html
+    assert "a vantagem não muda de lado" in html
+    assert "Cenário base: ×5,0" in html
+    assert "Welch não alcança 80%" in html
+
+
+def test_gerar_le_simulacoes_sem_reexecuta_las(tmp_path, monkeypatch):
+    def falhar(*args, **kwargs):
+        raise AssertionError("o dashboard não deve recalcular as simulações")
+
+    monkeypatch.setattr(pagina.motor, "simular", falhar)
+    gerar(tmp_path / "index.html")
 
 
 def test_areas_do_g2_usam_os_p_valores_dos_testes():

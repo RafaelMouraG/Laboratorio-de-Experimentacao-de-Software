@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy import stats
 
-from lab04.simulacao import parametros
+from lab04.simulacao import motor, parametros, q2
 from lab04.simulacao.exemplo import SEMENTE
 from lab04.simulacao.gerador import cenario_base, efeito_observado, gerar as gerar_amostra
 from lab04.simulacao.testes import mann_whitney, welch
@@ -33,6 +33,15 @@ GRUPOS = {
     "sem_bot": {"nome": "Sem review de bot", "cor": "#059669"},
 }
 ALFA = 0.05
+ALFAS = (0.05, 0.01)
+MARGEM_G3 = {0.05: 0.004, 0.01: 0.002}
+SITUACOES = {
+    "base": "Cenário base",
+    "assimetria": "Assimetria",
+    "outliers": "Outliers",
+    "n_pequeno": "n pequeno",
+    "dispersoes": "Dispersões*",
+}
 
 MODELO = Template("""<!doctype html>
 <html lang="pt-BR">
@@ -99,12 +108,14 @@ footer { padding: 2rem; color: #64748b; text-align: center; }
 
   <section id="g3">
     <h2>4. G3 — Erro tipo I</h2>
-    <p class="pendente"><span class="selo">S02</span>As taxas de rejeição sob H₀ serão incluídas na Sprint 02.</p>
+    <div class="grafico">$g3</div>
+    <p class="leitura">$texto_g3</p>
   </section>
 
   <section id="g4">
     <h2>5. G4 — Poder dos testes</h2>
-    <p class="pendente"><span class="selo">S02</span>As curvas de poder por tamanho de efeito serão incluídas na Sprint 02.</p>
+    <div class="grafico">$g4</div>
+    <p class="leitura">$texto_g4</p>
   </section>
 
   <section id="dados-reais">
@@ -355,6 +366,244 @@ def _figura_g2(resumo: dict[str, float]) -> str:
     )
 
 
+def _ler_simulacoes(caminho: Path) -> pd.DataFrame:
+    dados = motor.ler(caminho)
+    colunas = {"situacao", "efeito", "teste", "alfa", "rejeicoes", "n_rep"}
+    faltantes = colunas.difference(dados.columns)
+    if faltantes:
+        raise ValueError(f"{caminho} não contém as colunas: {', '.join(sorted(faltantes))}")
+    if dados.empty:
+        raise ValueError(f"{caminho} não contém resultados de simulação")
+    if dados.duplicated(["situacao", "efeito", "teste", "alfa"]).any():
+        raise ValueError(f"{caminho} contém combinações de simulação duplicadas")
+    if (dados["n_rep"] <= 0).any() or (dados["rejeicoes"] < 0).any() or (
+        dados["rejeicoes"] > dados["n_rep"]
+    ).any():
+        raise ValueError(f"{caminho} contém contagens de simulação inválidas")
+
+    dados = dados.assign(proporcao=dados["rejeicoes"] / dados["n_rep"])
+    for situacao in SITUACOES:
+        recorte = dados[dados["situacao"] == situacao]
+        for alfa in ALFAS:
+            por_efeito = recorte[recorte["alfa"] == alfa].pivot(
+                index="efeito", columns="teste", values="proporcao"
+            )
+            if set(por_efeito.columns) != set(TESTES) or por_efeito.isna().any().any():
+                raise ValueError(
+                    f"{caminho} não tem resultados pareados de Welch e Mann-Whitney "
+                    f"para {situacao}, α = {alfa:g}"
+                )
+            if not (recorte["efeito"] == 0).any():
+                raise ValueError(f"{caminho} não tem o efeito zero para {situacao}")
+    return dados
+
+
+def _linha_zero(dados: pd.DataFrame, situacao: str, teste: str, alfa: float) -> pd.Series:
+    linha = dados[
+        (dados["situacao"] == situacao)
+        & (dados["efeito"] == 0)
+        & (dados["teste"] == teste)
+        & (dados["alfa"] == alfa)
+    ]
+    if linha.empty:
+        raise ValueError(f"Falta o efeito zero de {teste} em {situacao}, α = {alfa:g}")
+    return linha.iloc[0]
+
+
+def _classificar_taxa(linha: pd.Series, alfa: float) -> str:
+    tolerancia = MARGEM_G3[alfa]
+    if linha["proporcao"] > alfa + tolerancia:
+        return "liberal"
+    if linha["proporcao"] < alfa - tolerancia:
+        return "conservador"
+    return "na faixa de ruído"
+
+
+def _percentual(valor: float) -> str:
+    return f"{100 * valor:.2f}".replace(".", ",") + "%"
+
+
+def _figura_g3(dados: pd.DataFrame) -> str:
+    figura = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=("α = 5%", "α = 1%"),
+        shared_yaxes=False,
+    )
+    situacoes = list(SITUACOES)
+    rotulos = [SITUACOES[situacao] for situacao in situacoes]
+
+    for coluna, alfa in enumerate(ALFAS, start=1):
+        margem_pp = 100 * MARGEM_G3[alfa]
+        referencia = 100 * alfa
+        figura.add_hrect(
+            y0=referencia - margem_pp,
+            y1=referencia + margem_pp,
+            fillcolor="#64748b",
+            opacity=0.14,
+            line_width=0,
+            row=1,
+            col=coluna,
+        )
+        figura.add_hline(
+            y=referencia,
+            line_dash="dash",
+            line_color="#334155",
+            line_width=2,
+            row=1,
+            col=coluna,
+        )
+        for teste, estilo in TESTES.items():
+            linhas = [_linha_zero(dados, situacao, teste, alfa) for situacao in situacoes]
+            figura.add_trace(
+                go.Scatter(
+                    x=rotulos,
+                    y=[100 * linha["proporcao"] for linha in linhas],
+                    customdata=[
+                        [int(linha["rejeicoes"]), int(linha["n_rep"])] for linha in linhas
+                    ],
+                    mode="lines+markers",
+                    name=estilo["nome"],
+                    legendgroup=teste,
+                    showlegend=coluna == 1,
+                    line=dict(color=estilo["cor"], width=3),
+                    marker=dict(size=9),
+                    hovertemplate=(
+                        "%{x}<br>Taxa: %{y:.2f}%<br>"
+                        "Rejeições: %{customdata[0]} de %{customdata[1]}"
+                        "<extra>%{fullData.name}</extra>"
+                    ),
+                ),
+                row=1,
+                col=coluna,
+            )
+        figura.update_xaxes(
+            title_text="Situação (efeito zero)",
+            tickangle=-25,
+            categoryorder="array",
+            categoryarray=rotulos,
+            row=1,
+            col=coluna,
+        )
+        maior_taxa = max(
+            100 * dados.loc[
+                (dados["situacao"].isin(situacoes)) & (dados["alfa"] == alfa)
+                & (dados["efeito"] == 0),
+                "proporcao",
+            ].max(),
+            referencia + margem_pp,
+        )
+        figura.update_yaxes(
+            title_text="Taxa de rejeição (%)",
+            range=[0, max(referencia + 2 * margem_pp, maior_taxa * 1.2)],
+            row=1,
+            col=coluna,
+        )
+
+    figura.update_layout(
+        title="Erro tipo I: taxa de rejeição no efeito zero",
+        template="plotly_white",
+        legend_title_text="Teste",
+        height=520,
+        margin=dict(l=60, r=25, t=90, b=135),
+    )
+    return figura.to_html(
+        full_html=False,
+        include_plotlyjs=False,
+        div_id="grafico-g3",
+        config={"responsive": True, "displaylogo": False},
+    )
+
+
+def _figura_g4(dados: pd.DataFrame) -> str:
+    figura = go.Figure()
+    descritores = []
+    for situacao in SITUACOES:
+        for alfa in ALFAS:
+            for teste in TESTES:
+                linhas = dados[
+                    (dados["situacao"] == situacao)
+                    & (dados["alfa"] == alfa)
+                    & (dados["teste"] == teste)
+                ].sort_values("efeito")
+                figura.add_trace(
+                    go.Scatter(
+                        x=np.exp(linhas["efeito"].to_numpy(float)),
+                        y=100 * linhas["proporcao"].to_numpy(float),
+                        customdata=np.column_stack((linhas["rejeicoes"], linhas["n_rep"])),
+                        mode="lines+markers",
+                        name=TESTES[teste]["nome"],
+                        legendgroup=teste,
+                        showlegend=situacao == "base" and alfa == 0.05,
+                        visible=situacao == "base" and alfa == 0.05,
+                        line=dict(color=TESTES[teste]["cor"], width=3),
+                        marker=dict(size=7),
+                        hovertemplate=(
+                            "Mediana: ×%{x:.2g}<br>Poder: %{y:.1f}%<br>"
+                            "Rejeições: %{customdata[0]:.0f} de %{customdata[1]:.0f}"
+                            "<extra>%{fullData.name}</extra>"
+                        ),
+                    )
+                )
+                descritores.append((situacao, alfa))
+
+    botoes = []
+    for situacao, rotulo in SITUACOES.items():
+        for alfa in ALFAS:
+            mascara = [
+                nome_situacao == situacao and nome_alfa == alfa
+                for nome_situacao, nome_alfa in descritores
+            ]
+            botoes.append(
+                {
+                    "label": f"{rotulo} · α = {100 * alfa:g}%",
+                    "method": "update",
+                    "args": [
+                        {"visible": mascara},
+                        {"title": {"text": f"Poder × tamanho do efeito — {rotulo}"}},
+                    ],
+                }
+            )
+
+    figura.add_hline(
+        y=80,
+        line_dash="dash",
+        line_color="#64748b",
+        annotation_text="Poder de 80%",
+        annotation_position="bottom right",
+    )
+    figura.update_xaxes(
+        title_text="Multiplicador da mediana com bot (×)",
+        type="log",
+        tickvals=[0.4, 1, 2, 5, 10, 20, 50, 100],
+        ticktext=["×0,4", "×1", "×2", "×5", "×10", "×20", "×50", "×100"],
+    )
+    figura.update_yaxes(title_text="Poder estimado (%)", range=[0, 100])
+    figura.update_layout(
+        title="Poder × tamanho do efeito — Cenário base",
+        template="plotly_white",
+        legend_title_text="Teste",
+        updatemenus=[
+            {
+                "type": "dropdown",
+                "direction": "down",
+                "x": 0,
+                "xanchor": "left",
+                "y": 1.17,
+                "yanchor": "top",
+                "buttons": botoes,
+            }
+        ],
+        margin=dict(l=65, r=30, t=125, b=65),
+    )
+    return figura.to_html(
+        full_html=False,
+        include_plotlyjs=False,
+        div_id="grafico-g4",
+        config={"responsive": True, "displaylogo": False},
+    )
+
+
 def _textos(reais: pd.DataFrame, com: np.ndarray, sem: np.ndarray, resumo: dict[str, float]) -> tuple[str, str]:
     medianas_reais = reais.groupby("grupo")["horas_ate_merge"].median()
     texto_g1 = (
@@ -374,8 +623,64 @@ def _textos(reais: pd.DataFrame, com: np.ndarray, sem: np.ndarray, resumo: dict[
     return texto_g1, texto_g2
 
 
-def gerar(destino: Path = DESTINO, csv: Path = parametros.CSV) -> Path:
+def _texto_g3(dados: pd.DataFrame) -> str:
+    base_w_05 = _linha_zero(dados, "base", "welch", 0.05)
+    base_m_05 = _linha_zero(dados, "base", "mann_whitney", 0.05)
+    base_w_01 = _linha_zero(dados, "base", "welch", 0.01)
+    base_m_01 = _linha_zero(dados, "base", "mann_whitney", 0.01)
+    return (
+        f"No cenário base, a 5%, Welch rejeita {_percentual(base_w_05['proporcao'])} das vezes "
+        f"({_classificar_taxa(base_w_05, 0.05)}) e Mann-Whitney {_percentual(base_m_05['proporcao'])} "
+        f"({_classificar_taxa(base_m_05, 0.05)}), comparados com a faixa de ruído de ±0,4 p.p. "
+        "para 5% e ±0,2 p.p. para 1%. "
+        f"A 1%, as taxas são {_percentual(base_w_01['proporcao'])} para Welch "
+        f"({_classificar_taxa(base_w_01, 0.01)}) e {_percentual(base_m_01['proporcao'])} para Mann-Whitney "
+        f"({_classificar_taxa(base_m_01, 0.01)}). "
+        "Em dispersões, o efeito zero iguala as medianas, mas não as médias: a hipótese nula do Welch "
+        "é falsa, então sua taxa não é erro tipo I; a do Mann-Whitney é verdadeira."
+    )
+
+
+def _texto_g4(dados: pd.DataFrame) -> str:
+    cruzamentos = {}
+    for situacao, rotulo in SITUACOES.items():
+        recorte = dados[dados["situacao"] == situacao]
+        efeito = q2.cruzamento(recorte, "mann_whitney", alfa=0.05)
+        cruzamentos[rotulo] = "não chega" if efeito is None else f"×{math.exp(efeito):.1f}".replace(".", ",")
+
+    cruzamentos_texto = ", ".join(
+        f"{rotulo}: {efeito}" for rotulo, efeito in cruzamentos.items()
+    )
+    comparacoes = []
+    for situacao in SITUACOES:
+        for alfa in ALFAS:
+            recorte = dados[(dados["situacao"] == situacao) & (dados["alfa"] == alfa)]
+            por_efeito = recorte.pivot(index="efeito", columns="teste", values="proporcao")
+            comparacoes.extend((por_efeito["mann_whitney"] > por_efeito["welch"]).tolist())
+    if all(comparacoes):
+        vantagem = (
+            "Mann-Whitney tem maior poder em todos os efeitos comparáveis, nas cinco situações e "
+            "nos dois α; a vantagem não muda de lado no intervalo testado."
+        )
+    else:
+        vantagem = (
+            "As curvas permitem localizar onde a vantagem de poder troca de teste; a comparação "
+            "usa os mesmos efeitos simulados para ambos."
+        )
+    return (
+        f"{vantagem} "
+        f"A 5%, Mann-Whitney chega a 80% de poder nos seguintes multiplicadores: {cruzamentos_texto}; "
+        "Welch não alcança 80% nem no maior efeito simulado, ×100."
+    )
+
+
+def gerar(
+    destino: Path = DESTINO,
+    csv: Path = parametros.CSV,
+    simulacoes: Path = motor.SAIDA,
+) -> Path:
     reais, com, sem, _ = _dados(csv)
+    dados_simulacoes = _ler_simulacoes(simulacoes)
     resumo = resumo_g2(com, sem)
     texto_g1, texto_g2 = _textos(reais, com, sem, resumo)
     html = MODELO.substitute(
@@ -386,6 +691,10 @@ def gerar(destino: Path = DESTINO, csv: Path = parametros.CSV) -> Path:
         g2=_figura_g2(resumo),
         texto_g1=texto_g1,
         texto_g2=texto_g2,
+        g3=_figura_g3(dados_simulacoes),
+        g4=_figura_g4(dados_simulacoes),
+        texto_g3=_texto_g3(dados_simulacoes),
+        texto_g4=_texto_g4(dados_simulacoes),
     )
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html, encoding="utf-8")
