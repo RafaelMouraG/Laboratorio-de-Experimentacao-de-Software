@@ -13,6 +13,7 @@ from plotly.subplots import make_subplots
 from scipy import stats
 
 from lab04.simulacao import motor, parametros, q2
+from lab04.simulacao import reais as testes_reais
 from lab04.simulacao.exemplo import SEMENTE
 from lab04.simulacao.gerador import cenario_base, efeito_observado, gerar as gerar_amostra
 from lab04.simulacao.testes import mann_whitney, welch
@@ -69,6 +70,11 @@ h3 { color: #263b67; }
 .leitura { margin: 1.2rem 0 0; padding: 1rem 1.2rem; border-radius: .7rem; background: #f1f5fb; line-height: 1.65; }
 .pendente { padding: 1.3rem; border: 1px dashed #9aa8bd; border-radius: .7rem; color: #526078; background: #fafbfc; }
 .selo { display: inline-block; margin-right: .5rem; padding: .2rem .55rem; border-radius: 999px; color: #6f3d00; background: #fff0c2; font-size: .82rem; font-weight: 700; text-transform: uppercase; }
+.tabela { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { padding: .6rem .7rem; border-bottom: 1px solid #dbe2ee; text-align: left; vertical-align: top; }
+th { color: #263b67; background: #f6f8fc; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 footer { padding: 2rem; color: #64748b; text-align: center; }
 @media (max-width: 600px) { section { padding: 1rem; } .grafico { min-height: 390px; } }
 </style>
@@ -120,7 +126,7 @@ footer { padding: 2rem; color: #64748b; text-align: center; }
 
   <section id="dados-reais">
     <h2>6. Os dois testes nos dados reais</h2>
-    <p class="pendente"><span class="selo">entrega final</span>A tabela com estatística, p-valor, tamanho de efeito e conclusão será incluída na entrega final.</p>
+    $dados_reais
   </section>
 
   <section id="conclusao">
@@ -674,6 +680,73 @@ def _texto_g4(dados: pd.DataFrame) -> str:
     )
 
 
+def _num(valor: float, casas: int) -> str:
+    return f"{valor:.{casas}f}".replace(".", ",")
+
+
+def _leitura_poder(t: testes_reais.Teste) -> str:
+    nome, poder = TESTES[t.teste]["nome"], _num(100 * t.poder[ALFA], 1) + "%"
+    if t.rejeita(ALFA) and t.poder[ALFA] < 0.5:
+        return (
+            f"O {nome} rejeitou mesmo com só {poder} de poder nesse efeito. Com poder baixo, quem passa do "
+            "corte costuma ser a amostra que exagerou a diferença, então ele reforça a conclusão, mas pesa menos."
+        )
+    if not t.rejeita(ALFA) and t.poder[ALFA] < 0.8:
+        return f"O {nome} não rejeitou, mas tinha só {poder} de poder nesse efeito: o resultado dele é inconclusivo."
+    if not t.rejeita(ALFA):
+        return f"O {nome} não rejeitou com {poder} de poder: um efeito desse tamanho provavelmente teria aparecido."
+    return f"O {nome} tinha {poder} de poder nesse efeito, então a rejeição era o resultado esperado."
+
+
+def _secao_dados_reais(r: testes_reais.Reais) -> str:
+    linhas = "".join(
+        f"<tr><td>{TESTES[t.teste]['nome']}</td><td class=\"num\">{testes_reais.estatistica(t).replace('.', ',')}</td>"
+        f"<td class=\"num\">{_num(t.p, 4)}</td><td class=\"num\">{t.efeito_nome} = {_num(t.efeito, 3)}</td>"
+        f"<td>{testes_reais.conclusao(t)}</td>"
+        + "".join(f"<td class=\"num\">{_num(100 * t.poder[a], 1)}%</td>" for a in testes_reais.ALFAS)
+        + "</tr>"
+        for t in r.testes
+    )
+    w, m = r.testes
+    sentido = "mais" if r.diferenca_medianas > 0 else "menos"
+    if w.rejeita(ALFA) and m.rejeita(ALFA):
+        decisao = f"A 5%, os dois testes rejeitam H₀: os PRs com review do bot demoram {sentido} até o merge."
+    elif w.rejeita(ALFA) or m.rejeita(ALFA):
+        so = w if w.rejeita(ALFA) else m
+        decisao = f"A 5%, só o {TESTES[so.teste]['nome']} rejeita H₀, e os testes discordam."
+    else:
+        decisao = "A 5%, nenhum dos dois testes rejeita H₀."
+    if w.rejeita(0.01) != m.rejeita(0.01):
+        so = w if w.rejeita(0.01) else m
+        outro = m if so is w else w
+        decisao += (
+            f" A 1% eles se separam: só o {TESTES[so.teste]['nome']} rejeita (p = {_num(so.p, 4)}), "
+            f"e o {TESTES[outro.teste]['nome']} fica em p = {_num(outro.p, 4)}."
+        )
+    pares = 100 * (1 + m.efeito) / 2
+    texto = " ".join([
+        f"A mediana até o merge é {_num(r.mediana['com_bot'], 1)} h com o CodeRabbit e "
+        f"{_num(r.mediana['sem_bot'], 1)} h sem bot, {_num(abs(r.diferenca_medianas), 1)} h de diferença "
+        f"(cerca de {_num(abs(r.diferenca_medianas) / 24, 1)} dia).",
+        decisao,
+        f"O δ de Cliff de {_num(m.efeito, 2)} quer dizer que, sorteando um PR de cada grupo, o com bot demora "
+        f"mais em {_num(pares, 0)}% dos pares.",
+        _leitura_poder(w),
+        _leitura_poder(m),
+        "O bot não foi sorteado entre os PRs, então isso mostra associação, não que o CodeRabbit causa a diferença.",
+    ])
+    return (
+        f"<p>{r.n['com_bot']} PRs com review do CodeRabbit e {r.n['sem_bot']} sem, tempo em horas brutas. "
+        f"O poder é o da Q2 no efeito observado (mediana ×{_num(math.exp(r.efeito_log), 2)}), com o mesmo n.</p>\n"
+        "    <div class=\"tabela\"><table>\n"
+        "      <thead><tr><th>Teste</th><th>Estatística</th><th>p-valor</th><th>Tamanho de efeito</th>"
+        "<th>Conclusão</th><th>Poder, α = 5%</th><th>Poder, α = 1%</th></tr></thead>\n"
+        f"      <tbody>{linhas}</tbody>\n"
+        "    </table></div>\n"
+        f"    <p class=\"leitura\">{texto}</p>"
+    )
+
+
 def gerar(
     destino: Path = DESTINO,
     csv: Path = parametros.CSV,
@@ -695,6 +768,7 @@ def gerar(
         g4=_figura_g4(dados_simulacoes),
         texto_g3=_texto_g3(dados_simulacoes),
         texto_g4=_texto_g4(dados_simulacoes),
+        dados_reais=_secao_dados_reais(testes_reais.rodar(csv, simulacoes)),
     )
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html, encoding="utf-8")

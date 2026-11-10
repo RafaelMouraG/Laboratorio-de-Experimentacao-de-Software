@@ -255,3 +255,26 @@ acima de 5%, e o Mann-Whitney um pouco fora. Foi o contrário: com o σ real a d
 existe, mas é a mesma cauda longa que a cria que deixa o Welch sem poder para vê-la, e o
 Mann-Whitney ficou em α. O resto do palpite se confirmou, com o Welch perdendo por mais do que
 apostamos.
+
+## Os dois testes nos dados reais
+
+Os mesmos testes das simulações, agora nos 60 PRs do `prs.csv`, em horas brutas. O poder não é
+calculado de novo: é a linha da Q2 no efeito observado. A tabela é gerada por
+`python -m lab04.simulacao.reais` e não deve ser editada à mão.
+
+<!-- reais:inicio -->
+30 PRs com bot e 30 sem, horas brutas. Mediana 36.8 h com bot e 3.0 h sem (+33.8 h); média 129.0 h e 23.6 h. Poder lido na Q2, no efeito observado (1.561 no log, mediana ×4.76).
+
+| Teste | Estatística | p-valor | Tamanho de efeito | Conclusão | Poder, α = 5% | Poder, α = 1% |
+|---|---|---|---|---|---|---|
+| t de Welch | t = 2.714 | 0.0107 | g de Hedges = 0.692 | H₀ (médias iguais) rejeitada a 5%, não rejeitada a 1% | 23.5% | 4.3% |
+| Mann-Whitney | U = 625 | 0.0099 | δ de Cliff = 0.389 | H₀ (nenhum grupo tende a demorar mais) rejeitada a 5%, rejeitada a 1% | 77.4% | 53.2% |
+<!-- reais:fim -->
+
+**Os dois testes rejeitam H₀ a 5%, mas só o Mann-Whitney tinha poder para isso.** Com 77% de poder
+nesse efeito, a rejeição dele era o esperado. O Welch passou com p = 0,011 tendo 24% de poder, e com
+poder baixo quem passa do corte costuma ser a amostra que exagerou a diferença: o g de 0,69 aqui é
+quase o dobro do 0,39 do conjunto simulado com o mesmo efeito. A 1% só o Mann-Whitney rejeita, e
+por pouco (p = 0,0099). Na prática, 34 h a mais na mediana é mais de um dia por PR, e o δ de 0,39
+diz que o PR com bot demora mais em cerca de 69% dos pares. Os limites da seção "Dados reais"
+continuam valendo: é associação, não efeito do bot.
