@@ -12,7 +12,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy import stats
 
-from lab04.simulacao import motor, parametros, q2
+from lab04.data import coleta_prs as coleta
+from lab04.simulacao import motor, parametros, q2, q3, q4
 from lab04.simulacao import reais as testes_reais
 from lab04.simulacao.exemplo import SEMENTE
 from lab04.simulacao.gerador import cenario_base, efeito_observado, gerar as gerar_amostra
@@ -23,6 +24,9 @@ BOARD = "https://github.com/users/RafaelMouraG/projects/12"
 # Publicado pelo .github/workflows/dashboard.yml a cada push na main.
 DASHBOARD = "https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/"
 DESTINO = Path(__file__).with_name("index.html")
+# Da execução da coleta (#143), registrada no README: o CSV guarda só os PRs sorteados.
+COLETADO_EM = "04/11/2026"
+ELEGIVEIS = {"com_bot": 490, "sem_bot": 371}
 
 # A identidade dos testes fica aqui e é reutilizada por G2, G3 e G4.
 TESTES = {
@@ -68,8 +72,9 @@ h3 { color: #263b67; }
 .hipotese { padding: 1rem; border-left: 4px solid #506995; border-radius: .4rem; background: #f6f8fc; }
 .grafico { min-height: 450px; }
 .leitura { margin: 1.2rem 0 0; padding: 1rem 1.2rem; border-radius: .7rem; background: #f1f5fb; line-height: 1.65; }
-.pendente { padding: 1.3rem; border: 1px dashed #9aa8bd; border-radius: .7rem; color: #526078; background: #fafbfc; }
-.selo { display: inline-block; margin-right: .5rem; padding: .2rem .55rem; border-radius: 999px; color: #6f3d00; background: #fff0c2; font-size: .82rem; font-weight: 700; text-transform: uppercase; }
+td.certo { color: #166534; font-weight: 600; }
+td.errado { color: #b91c1c; font-weight: 600; }
+td.parcial { color: #92400e; font-weight: 600; }
 .tabela { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .95rem; }
 th, td { padding: .6rem .7rem; border-bottom: 1px solid #dbe2ee; text-align: left; vertical-align: top; }
@@ -92,12 +97,7 @@ footer { padding: 2rem; color: #64748b; text-align: center; }
 <main>
   <section id="pergunta">
     <h2>1. Pergunta e hipóteses</h2>
-    <p>O tempo até o merge de um PR no <code>langflow-ai/langflow</code> muda quando o PR recebe review do <code>coderabbitai[bot]</code>?</p>
-    <div class="hipoteses">
-      <div class="hipotese"><strong>t de Welch</strong><br>H₀: os tempos médios são iguais.<br>H₁: os tempos médios são diferentes.</div>
-      <div class="hipotese"><strong>Mann-Whitney</strong><br>H₀: nenhum grupo tende a ter tempos maiores.<br>H₁: um grupo tende a ter tempos maiores.</div>
-    </div>
-    <p class="pendente"><span class="selo">entrega final</span>A origem dos dados e o fechamento desta apresentação serão detalhados na entrega final.</p>
+    $pergunta
   </section>
 
   <section id="g1">
@@ -131,7 +131,7 @@ footer { padding: 2rem; color: #64748b; text-align: center; }
 
   <section id="conclusao">
     <h2>7. Palpite, resultados e conclusão</h2>
-    <p class="pendente"><span class="selo">entrega final</span>O confronto entre o palpite inicial e os resultados será incluído na entrega final.</p>
+    $conclusao
   </section>
 </main>
 <footer>Laboratório de Experimentação de Software — PUC Minas</footer>
@@ -610,52 +610,106 @@ def _figura_g4(dados: pd.DataFrame) -> str:
     )
 
 
+def _horas(valor: float) -> str:
+    return _num(valor, 1) + " h"
+
+
 def _textos(reais: pd.DataFrame, com: np.ndarray, sem: np.ndarray, resumo: dict[str, float]) -> tuple[str, str]:
-    medianas_reais = reais.groupby("grupo")["horas_ate_merge"].median()
+    horas = reais.groupby("grupo")["horas_ate_merge"]
+    medianas, maximos = horas.median(), horas.max()
+    semana = 7 * 24
+    if maximos["com_bot"] > semana >= maximos["sem_bot"]:
+        cauda = "e só o grupo com bot tem PRs que passam de uma semana"
+    else:
+        cauda = "e os dois grupos têm PRs que levam dias"
     texto_g1 = (
-        f"Nos dados reais, a mediana é {medianas_reais['com_bot']:.1f} h com o CodeRabbit e "
-        f"{medianas_reais['sem_bot']:.1f} h sem bot; a escala log deixa visíveis tanto os merges rápidos quanto a cauda de semanas. "
-        f"A amostra simulada preserva a cauda longa e o deslocamento entre os grupos, com medianas de {np.median(com):.1f} h e {np.median(sem):.1f} h. "
-        "Ela não reproduz a bimodalidade dos dados reais, portanto a lognormal é uma aproximação útil, mas incompleta."
+        f"A mediana real é {_horas(medianas['com_bot'])} com o CodeRabbit e {_horas(medianas['sem_bot'])} sem bot, "
+        f"{cauda}. A amostra simulada, sorteada da lognormal com o mesmo n, mantém a cauda longa e o "
+        f"deslocamento entre os grupos, com medianas de {_horas(float(np.median(com)))} e {_horas(float(np.median(sem)))}. "
+        "O que ela não reproduz é a bimodalidade dos dados reais, um bloco de merges em poucas horas e outro "
+        "de dias: a lognormal é uma aproximação útil, mas incompleta."
     )
-    decisao_w = "não rejeita" if resumo["p_welch"] >= ALFA else "rejeita"
-    decisao_m = "não rejeita" if resumo["p_mann_whitney"] >= ALFA else "rejeita"
+    rejeita_w, rejeita_m = resumo["p_welch"] < ALFA, resumo["p_mann_whitney"] < ALFA
+    if rejeita_m and not rejeita_w:
+        decisao = (
+            "A 5%, só o U cai na região de rejeição. Como o efeito foi posto pelo gerador, o Welch comete aqui "
+            "um erro tipo II: os poucos PRs muito lentos inflam o desvio padrão das horas e escondem o "
+            "deslocamento, enquanto nos postos eles contam só como os mais lentos."
+        )
+    elif rejeita_m and rejeita_w:
+        decisao = "A 5%, as duas estatísticas caem na região de rejeição e os dois testes detectam o efeito posto pelo gerador."
+    else:
+        decisao = "A 5%, os testes não concordam com o efeito posto pelo gerador; ver a Q2 para saber se isso é comum."
     texto_g2 = (
-        f"As áreas escuras são exatamente os p-valores bicaudais do mesmo conjunto simulado: {resumo['p_welch']:.4f} para Welch e "
-        f"{resumo['p_mann_whitney']:.4f} para Mann-Whitney. "
-        f"A 5%, Welch {decisao_w} H₀, enquanto Mann-Whitney {decisao_m} H₀ porque sua estatística cai na região crítica. "
-        "Neste exemplo com efeito conhecido, a cauda longa reduz o sinal do teste de médias, mas afeta menos o teste baseado em postos."
+        "As áreas escuras são os p-valores bicaudais do conjunto simulado do G1: "
+        f"{_num(resumo['p_welch'], 4)} no Welch e {_num(resumo['p_mann_whitney'], 4)} no Mann-Whitney. {decisao}"
     )
     return texto_g1, texto_g2
 
 
+def _situacoes_com_h0(situacoes=SITUACOES) -> list[str]:
+    """Situações em que o efeito zero é H₀ verdadeira para os dois testes."""
+    return [s for s in situacoes if s != "dispersoes"]
+
+
 def _texto_g3(dados: pd.DataFrame) -> str:
-    base_w_05 = _linha_zero(dados, "base", "welch", 0.05)
-    base_m_05 = _linha_zero(dados, "base", "mann_whitney", 0.05)
-    base_w_01 = _linha_zero(dados, "base", "welch", 0.01)
-    base_m_01 = _linha_zero(dados, "base", "mann_whitney", 0.01)
-    return (
-        f"No cenário base, a 5%, Welch rejeita {_percentual(base_w_05['proporcao'])} das vezes "
-        f"({_classificar_taxa(base_w_05, 0.05)}) e Mann-Whitney {_percentual(base_m_05['proporcao'])} "
-        f"({_classificar_taxa(base_m_05, 0.05)}), comparados com a faixa de ruído de ±0,4 p.p. "
-        "para 5% e ±0,2 p.p. para 1%. "
-        f"A 1%, as taxas são {_percentual(base_w_01['proporcao'])} para Welch "
-        f"({_classificar_taxa(base_w_01, 0.01)}) e {_percentual(base_m_01['proporcao'])} para Mann-Whitney "
-        f"({_classificar_taxa(base_m_01, 0.01)}). "
-        "Em dispersões, o efeito zero iguala as medianas, mas não as médias: a hipótese nula do Welch "
-        "é falsa, então sua taxa não é erro tipo I; a do Mann-Whitney é verdadeira."
+    base = {(t, a): _linha_zero(dados, "base", t, a) for t in TESTES for a in ALFAS}
+    validas = _situacoes_com_h0()
+    leituras = {
+        (s, t, a): _classificar_taxa(_linha_zero(dados, s, t, a), a)
+        for s in validas for t in TESTES for a in ALFAS
+    }
+    welch_cons = all(leituras[s, "welch", a] == "conservador" for s in validas for a in ALFAS)
+    nenhum_liberal = all(v != "liberal" for v in leituras.values())
+    outras_w = [_linha_zero(dados, s, "welch", 0.05)["proporcao"] for s in validas if s != "base"]
+    m05 = base["mann_whitney", 0.05]
+    leitura_m05 = _classificar_taxa(m05, 0.05)
+    frases = [
+        f"No cenário base, o Mann-Whitney rejeita {_percentual(m05['proporcao'])} a 5% e "
+        f"{_percentual(base['mann_whitney', 0.01]['proporcao'])} a 1%, perto de α; contra a faixa de ruído de "
+        "±0,4 p.p. (±0,2 p.p. a 1%), os 5% ficam "
+        + ("dentro da faixa." if leitura_m05 == "na faixa de ruído" else
+           "um pouco fora, pela correção de continuidade da aproximação normal de U e pelo sorteio.")
+    ]
+    if welch_cons:
+        frases.append(
+            f"O Welch é conservador em todas as situações: rejeita {_percentual(base['welch', 0.05]['proporcao'])} a 5% "
+            f"e {_percentual(base['welch', 0.01]['proporcao'])} a 1% no base, e entre "
+            f"{_percentual(min(outras_w))} e {_percentual(max(outras_w))} a 5% com assimetria, outliers ou n pequeno."
+        )
+    else:
+        frases.append(
+            f"O Welch rejeita {_percentual(base['welch', 0.05]['proporcao'])} a 5% e "
+            f"{_percentual(base['welch', 0.01]['proporcao'])} a 1% no base."
+        )
+    if nenhum_liberal:
+        frases.append("Nenhum dos dois fica liberal, então nenhum rejeita H₀ verdadeira mais do que promete.")
+    disp_m = _linha_zero(dados, "dispersoes", "mann_whitney", 0.05)
+    frases.append(
+        "Em Dispersões* o efeito zero iguala as medianas, mas não as médias: a taxa do Welch ali não é erro "
+        f"tipo I, e a do Mann-Whitney ({_percentual(disp_m['proporcao'])}) é."
     )
+    return " ".join(frases)
 
 
-def _texto_g4(dados: pd.DataFrame) -> str:
-    cruzamentos = {}
-    for situacao, rotulo in SITUACOES.items():
-        recorte = dados[dados["situacao"] == situacao]
-        efeito = q2.cruzamento(recorte, "mann_whitney", alfa=0.05)
-        cruzamentos[rotulo] = "não chega" if efeito is None else f"×{math.exp(efeito):.1f}".replace(".", ",")
+def _poder(dados: pd.DataFrame, situacao: str, teste: str, efeito: float, alfa: float = ALFA) -> float:
+    linha = dados[
+        (dados["situacao"] == situacao) & (dados["teste"] == teste) & (dados["alfa"] == alfa)
+        & dados["efeito"].map(lambda e: math.isclose(e, efeito, abs_tol=1e-12))
+    ]
+    if linha.empty:
+        raise ValueError(f"Falta o efeito {efeito:.3f} de {teste} em {situacao}, α = {alfa:g}")
+    return float(linha["proporcao"].iloc[0])
 
-    cruzamentos_texto = ", ".join(
-        f"{rotulo}: {efeito}" for rotulo, efeito in cruzamentos.items()
+
+def _vezes(efeito: float | None) -> str:
+    return "não chega" if efeito is None else f"×{_num(math.exp(efeito), 1)}"
+
+
+def _texto_g4(dados: pd.DataFrame, efeito_real: float) -> str:
+    cruzamentos = ", ".join(
+        f"{rotulo}: {_vezes(q2.cruzamento(dados[dados['situacao'] == situacao], 'mann_whitney', alfa=ALFA))}"
+        for situacao, rotulo in SITUACOES.items()
     )
     comparacoes = []
     for situacao in SITUACOES:
@@ -665,18 +719,18 @@ def _texto_g4(dados: pd.DataFrame) -> str:
             comparacoes.extend((por_efeito["mann_whitney"] > por_efeito["welch"]).tolist())
     if all(comparacoes):
         vantagem = (
-            "Mann-Whitney tem maior poder em todos os efeitos comparáveis, nas cinco situações e "
-            "nos dois α; a vantagem não muda de lado no intervalo testado."
+            "O Mann-Whitney tem mais poder que o Welch em todos os efeitos, nas cinco situações e nos dois α: "
+            "a vantagem não muda de lado no intervalo simulado."
         )
     else:
-        vantagem = (
-            "As curvas permitem localizar onde a vantagem de poder troca de teste; a comparação "
-            "usa os mesmos efeitos simulados para ambos."
-        )
+        vantagem = "As curvas se cruzam em algum ponto da grade: ali a vantagem de poder troca de teste."
+    base_w = dados[(dados["situacao"] == "base") & (dados["teste"] == "welch") & (dados["alfa"] == ALFA)]
     return (
-        f"{vantagem} "
-        f"A 5%, Mann-Whitney chega a 80% de poder nos seguintes multiplicadores: {cruzamentos_texto}; "
-        "Welch não alcança 80% nem no maior efeito simulado, ×100."
+        f"{vantagem} No efeito dos dados reais (mediana ×{_num(math.exp(efeito_real), 2)}), com o n coletado, "
+        f"ele detecta a diferença em {_num(100 * _poder(dados, 'base', 'mann_whitney', efeito_real), 1)}% das amostras, "
+        f"contra {_num(100 * _poder(dados, 'base', 'welch', efeito_real), 1)}% do Welch. "
+        f"A 5%, o Mann-Whitney chega a 80% de poder em {cruzamentos}; o Welch não alcança 80% nem com a mediana "
+        f"×100, e no cenário base a curva dele para em {_num(100 * base_w['proporcao'].max(), 1)}%."
     )
 
 
@@ -747,12 +801,175 @@ def _secao_dados_reais(r: testes_reais.Reais) -> str:
     )
 
 
+def _milhar(valor: int) -> str:
+    return f"{valor:,}".replace(",", ".")
+
+
+def _data_br(iso: str) -> str:
+    ano, mes, dia = iso.split("-")
+    return f"{dia}/{mes}/{ano}"
+
+
+def _secao_pergunta(reais: pd.DataFrame, dados: pd.DataFrame) -> str:
+    n = reais["grupo"].value_counts()
+    inicio, fim = coleta.PERIODO.split("..")
+    combinacoes = dados.drop_duplicates(["situacao", "efeito"])
+    conjuntos = int(combinacoes["n_rep"].sum())
+    n_rep = int(combinacoes["n_rep"].iloc[0]) if combinacoes["n_rep"].nunique() == 1 else None
+    por_combinacao = f", cada uma com {_milhar(n_rep)} conjuntos sorteados" if n_rep else ""
+    return f"""<p>O tempo até o merge de um PR no <code>{coleta.REPOSITORIO}</code> muda quando o PR recebe review do <code>{coleta.BOT_REVISOR}</code>? Sendo X o tempo de um PR com review do bot e Y o de um PR sem, os dois testes respondem a essa pergunta de jeitos diferentes:</p>
+    <div class="hipoteses">
+      <div class="hipotese"><strong>t de Welch</strong> compara médias<br>H₀: E[X] = E[Y], o tempo médio é o mesmo.<br>H₁: E[X] ≠ E[Y].</div>
+      <div class="hipotese"><strong>Mann-Whitney</strong> compara postos<br>H₀: P(X &gt; Y) = P(Y &gt; X), nenhum grupo tende a demorar mais.<br>H₁: P(X &gt; Y) ≠ P(Y &gt; X).</div>
+    </div>
+    <p>Os dois são bicaudais, porque o bot pode acelerar o merge (o autor corrige antes do revisor humano chegar) ou atrasá-lo (cada comentário é mais uma rodada de ajuste). Rodam sobre as horas brutas, a escala em que a pergunta é feita. As duas H₀ só coincidem quando os grupos têm a mesma forma e diferem por um deslocamento, que é o que o cenário base simula.</p>
+    <h3>De onde vêm os dados</h3>
+    <p>PRs mergeados no <code>{coleta.REPOSITORIO}</code> entre {_data_br(inicio)} e {_data_br(fim)}, coletados pela API do GitHub em {COLETADO_EM}. <strong>Com bot</strong>: o <code>{coleta.BOT_REVISOR}</code> revisou o PR antes do merge. <strong>Sem bot</strong>: nenhum bot revisou. Ficaram de fora PRs abertos por bot, sincronizações de branch e merges em menos de {coleta.MINUTOS_MINIMOS} minutos, rápidos demais para o bot ter revisado. Dos {ELEGIVEIS['com_bot']} PRs com bot e {ELEGIVEIS['sem_bot']} sem que sobraram, sorteamos {coleta.POR_GRUPO} de cada (semente {coleta.SEMENTE}).</p>
+    <h3>Quantas observações</h3>
+    <ul>
+      <li><strong>Dados reais:</strong> {int(n.sum())} PRs, {int(n['com_bot'])} com bot e {int(n['sem_bot'])} sem, com o tempo em horas da abertura ao merge.</li>
+      <li><strong>Simulação:</strong> {len(combinacoes)} combinações de situação, efeito e n{por_combinacao} de uma lognormal calibrada nos PRs reais, {_milhar(conjuntos)} conjuntos no total. Os dois testes recebem exatamente os mesmos conjuntos, e cada um é avaliado a α = 5% e 1%.</li>
+    </ul>"""
+
+
+def _curva_amostra(dados: pd.DataFrame, csv: Path) -> pd.DataFrame | None:
+    """Poder por n da Q4, ou None se o `simulacoes.csv` ainda não tem essas linhas."""
+    try:
+        return q4.curva(dados, csv)
+    except ValueError:
+        return None
+
+
+def _bloco_amostra(curva: pd.DataFrame | None, coletado: int) -> str:
+    if curva is None:
+        return ""
+    linhas = []
+    for teste, estilo in TESTES.items():
+        no_coletado = curva[(curva["teste"] == teste) & (curva["alfa"] == ALFA) & (curva["n"] == coletado)]
+        celulas = [
+            estilo["nome"],
+            _num(100 * float(no_coletado["proporcao"].iloc[0]), 1) + "%",
+            *(
+                "não chega" if (n := q4.n_para(curva, teste, alfa)) is None else f"{n} PRs"
+                for alfa in ALFAS
+            ),
+        ]
+        linhas.append(
+            f"<tr><td>{celulas[0]}</td>" + "".join(f'<td class="num">{c}</td>' for c in celulas[1:]) + "</tr>"
+        )
+    n_w, n_m = q4.n_para(curva, "welch"), q4.n_para(curva, "mann_whitney")
+    if n_w is not None and n_m is not None:
+        leitura = (
+            f"Com os {coletado} PRs coletados o Mann-Whitney está a poucos PRs dos 80%; o Welch precisaria de "
+            f"cerca de {_num(n_w / n_m, 0)} vezes mais. Aumentar o efeito não tira o Welch do teto da Q2, mas aumentar "
+            f"o n sim, porque com mais PRs a média amostral fica mais perto de normal. O <code>{coleta.REPOSITORIO}</code> "
+            f"tinha {ELEGIVEIS['com_bot']} e {ELEGIVEIS['sem_bot']} PRs disponíveis, então esse estudo maior seria viável."
+        )
+    else:
+        leitura = f"Até {max(q4.TAMANHOS)} PRs por grupo, ao menos um dos testes não chega a 80%."
+    return f"""
+    <h3>Tamanho da amostra</h3>
+    <p>Quantos PRs por grupo cada teste precisa para 80% de poder, se o efeito real for o que os dados sugerem. Mesmo cenário base, mudando só o n, igual nos dois grupos.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Teste</th><th>Poder com {coletado} por grupo, α = 5%</th><th>n por grupo para 80%, α = 5%</th><th>n por grupo para 80%, α = 1%</th></tr></thead>
+      <tbody>{''.join(linhas)}</tbody>
+    </table></div>
+    <p class="leitura">{leitura}</p>"""
+
+
+def _secao_conclusao(
+    dados: pd.DataFrame,
+    p: dict[str, parametros.Parametros],
+    reais: pd.DataFrame,
+    curva: pd.DataFrame | None,
+) -> str:
+    efeito_real = efeito_observado(p)
+    cinco = math.log(5)
+
+    def zero(situacao: str, teste: str) -> str:
+        return _percentual(_linha_zero(dados, situacao, teste, ALFA)["proporcao"])
+
+    def poder(situacao: str, teste: str, efeito: float = cinco) -> str:
+        return _num(100 * _poder(dados, situacao, teste, efeito), 1) + "%"
+
+    def cruza(situacao: str) -> str:
+        return _vezes(q2.cruzamento(dados[dados["situacao"] == situacao], "mann_whitney", alfa=ALFA))
+
+    base_w = dados[(dados["situacao"] == "base") & (dados["teste"] == "welch") & (dados["alfa"] == ALFA)]
+    disp = q3.situacoes(p)["dispersoes"]
+    medias_iguais = q3.efeito_medias_iguais(disp)
+    linhas = [
+        ("Erro tipo I no cenário base",
+         "Os dois perto de 5%, com o Welch um pouco abaixo (conservador).",
+         f"Mann-Whitney em {zero('base', 'mann_whitney')}; Welch em {zero('base', 'welch')}, bem abaixo da faixa de ruído.",
+         "parcial", "Direção certa, tamanho errado"),
+        ("Poder",
+         "O Mann-Whitney chega a 80% com um efeito bem menor, e a diferença é grande.",
+         f"Mann-Whitney chega a 80% na mediana {cruza('base')}; o Welch não chega nem em ×100 "
+         f"(para em {_num(100 * base_w['proporcao'].max(), 1)}%).",
+         "certo", "Acertou, com diferença maior que a apostada"),
+        ("Assimetria e outliers",
+         "Aumentam a vantagem do Mann-Whitney.",
+         f"Na mediana ×5, o Welch cai de {poder('base', 'welch')} para {poder('assimetria', 'welch')} com assimetria "
+         f"e {poder('outliers', 'welch')} com outliers; o Mann-Whitney, de {poder('base', 'mann_whitney')} para "
+         f"{poder('assimetria', 'mann_whitney')} e {poder('outliers', 'mann_whitney')}.",
+         "certo", "Acertou"),
+        ("n = 10 por grupo",
+         "Os dois perdem poder, e o Welch fica mais conservador.",
+         f"Welch rejeita {zero('n_pequeno', 'welch')} sob H₀; o Mann-Whitney só chega a 80% na mediana {cruza('n_pequeno')}.",
+         "certo", "Acertou"),
+        ("Mesma mediana, σ diferentes",
+         "Welch bem acima de 5%, certo para a pergunta dele; Mann-Whitney um pouco fora de 5%.",
+         f"Welch em {zero('dispersoes', 'welch')}, abaixo do próprio α mesmo com a H₀ dele falsa; Mann-Whitney em "
+         f"{zero('dispersoes', 'mann_whitney')}, dentro da faixa.",
+         "errado", "Errou"),
+    ]
+    tabela = "".join(
+        f"<tr><td>{ponto}</td><td>{palpite}</td><td>{resultado}</td><td class=\"{classe}\">{leitura}</td></tr>"
+        for ponto, palpite, resultado, classe, leitura in linhas
+    )
+    w_real = _poder(dados, "base", "welch", efeito_real)
+    m_real = _poder(dados, "base", "mann_whitney", efeito_real)
+    n_w = q4.n_para(curva, "welch") if curva is not None else None
+    n_w_01 = q4.n_para(curva, "welch", 0.01) if curva is not None else None
+    n_media = (
+        f" Com essa cauda, porém, o Welch só chega a 80% de poder com cerca de {n_w} PRs por grupo "
+        f"({n_w_01} a 1%), contra os {p['com_bot'].n} coletados."
+        if n_w is not None and n_w_01 is not None else ""
+    )
+    autor, fracao = _autor_dominante(reais)
+    pagina_cenario = f"{REPOSITORIO}/blob/main/lab04/cenario.md"
+    return f"""<h3>O palpite contra a simulação</h3>
+    <p>O palpite foi escrito no <a href="{pagina_cenario}"><code>cenario.md</code></a> antes da primeira simulação, e o histórico do arquivo no git é a prova disso.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Ponto</th><th>Palpite</th><th>O que a simulação mostrou (α = 5%)</th><th>Leitura</th></tr></thead>
+      <tbody>{tabela}</tbody>
+    </table></div>
+    <p class="leitura">O palpite acertou quem ganha e por quê, mas subestimou o tamanho: a cauda longa não deixa o Welch só um pouco conservador, tira dele a maior parte do poder. O erro foi em Dispersões*: a mesma cauda que cria a diferença de médias deixa o Welch sem poder para vê-la.</p>
+    {_bloco_amostra(curva, p['com_bot'].n)}
+    <h3>Qual teste usar neste cenário</h3>
+    <p class="leitura"><strong>Mann-Whitney.</strong> Ele mantém o erro tipo I perto de α em todas as situações simuladas, enquanto o Welch fica conservador em todas. No efeito que os dados sugerem tem {_num(100 * m_real, 1)}% de poder contra {_num(100 * w_real, 1)}% do Welch, então, com o n coletado, um Welch não significativo seria o resultado esperado mesmo com o efeito existindo. E responde a uma pergunta útil para quem espera o merge: sorteando um PR de cada grupo, o com bot tende a demorar mais?</p>
+    <h3>Quando a escolha mudaria</h3>
+    <ul>
+      <li><strong>Se a pergunta for sobre a média</strong>, como o total de horas de espera somado no mês, que é o que pesa no custo do time. Aí a H₀ do Welch é a pergunta certa, e o Mann-Whitney responde outra coisa.{n_media}</li>
+      <li><strong>Se os grupos tiverem formas diferentes</strong>, como em Dispersões*. Aí os dois testes deixam de responder à mesma pergunta: no ponto em que as médias ficam iguais (mediana com bot ×{_num(math.exp(medias_iguais), 2)}), o Mann-Whitney rejeitou {poder('dispersoes', 'mann_whitney', medias_iguais)} e o Welch {poder('dispersoes', 'welch', medias_iguais)}. "O Mann-Whitney rejeitou e o Welch não" pode querer dizer "a mediana mudou e a média não", e quem quer falar de média precisa do Welch, com o n que ele pede.</li>
+      <li><strong>Se a cauda fosse curta</strong> (σ do log bem menor que o {_num(parametros.sigma_comum(p), 1)} do cenário base), a média amostral ficaria perto de normal e os dois testes deveriam se aproximar. Essa situação fica fora da grade que simulamos.</li>
+    </ul>
+    <h3>Principal limitação</h3>
+    <p class="leitura">A comparação dos testes vale para dados parecidos com a lognormal calibrada, e os dados reais não são tão parecidos: o log das horas é bimodal (Shapiro com p = {_num(p['com_bot'].shapiro_p, 3)} com bot e {_num(p['sem_bot'].shapiro_p, 3)} sem), e o G1 mostra que a simulação não reproduz isso. A Q3 estressou a cauda longa, os outliers e o n, mas não uma mistura de dois tipos de PR. Sobre a pergunta em si, os dados são observacionais: o bot não foi sorteado e {_num(100 * fracao, 0)}% dos PRs são do mesmo autor (<code>{autor}</code>), então a diferença no tempo até o merge mostra associação, não efeito do CodeRabbit.</p>"""
+
+
+def _autor_dominante(reais: pd.DataFrame) -> tuple[str, float]:
+    contagem = reais["autor"].value_counts()
+    return str(contagem.index[0]), float(contagem.iloc[0] / len(reais))
+
+
 def gerar(
     destino: Path = DESTINO,
     csv: Path = parametros.CSV,
     simulacoes: Path = motor.SAIDA,
 ) -> Path:
-    reais, com, sem, _ = _dados(csv)
+    reais, com, sem, p = _dados(csv)
     dados_simulacoes = _ler_simulacoes(simulacoes)
     resumo = resumo_g2(com, sem)
     texto_g1, texto_g2 = _textos(reais, com, sem, resumo)
@@ -760,6 +977,7 @@ def gerar(
         dashboard=DASHBOARD,
         repositorio=REPOSITORIO,
         board=BOARD,
+        pergunta=_secao_pergunta(reais, dados_simulacoes),
         g1=_figura_g1(reais, com, sem),
         g2=_figura_g2(resumo),
         texto_g1=texto_g1,
@@ -767,8 +985,9 @@ def gerar(
         g3=_figura_g3(dados_simulacoes),
         g4=_figura_g4(dados_simulacoes),
         texto_g3=_texto_g3(dados_simulacoes),
-        texto_g4=_texto_g4(dados_simulacoes),
+        texto_g4=_texto_g4(dados_simulacoes, efeito_observado(p)),
         dados_reais=_secao_dados_reais(testes_reais.rodar(csv, simulacoes)),
+        conclusao=_secao_conclusao(dados_simulacoes, p, reais, _curva_amostra(dados_simulacoes, csv)),
     )
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html, encoding="utf-8")
