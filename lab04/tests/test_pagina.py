@@ -1,4 +1,5 @@
 import json
+import re
 
 import numpy as np
 import pytest
@@ -18,13 +19,59 @@ def test_gera_a_pagina_com_os_links_no_topo(tmp_path):
     assert html.index(DASHBOARD) < html.index(REPOSITORIO)
 
 
-def test_pagina_tem_as_sete_secoes_na_ordem_e_os_avisos(tmp_path):
-    html = gerar(tmp_path / "index.html").read_text(encoding="utf-8")
+@pytest.fixture(scope="module")
+def html(tmp_path_factory):
+    return gerar(tmp_path_factory.mktemp("dashboard") / "index.html").read_text(encoding="utf-8")
+
+
+def _secao(html, id_secao):
+    inicio = html.index(f'<section id="{id_secao}">')
+    return html[inicio:html.index("</section>", inicio)]
+
+
+def _leitura(html, id_secao):
+    trecho = _secao(html, id_secao)
+    inicio = trecho.index('<p class="leitura">') + len('<p class="leitura">')
+    return trecho[inicio:trecho.index("</p>", inicio)]
+
+
+def test_pagina_tem_as_sete_secoes_na_ordem_e_sem_avisos(html):
     ids = ["pergunta", "g1", "g2", "g3", "g4", "dados-reais", "conclusao"]
     posicoes = [html.index(f'<section id="{id_secao}">') for id_secao in ids]
     assert posicoes == sorted(posicoes)
-    assert 'class="selo">S02<' not in html
-    assert html.count("entrega final") >= 3
+    # Os dados dos gráficos vão em base64 dentro dos <script>, e lá "S02" pode aparecer por acaso.
+    texto = re.sub(r"<script.*?</script>", "", html, flags=re.S)
+    assert "S02" not in texto
+    assert "entrega final" not in texto
+    assert "pendente" not in texto
+
+
+def test_secao_1_tem_hipoteses_origem_e_observacoes(html):
+    secao = _secao(html, "pergunta")
+    for trecho in ["E[X] = E[Y]", "P(X &gt; Y) = P(Y &gt; X)", "bicaudais", "langflow-ai/langflow",
+                   "01/08/2026", "31/10/2026", "490", "371", "60 PRs", "30 com bot e 30 sem", "880.000"]:
+        assert trecho in secao
+
+
+@pytest.mark.parametrize("grafico", ["g1", "g2", "g3", "g4"])
+def test_textos_dos_graficos_tem_de_2_a_4_frases(html, grafico):
+    texto = _leitura(html, grafico).replace("p.p.", "pp")
+    frases = [f for f in re.split(r"[.?!](?=\s|$)", texto) if f.strip()]
+    assert 2 <= len(frases) <= 4
+
+
+def test_textos_g1_e_g2_batem_com_os_dados(html):
+    assert "36,8 h" in _leitura(html, "g1") and "3,0 h" in _leitura(html, "g1")
+    assert "0,1359" in _leitura(html, "g2") and "0,0022" in _leitura(html, "g2")
+    assert "erro tipo II" in _leitura(html, "g2")
+
+
+def test_secao_7_confronta_palpite_escolhe_teste_e_da_limitacao(html):
+    secao = _secao(html, "conclusao")
+    for trecho in ["O palpite contra a simulação", "Errou", "Acertou", "Qual teste usar",
+                   "<strong>Mann-Whitney.</strong>", "Quando a escolha mudaria", "Principal limitação",
+                   "Tamanho da amostra", "33 PRs", "203 PRs", "77,4%", "23,5%", "2,89%", "5,16%"]:
+        assert trecho in secao
 
 
 def test_graficos_g1_a_g4_sao_plotly_autocontidos_e_rotulados(tmp_path):
@@ -47,8 +94,7 @@ def test_graficos_g1_a_g4_sao_plotly_autocontidos_e_rotulados(tmp_path):
         assert rotulo in html or json.dumps(rotulo)[1:-1] in html
 
 
-def test_textos_g3_e_g4_refletem_as_taxas_e_os_poderes_do_csv(tmp_path):
-    html = gerar(tmp_path / "index.html").read_text(encoding="utf-8")
+def test_textos_g3_e_g4_refletem_as_taxas_e_os_poderes_do_csv(html):
     assert "1,56%" in html
     assert "4,38%" in html
     assert "0,07%" in html
@@ -56,6 +102,8 @@ def test_textos_g3_e_g4_refletem_as_taxas_e_os_poderes_do_csv(tmp_path):
     assert "a vantagem não muda de lado" in html
     assert "Cenário base: ×5,0" in html
     assert "Welch não alcança 80%" in html
+    assert "63,3%" in _leitura(html, "g4")
+    assert "Nenhum dos dois fica liberal" in _leitura(html, "g3")
 
 
 def test_gerar_le_simulacoes_sem_reexecuta_las(tmp_path, monkeypatch):

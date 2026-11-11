@@ -28,6 +28,7 @@ Para recalcular as simulações e atualizar o CSV antes de gerar o dashboard:
 python -m lab04.simulacao.q1
 python -m lab04.simulacao.q2
 python -m lab04.simulacao.q3
+python -m lab04.simulacao.q4
 python -m lab04
 ```
 
@@ -278,3 +279,48 @@ quase o dobro do 0,39 do conjunto simulado com o mesmo efeito. A 1% só o Mann-W
 por pouco (p = 0,0099). Na prática, 34 h a mais na mediana é mais de um dia por PR, e o δ de 0,39
 diz que o PR com bot demora mais em cerca de 69% dos pares. Os limites da seção "Dados reais"
 continuam valendo: é associação, não efeito do bot.
+
+## Tamanho da amostra
+
+Quantos PRs por grupo um novo estudo precisaria para ter 80% de poder, se o efeito real for o que
+os dados sugerem (mediana do grupo com bot ×4,76). Mesmo cenário base, mudando só o n, igual nos
+dois grupos. A tabela é gerada por `python -m lab04.simulacao.q4` e não deve ser editada à mão.
+
+<!-- q4:inicio -->
+10000 repetições por n, cenário base no efeito observado (1.561 no log, mediana ×4.76), mesmo n nos dois grupos, semente 42. A linha em negrito é o n coletado, lida do cenário base.
+
+| n por grupo | Welch, α = 5% | Mann-Whitney, α = 5% | Welch, α = 1% | Mann-Whitney, α = 1% |
+|---|---|---|---|---|
+| 10 | 5.4% | 30.5% | 0.3% | 10.8% |
+| 15 | 10.2% | 45.2% | 0.9% | 20.1% |
+| 20 | 14.4% | 58.9% | 1.7% | 32.1% |
+| 25 | 19.0% | 68.2% | 2.8% | 43.3% |
+| **30** | **23.5%** | **77.4%** | **4.3%** | **53.2%** |
+| 35 | 26.8% | 83.3% | 5.6% | 61.6% |
+| 40 | 31.4% | 88.0% | 7.5% | 70.4% |
+| 50 | 36.6% | 94.0% | 10.4% | 82.2% |
+| 60 | 43.6% | 97.1% | 15.2% | 89.7% |
+| 80 | 52.9% | 99.5% | 22.4% | 97.2% |
+| 100 | 61.0% | 99.9% | 30.1% | 99.4% |
+| 150 | 72.2% | 100.0% | 44.3% | 100.0% |
+| 200 | 79.8% | 100.0% | 55.8% | 100.0% |
+| 250 | 84.1% | 100.0% | 64.1% | 100.0% |
+| 300 | 86.6% | 100.0% | 69.3% | 100.0% |
+| 400 | 90.4% | 100.0% | 77.8% | 100.0% |
+| 500 | 93.5% | 100.0% | 83.1% | 100.0% |
+
+n por grupo para 80% de poder (interpolado entre os pontos da grade):
+
+- t de Welch, α = 5%: 203 PRs por grupo
+- Mann-Whitney, α = 5%: 33 PRs por grupo
+- t de Welch, α = 1%: 442 PRs por grupo
+- Mann-Whitney, α = 1%: 49 PRs por grupo
+<!-- q4:fim -->
+
+**O Mann-Whitney precisa de 33 PRs por grupo; o Welch, de cerca de 200.** Com os 30 coletados o
+Mann-Whitney fica a poucos PRs dos 80% (77%), e a 1% chega lá com cerca de 50. O Welch precisa de
+seis vezes mais a 5% e de quase 450 a 1%. É o teto da Q2 visto pelo outro lado: aumentar o efeito
+não ajuda o Welch, mas aumentar o n sim, porque com mais PRs a média amostral da lognormal fica
+mais perto de normal. No `langflow` havia 490 PRs com o bot e 371 sem no mesmo período, então um
+estudo com 200 por grupo seria possível; só com esse n o Welch passa a ser uma opção para quem
+quer comparar médias.
