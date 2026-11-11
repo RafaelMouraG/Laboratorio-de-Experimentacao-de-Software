@@ -6,6 +6,7 @@ quantas vezes cada teste acerta ou erra.
 
 - **Dashboard:** https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/
 - **Board:** https://github.com/users/RafaelMouraG/projects/12
+- **Roteiro da apresentação:** [15 perguntas, respostas e referências ao dashboard](apresentacao.md)
 
 > Setup do ambiente (`.env`, `.venv`, dependências) está no [README da raiz](../README.md).
 
