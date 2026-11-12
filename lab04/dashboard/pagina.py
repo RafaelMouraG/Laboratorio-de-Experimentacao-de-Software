@@ -14,7 +14,7 @@ from plotly.subplots import make_subplots
 from scipy import stats
 
 from lab04.data import coleta_prs as coleta
-from lab04.simulacao import motor, parametros, q2, q3, q4
+from lab04.simulacao import motor, parametros, pressupostos_n, q2, q3, q4
 from lab04.simulacao import reais as testes_reais
 from lab04.simulacao.exemplo import SEMENTE
 from lab04.simulacao.gerador import cenario_base, efeito_observado, gerar as gerar_amostra
@@ -49,6 +49,8 @@ SITUACOES = {
     "n_pequeno": "n pequeno",
     "dispersoes": "Dispersões*",
 }
+# Cores das situações no A2, longe do azul e do vermelho dos testes.
+CORES_SITUACOES = {"base": "#334155", "assimetria": "#d97706", "outliers": "#0891b2"}
 
 MODELO = Template("""<!doctype html>
 <html lang="pt-BR">
@@ -960,11 +962,106 @@ def _bloco_a1(curva: pd.DataFrame | None, coletado: int) -> str:
     <p class="leitura">{leitura}</p>"""
 
 
-def _secao_apendice(curva: pd.DataFrame | None, p: dict[str, parametros.Parametros]) -> str:
+def _figura_a2(vantagem: pd.DataFrame) -> str:
+    figura = go.Figure()
+    for situacao in pressupostos_n.SITUACOES:
+        linhas = vantagem[vantagem["situacao"] == situacao].sort_values("n")
+        figura.add_trace(
+            go.Scatter(
+                x=linhas["n"],
+                y=100 * linhas["diferenca"],
+                customdata=100 * np.column_stack((linhas["welch"], linhas["mann_whitney"])),
+                mode="lines+markers",
+                name=SITUACOES[situacao],
+                line=dict(color=CORES_SITUACOES[situacao], width=3),
+                marker=dict(size=8),
+                hovertemplate=(
+                    "n = %{x} por grupo<br>Mann-Whitney − Welch: %{y:+.1f} p.p.<br>"
+                    "Welch: %{customdata[0]:.1f}% · Mann-Whitney: %{customdata[1]:.1f}%"
+                    "<extra>%{fullData.name}</extra>"
+                ),
+            )
+        )
+    figura.add_hline(
+        y=0, line_dash="dash", line_color="#64748b",
+        annotation_text="Abaixo daqui o Welch teria mais poder", annotation_position="bottom right",
+    )
+    ticks = list(pressupostos_n.TAMANHOS)
+    figura.update_xaxes(title_text="PRs por grupo (escala log)", type="log", tickvals=ticks, ticktext=[str(t) for t in ticks])
+    figura.update_yaxes(title_text="Poder do Mann-Whitney − poder do Welch (p.p.)", range=[-10, 100])
+    figura.update_layout(
+        title=f"Vantagem de poder do Mann-Whitney na mediana ×{pressupostos_n.MULTIPLICADOR}, α = 5%",
+        template="plotly_white",
+        legend_title_text="Situação",
+        margin=dict(l=65, r=30, t=90, b=65),
+    )
+    return figura.to_html(
+        full_html=False, include_plotlyjs=False, div_id="grafico-a2",
+        config={"responsive": True, "displaylogo": False},
+    )
+
+
+def _texto_a2(curva: pd.DataFrame, vantagem: pd.DataFrame) -> str:
+    v = vantagem.set_index(["situacao", "n"])
+    maior_n, menor_n = max(pressupostos_n.TAMANHOS), min(pressupostos_n.TAMANHOS)
+
+    def pp(situacao: str, n: int, coluna: str = "diferenca") -> str:
+        valor = 100 * v.loc[(situacao, n), coluna]
+        return (f"{valor:+.1f}".replace(".", ",") + " p.p.") if coluna == "diferenca" else _num(valor, 1) + "%"
+
+    if (vantagem["diferenca"] > 0).all():
+        frases = [
+            f"O Mann-Whitney tem mais poder que o Welch em todos os pontos, então a escolha não troca de lado "
+            f"entre {menor_n} e {maior_n} PRs por grupo."
+        ]
+    else:
+        frases = ["Em algum ponto da grade o Welch tem mais poder: ali a escolha troca de lado."]
+    base = v.loc["base", "diferenca"]
+    pico = int(base.idxmax())
+    if pico != maior_n:
+        frases.append(
+            f"No cenário base a vantagem chega ao máximo em n = {pico} ({pp('base', pico)}) e encolhe em {maior_n} "
+            f"({pp('base', maior_n)}), porque o Mann-Whitney encosta em 100% e o Welch, com a média amostral mais "
+            f"perto de normal, começa a alcançá-lo ({pp('base', maior_n, 'welch')} de poder)."
+        )
+    else:
+        frases.append(f"No cenário base a vantagem cresce com o n até {pp('base', maior_n)}.")
+    violadas = [s for s in pressupostos_n.SITUACOES if s != "base"]
+    crescem = all(v.loc[s, "diferenca"].is_monotonic_increasing for s in violadas)
+    frases.append(
+        f"Com assimetria e outliers ela {'só cresce' if crescem else 'oscila'}, até {pp('assimetria', maior_n)} e "
+        f"{pp('outliers', maior_n)} em n = {maior_n}, com o Welch em {pp('assimetria', maior_n, 'welch')} e "
+        f"{pp('outliers', maior_n, 'welch')} de poder."
+    )
+    zero = curva[(curva["alfa"] == ALFA) & (curva["efeito"] == 0.0) & (curva["teste"] == "welch")]
+    pior = zero.loc[zero["proporcao"].idxmin()]
+    frases.append(
+        f"Os pressupostos pesam no erro tipo I do Welch com n pequeno ({_percentual(pior['proporcao'])} em "
+        f"{SITUACOES[pior['situacao']].lower()} com n = {int(pior['n'])}) e no poder dele com n grande, quando a cauda longa e "
+        "os outliers o seguram enquanto o Mann-Whitney passa de 90%."
+    )
+    return " ".join(frases)
+
+
+def _bloco_a2(curva: pd.DataFrame) -> str:
+    vantagem = pressupostos_n.vantagem(curva)
+    return f"""
+    <h3>A2 — O melhor teste muda com o tamanho da amostra?</h3>
+    <p>Cenário base, assimetria e outliers da Q3 com {', '.join(map(str, pressupostos_n.TAMANHOS[:-1]))} e {pressupostos_n.TAMANHOS[-1]} PRs por grupo. O poder é medido na mediana ×{pressupostos_n.MULTIPLICADOR}, em que o Mann-Whitney tem cerca de metade de poder no cenário base com o n coletado; o erro tipo I, no efeito zero.</p>
+    <div class="grafico">{_figura_a2(vantagem)}</div>
+    <p class="leitura">{_texto_a2(curva, vantagem)}</p>"""
+
+
+def _secao_apendice(
+    curva: pd.DataFrame | None,
+    curva_pressupostos: pd.DataFrame,
+    p: dict[str, parametros.Parametros],
+) -> str:
     return (
-        "<p>Quantos PRs bastariam para cada teste, uma pergunta que o enunciado deixa para o fim. Fica fora das sete "
-        "seções, que têm ordem fixa.</p>"
+        "<p>Duas perguntas que o enunciado deixa para o fim: quantos PRs bastariam e se a escolha do teste muda com o "
+        "n. Ficam fora das sete seções, que têm ordem fixa.</p>"
         + _bloco_a1(curva, p["com_bot"].n)
+        + _bloco_a2(curva_pressupostos)
     )
 
 
@@ -1058,6 +1155,7 @@ def gerar(
     destino: Path = DESTINO,
     csv: Path = parametros.CSV,
     simulacoes: Path = motor.SAIDA,
+    tamanho_amostra: Path = pressupostos_n.SAIDA,
 ) -> Path:
     reais, com, sem, p = _dados(csv)
     dados_simulacoes = _ler_simulacoes(simulacoes)
@@ -1080,7 +1178,11 @@ def gerar(
         texto_g4=_texto_g4(dados_simulacoes, efeito_observado(p)),
         dados_reais=_secao_dados_reais(resultado_reais),
         conclusao=_secao_conclusao(dados_simulacoes, p, reais, curva),
-        apendice=_secao_apendice(curva, p),
+        apendice=_secao_apendice(
+            curva,
+            pressupostos_n.curva(dados_simulacoes, motor.ler(tamanho_amostra), csv),
+            p,
+        ),
     )
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html, encoding="utf-8")

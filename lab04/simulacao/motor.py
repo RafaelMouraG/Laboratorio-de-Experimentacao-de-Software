@@ -100,15 +100,17 @@ def ler(caminho: Path = SAIDA) -> pd.DataFrame:
     return pd.read_csv(caminho, float_precision="round_trip")
 
 
-def gravar(novas: pd.DataFrame, caminho: Path = SAIDA) -> pd.DataFrame:
-    """Junta `novas` ao CSV, trocando as linhas com a mesma situação, efeito, teste e α."""
-    novas = novas[COLUNAS]
+def gravar(
+    novas: pd.DataFrame, caminho: Path = SAIDA, colunas: list[str] = COLUNAS, chave: list[str] = CHAVE
+) -> pd.DataFrame:
+    """Junta `novas` ao CSV, trocando as linhas com a mesma chave (situação, efeito, teste e α)."""
+    novas = novas[colunas]
     if caminho.exists():
         antigas = ler(caminho)
-        chaves = pd.MultiIndex.from_frame(novas[CHAVE])
-        antigas = antigas[~pd.MultiIndex.from_frame(antigas[CHAVE]).isin(chaves)]
+        chaves = pd.MultiIndex.from_frame(novas[chave])
+        antigas = antigas[~pd.MultiIndex.from_frame(antigas[chave]).isin(chaves)]
         novas = pd.concat([antigas, novas], ignore_index=True)
-    novas = novas.sort_values(CHAVE, ignore_index=True)
+    novas = novas.sort_values(chave, ignore_index=True)
     caminho.parent.mkdir(parents=True, exist_ok=True)
     novas.to_csv(caminho, index=False)
     return novas

@@ -30,6 +30,7 @@ python -m lab04.simulacao.q1
 python -m lab04.simulacao.q2
 python -m lab04.simulacao.q3
 python -m lab04.simulacao.q4
+python -m lab04.simulacao.pressupostos_n
 python -m lab04
 ```
 
@@ -39,7 +40,7 @@ python -m lab04
 |---|---|
 | `data/` | Os PRs coletados, em CSV, e o script da coleta |
 | `simulacao/` | Gerador dos dados simulados, os dois testes e o motor das repetições |
-| `saida/` | `simulacoes.csv`, com as rejeições de cada teste em cada situação, efeito e α |
+| `saida/` | `simulacoes.csv`, com as rejeições de cada teste em cada situação, efeito e α; `tamanho_amostra.csv`, do extra de pressupostos × n |
 | `dashboard/` | Código que monta a página |
 | `tests/` | Testes, com `pytest lab04/tests` |
 
@@ -327,4 +328,41 @@ de 123 por mês no grupo mais raro. Nesse ritmo, os 33 PRs do Mann-Whitney saem 
 os 203 do Welch de 1,7 mês e os 442 do Welch a 1% de 3,6 meses, mais que o período coletado. Só com
 esse n o Welch passa a ser uma opção para quem quer comparar médias. No dashboard, isso fica no
 apêndice, com o gráfico de poder × n.
+
+## Extra: o melhor teste muda com o tamanho da amostra?
+
+Três situações da Q3 com 10, 30, 100 e 200 PRs por grupo, para ver se a vantagem de um teste cresce,
+some ou troca de lado conforme o n. A tabela é gerada por `python -m lab04.simulacao.pressupostos_n`
+e não deve ser editada à mão.
+
+<!-- pressupostos_n:inicio -->
+10000 repetições por ponto, semente 42, α = 5%, mesmo n nos dois grupos. Poder na mediana ×3. O n coletado e o `base` com n = 10 são os pontos da Q2 e da Q3.
+
+| Situação | n por grupo | Erro tipo I, Welch | Erro tipo I, Mann-Whitney | Poder, Welch | Poder, Mann-Whitney | Mann-Whitney − Welch |
+|---|---|---|---|---|---|---|
+| `base` | 10 | 1.0% | 4.3% | 2.8% | 17.1% | +14.3 p.p. |
+| `base` | 30 | 1.6% | 4.4% | 12.1% | 47.0% | +34.9 p.p. |
+| `base` | 100 | 2.5% | 5.1% | 36.5% | 94.0% | +57.5 p.p. |
+| `base` | 200 | 2.9% | 5.3% | 57.5% | 99.9% | +42.4 p.p. |
+| `assimetria` | 10 | 0.4% | 4.3% | 0.7% | 9.5% | +8.8 p.p. |
+| `assimetria` | 30 | 0.9% | 5.0% | 2.6% | 24.1% | +21.5 p.p. |
+| `assimetria` | 100 | 1.3% | 4.9% | 7.4% | 65.3% | +57.9 p.p. |
+| `assimetria` | 200 | 1.6% | 5.2% | 12.7% | 91.4% | +78.7 p.p. |
+| `outliers` | 10 | 0.6% | 4.5% | 1.8% | 15.2% | +13.4 p.p. |
+| `outliers` | 30 | 1.0% | 4.5% | 5.7% | 43.0% | +37.4 p.p. |
+| `outliers` | 100 | 1.6% | 5.2% | 13.4% | 91.3% | +77.9 p.p. |
+| `outliers` | 200 | 1.8% | 4.4% | 20.5% | 99.8% | +79.2 p.p. |
+<!-- pressupostos_n:fim -->
+
+**A escolha não troca de lado.** O Mann-Whitney tem mais poder que o Welch em todos os doze pontos,
+de 10 a 200 PRs por grupo. O que muda é o tamanho da vantagem. No `base` ela chega ao máximo em
+n = 100 e encolhe em 200, porque o Mann-Whitney encosta em 100% e o Welch, com a média amostral mais
+perto de normal, sobe para 58%. Com `assimetria` e `outliers` ela só cresce, até quase 80 p.p.: a
+cauda longa e os PRs esquecidos seguram o Welch em 13% e 21% mesmo com 200 PRs por grupo.
+
+**Os pressupostos pesam nos dois extremos, de jeitos diferentes.** Com n pequeno pesam no erro tipo I
+do Welch, que cai para 0,4% com assimetria e n = 10; com n grande ele volta a se aproximar de α, mas
+ainda fica abaixo. No poder, com 10 PRs os dois testes estão perto do chão em qualquer situação, e é
+com n grande que a violação aparece, porque o Mann-Whitney sobe e o Welch não acompanha. O erro tipo I
+do Mann-Whitney fica perto de 5% em todo n, como na Q3.
 
