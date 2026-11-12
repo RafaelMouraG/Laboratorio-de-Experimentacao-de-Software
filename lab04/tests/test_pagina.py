@@ -36,7 +36,7 @@ def _leitura(html, id_secao):
 
 
 def test_pagina_tem_as_sete_secoes_na_ordem_e_sem_avisos(html):
-    ids = ["pergunta", "g1", "g2", "g3", "g4", "dados-reais", "conclusao"]
+    ids = ["pergunta", "g1", "g2", "g3", "g4", "dados-reais", "conclusao", "apendice"]
     posicoes = [html.index(f'<section id="{id_secao}">') for id_secao in ids]
     assert posicoes == sorted(posicoes)
     # Os dados dos gráficos vão em base64 dentro dos <script>, e lá "S02" pode aparecer por acaso.
@@ -70,13 +70,21 @@ def test_secao_7_confronta_palpite_escolhe_teste_e_da_limitacao(html):
     secao = _secao(html, "conclusao")
     for trecho in ["O palpite contra a simulação", "Errou", "Acertou", "Qual teste usar",
                    "<strong>Mann-Whitney.</strong>", "Quando a escolha mudaria", "Principal limitação",
-                   "Tamanho da amostra", "33 PRs", "203 PRs", "77,4%", "23,5%", "2,89%", "5,16%"]:
+                   "203 PRs", "ver o apêndice", "77,4%", "23,5%", "2,89%", "5,16%"]:
+        assert trecho in secao
+    assert "A1 —" not in secao
+
+
+def test_apendice_tem_o_poder_por_n_e_a_viabilidade(html):
+    secao = _secao(html, "apendice")
+    for trecho in ["A1 — Poder × tamanho da amostra", "33 PRs", "203 PRs", "442 PRs", "8 dias", "1,7 mês",
+                   "3,6 meses", "mais que o período coletado"]:
         assert trecho in secao
 
 
 def test_graficos_g1_a_g4_sao_plotly_autocontidos_e_rotulados(tmp_path):
     html = gerar(tmp_path / "index.html").read_text(encoding="utf-8")
-    for grafico in ("g1", "g2", "g3", "g4"):
+    for grafico in ("g1", "g2", "g3", "g4", "a1"):
         assert f'id="grafico-{grafico}"' in html
     assert "plotly.js" in html.lower()
     for rotulo in [

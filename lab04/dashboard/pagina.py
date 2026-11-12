@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from datetime import date
 from pathlib import Path
 from string import Template
 
@@ -27,6 +28,7 @@ DESTINO = Path(__file__).with_name("index.html")
 # Da execução da coleta (#143), registrada no README: o CSV guarda só os PRs sorteados.
 COLETADO_EM = "04/11/2026"
 ELEGIVEIS = {"com_bot": 490, "sem_bot": 371}
+DIAS_POR_MES = 365.25 / 12
 
 # A identidade dos testes fica aqui e é reutilizada por G2, G3 e G4.
 TESTES = {
@@ -132,6 +134,11 @@ footer { padding: 2rem; color: #64748b; text-align: center; }
   <section id="conclusao">
     <h2>7. Palpite, resultados e conclusão</h2>
     $conclusao
+  </section>
+
+  <section id="apendice">
+    <h2>Apêndice — Tamanho da amostra</h2>
+    $apendice
   </section>
 </main>
 <footer>Laboratório de Experimentação de Software — PUC Minas</footer>
@@ -840,7 +847,77 @@ def _curva_amostra(dados: pd.DataFrame, csv: Path) -> pd.DataFrame | None:
         return None
 
 
-def _bloco_amostra(curva: pd.DataFrame | None, coletado: int) -> str:
+def _meses_coletados() -> float:
+    inicio, fim = (date.fromisoformat(d) for d in coleta.PERIODO.split(".."))
+    return ((fim - inicio).days + 1) / DIAS_POR_MES
+
+
+def _prs_por_mes() -> float:
+    """PRs elegíveis por mês do grupo mais raro, no ritmo do período coletado."""
+    return min(ELEGIVEIS.values()) / _meses_coletados()
+
+
+def _grupo_mais_raro() -> str:
+    return "sem bot" if ELEGIVEIS["sem_bot"] <= ELEGIVEIS["com_bot"] else "com bot"
+
+
+def _tempo_de_coleta(n: int) -> str:
+    """Quanto tempo de PRs do repositório dá `n` por grupo, no ritmo do período coletado."""
+    meses = n / _prs_por_mes()
+    if meses < 1:
+        return f"{_num(meses * DIAS_POR_MES, 0)} dias"
+    return f"{_num(meses, 1)} {'mês' if round(meses, 1) < 2 else 'meses'}"
+
+
+def _figura_a1(curva: pd.DataFrame, coletado: int) -> str:
+    figura = go.Figure()
+    for alfa, traco in zip(ALFAS, ("solid", "dash")):
+        for teste, estilo in TESTES.items():
+            linhas = curva[(curva["teste"] == teste) & (curva["alfa"] == alfa)].sort_values("n")
+            figura.add_trace(
+                go.Scatter(
+                    x=linhas["n"],
+                    y=100 * linhas["proporcao"],
+                    customdata=np.column_stack((linhas["rejeicoes"], linhas["n_rep"])),
+                    mode="lines+markers",
+                    name=f"{estilo['nome']}, α = {100 * alfa:g}%",
+                    line=dict(color=estilo["cor"], width=3, dash=traco),
+                    marker=dict(size=6),
+                    hovertemplate=(
+                        "n = %{x} por grupo<br>Poder: %{y:.1f}%<br>"
+                        "Rejeições: %{customdata[0]:.0f} de %{customdata[1]:.0f}"
+                        "<extra>%{fullData.name}</extra>"
+                    ),
+                )
+            )
+    figura.add_hline(
+        y=80, line_dash="dash", line_color="#64748b",
+        annotation_text="Poder de 80%", annotation_position="top left",
+    )
+    # Em eixo log, formas e o range do Plotly ficam em log10, não no valor.
+    figura.add_vline(
+        x=math.log10(coletado), line_dash="dot", line_color="#475569",
+        annotation_text=f"{coletado} coletados", annotation_position="top right",
+    )
+    ticks = [10, 20, 30, 50, 100, 200, 500]
+    figura.update_xaxes(
+        title_text="PRs por grupo (escala log)", type="log", tickvals=ticks, ticktext=[str(t) for t in ticks],
+        range=[math.log10(curva["n"].min() * 0.9), math.log10(curva["n"].max() * 1.1)],
+    )
+    figura.update_yaxes(title_text="Poder estimado (%)", range=[0, 102])
+    figura.update_layout(
+        title="Poder × tamanho da amostra no efeito observado",
+        template="plotly_white",
+        legend_title_text="Teste e α",
+        margin=dict(l=65, r=30, t=90, b=65),
+    )
+    return figura.to_html(
+        full_html=False, include_plotlyjs=False, div_id="grafico-a1",
+        config={"responsive": True, "displaylogo": False},
+    )
+
+
+def _bloco_a1(curva: pd.DataFrame | None, coletado: int) -> str:
     if curva is None:
         return ""
     linhas = []
@@ -858,23 +935,37 @@ def _bloco_amostra(curva: pd.DataFrame | None, coletado: int) -> str:
             f"<tr><td>{celulas[0]}</td>" + "".join(f'<td class="num">{c}</td>' for c in celulas[1:]) + "</tr>"
         )
     n_w, n_m = q4.n_para(curva, "welch"), q4.n_para(curva, "mann_whitney")
-    if n_w is not None and n_m is not None:
+    n_w_01 = q4.n_para(curva, "welch", 0.01)
+    if n_w is not None and n_m is not None and n_w_01 is not None:
+        alem = n_w_01 / _prs_por_mes() > _meses_coletados()
         leitura = (
             f"Com os {coletado} PRs coletados o Mann-Whitney está a poucos PRs dos 80%; o Welch precisaria de "
             f"cerca de {_num(n_w / n_m, 0)} vezes mais. Aumentar o efeito não tira o Welch do teto da Q2, mas aumentar "
-            f"o n sim, porque com mais PRs a média amostral fica mais perto de normal. O <code>{coleta.REPOSITORIO}</code> "
-            f"tinha {ELEGIVEIS['com_bot']} e {ELEGIVEIS['sem_bot']} PRs disponíveis, então esse estudo maior seria viável."
+            "o n sim, porque com mais PRs a média amostral fica mais perto de normal. No ritmo do período coletado, "
+            f"o grupo mais raro ({_grupo_mais_raro()}) teve cerca de {_num(_prs_por_mes(), 0)} PRs elegíveis por mês no "
+            f"<code>{coleta.REPOSITORIO}</code>: os {n_m} PRs por grupo do Mann-Whitney saem de {_tempo_de_coleta(n_m)} "
+            f"de PRs, os {n_w} do Welch de {_tempo_de_coleta(n_w)} e os {n_w_01} do Welch a 1% de "
+            f"{_tempo_de_coleta(n_w_01)}{', mais que o período coletado' if alem else ''}."
         )
     else:
         leitura = f"Até {max(q4.TAMANHOS)} PRs por grupo, ao menos um dos testes não chega a 80%."
     return f"""
-    <h3>Tamanho da amostra</h3>
+    <h3>A1 — Poder × tamanho da amostra</h3>
     <p>Quantos PRs por grupo cada teste precisa para 80% de poder, se o efeito real for o que os dados sugerem. Mesmo cenário base, mudando só o n, igual nos dois grupos.</p>
+    <div class="grafico">{_figura_a1(curva, coletado)}</div>
     <div class="tabela"><table>
       <thead><tr><th>Teste</th><th>Poder com {coletado} por grupo, α = 5%</th><th>n por grupo para 80%, α = 5%</th><th>n por grupo para 80%, α = 1%</th></tr></thead>
       <tbody>{''.join(linhas)}</tbody>
     </table></div>
     <p class="leitura">{leitura}</p>"""
+
+
+def _secao_apendice(curva: pd.DataFrame | None, p: dict[str, parametros.Parametros]) -> str:
+    return (
+        "<p>Quantos PRs bastariam para cada teste, uma pergunta que o enunciado deixa para o fim. Fica fora das sete "
+        "seções, que têm ordem fixa.</p>"
+        + _bloco_a1(curva, p["com_bot"].n)
+    )
 
 
 def _secao_conclusao(
@@ -934,7 +1025,7 @@ def _secao_conclusao(
     n_w_01 = q4.n_para(curva, "welch", 0.01) if curva is not None else None
     n_media = (
         f" Com essa cauda, porém, o Welch só chega a 80% de poder com cerca de {n_w} PRs por grupo "
-        f"({n_w_01} a 1%), contra os {p['com_bot'].n} coletados."
+        f"({n_w_01} a 1%), contra os {p['com_bot'].n} coletados (ver o apêndice)."
         if n_w is not None and n_w_01 is not None else ""
     )
     autor, fracao = _autor_dominante(reais)
@@ -946,7 +1037,6 @@ def _secao_conclusao(
       <tbody>{tabela}</tbody>
     </table></div>
     <p class="leitura">O palpite acertou quem ganha e por quê, mas subestimou o tamanho: a cauda longa não deixa o Welch só um pouco conservador, tira dele a maior parte do poder. O erro foi em Dispersões*: a mesma cauda que cria a diferença de médias deixa o Welch sem poder para vê-la.</p>
-    {_bloco_amostra(curva, p['com_bot'].n)}
     <h3>Qual teste usar neste cenário</h3>
     <p class="leitura"><strong>Mann-Whitney.</strong> Ele mantém o erro tipo I perto de α em todas as situações simuladas, enquanto o Welch fica conservador em todas. No efeito que os dados sugerem tem {_num(100 * m_real, 1)}% de poder contra {_num(100 * w_real, 1)}% do Welch, então, com o n coletado, um Welch não significativo seria o resultado esperado mesmo com o efeito existindo. E responde a uma pergunta útil para quem espera o merge: sorteando um PR de cada grupo, o com bot tende a demorar mais?</p>
     <h3>Quando a escolha mudaria</h3>
@@ -971,6 +1061,8 @@ def gerar(
 ) -> Path:
     reais, com, sem, p = _dados(csv)
     dados_simulacoes = _ler_simulacoes(simulacoes)
+    curva = _curva_amostra(dados_simulacoes, csv)
+    resultado_reais = testes_reais.rodar(csv, simulacoes)
     resumo = resumo_g2(com, sem)
     texto_g1, texto_g2 = _textos(reais, com, sem, resumo)
     html = MODELO.substitute(
@@ -986,8 +1078,9 @@ def gerar(
         g4=_figura_g4(dados_simulacoes),
         texto_g3=_texto_g3(dados_simulacoes),
         texto_g4=_texto_g4(dados_simulacoes, efeito_observado(p)),
-        dados_reais=_secao_dados_reais(testes_reais.rodar(csv, simulacoes)),
-        conclusao=_secao_conclusao(dados_simulacoes, p, reais, _curva_amostra(dados_simulacoes, csv)),
+        dados_reais=_secao_dados_reais(resultado_reais),
+        conclusao=_secao_conclusao(dados_simulacoes, p, reais, curva),
+        apendice=_secao_apendice(curva, p),
     )
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html, encoding="utf-8")

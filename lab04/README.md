@@ -322,6 +322,9 @@ n por grupo para 80% de poder (interpolado entre os pontos da grade):
 Mann-Whitney fica a poucos PRs dos 80% (77%), e a 1% chega lá com cerca de 50. O Welch precisa de
 seis vezes mais a 5% e de quase 450 a 1%. É o teto da Q2 visto pelo outro lado: aumentar o efeito
 não ajuda o Welch, mas aumentar o n sim, porque com mais PRs a média amostral da lognormal fica
-mais perto de normal. No `langflow` havia 490 PRs com o bot e 371 sem no mesmo período, então um
-estudo com 200 por grupo seria possível; só com esse n o Welch passa a ser uma opção para quem
-quer comparar médias.
+mais perto de normal. No `langflow` havia 490 PRs com o bot e 371 sem de agosto a outubro, cerca
+de 123 por mês no grupo mais raro. Nesse ritmo, os 33 PRs do Mann-Whitney saem de uns 8 dias de PRs,
+os 203 do Welch de 1,7 mês e os 442 do Welch a 1% de 3,6 meses, mais que o período coletado. Só com
+esse n o Welch passa a ser uma opção para quem quer comparar médias. No dashboard, isso fica no
+apêndice, com o gráfico de poder × n.
+
