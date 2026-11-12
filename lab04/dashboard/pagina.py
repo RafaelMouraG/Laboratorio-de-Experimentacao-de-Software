@@ -14,7 +14,7 @@ from plotly.subplots import make_subplots
 from scipy import stats
 
 from lab04.data import coleta_prs as coleta
-from lab04.simulacao import motor, parametros, pressupostos_n, q2, q3, q4
+from lab04.simulacao import amostra_grande, motor, parametros, pressupostos_n, q2, q3, q4
 from lab04.simulacao import reais as testes_reais
 from lab04.simulacao.exemplo import SEMENTE
 from lab04.simulacao.gerador import cenario_base, efeito_observado, gerar as gerar_amostra
@@ -1052,16 +1052,61 @@ def _bloco_a2(curva: pd.DataFrame) -> str:
     <p class="leitura">{_texto_a2(curva, vantagem)}</p>"""
 
 
+def _p_html(p: float) -> str:
+    if p >= 0.001:
+        return _num(p, 3)
+    mantissa, expoente = f"{p:.1e}".split("e")
+    return f"{mantissa.replace('.', ',')} × 10<sup>{int(expoente)}</sup>".replace("<sup>-", "<sup>−")
+
+
+def _bloco_a3(grande: pd.DataFrame, p: dict[str, parametros.Parametros], mediana_real: float) -> str:
+    c = cenario_base(p)
+    minutos = amostra_grande.diferenca_verdadeira_h(c) * 60
+    linhas = "".join(
+        f"<tr><td class=\"num\">{_milhar(int(l.n))}</td><td class=\"num\">{_p_html(l.p_welch)}</td>"
+        f"<td class=\"num\">{_p_html(l.p_mann_whitney)}</td><td class=\"num\">{_num(100 * l.rejeicao_welch, 0)}%</td>"
+        f"<td class=\"num\">{_num(100 * l.rejeicao_mann_whitney, 0)}%</td><td class=\"num\">{_num(l.g_hedges, 3)}</td>"
+        f"<td class=\"num\">{_num(l.delta_cliff, 3)}</td><td class=\"num\">{_num(l.diferenca_medianas_h * 60, 0)} min</td></tr>"
+        for l in grande.itertuples()
+    )
+    menor, maior = grande.iloc[0], grande.iloc[-1]
+    leitura = " ".join([
+        f"Com a mediana do grupo com bot {_num(100 * amostra_grande.AUMENTO, 0)}% maior, uns {_num(minutos, 0)} minutos "
+        f"num PR que leva {_num(math.exp(c.mu), 1)} h, o p-valor mediano do Mann-Whitney cai de "
+        f"{_p_html(menor.p_mann_whitney)} com {_milhar(int(menor.n))} PRs por grupo para {_p_html(maior.p_mann_whitney)} "
+        f"com {_milhar(int(maior.n))}, e ele rejeita H₀ em {_num(100 * maior.rejeicao_mann_whitney, 0)}% dos conjuntos.",
+        f"No mesmo caminho o δ de Cliff fica entre {_num(grande['delta_cliff'].min(), 3)} e "
+        f"{_num(grande['delta_cliff'].max(), 3)} e o g de Hedges perto de zero: o n não aumenta o efeito, só a certeza "
+        "de que ele não é zero.",
+        f"Significância diz se há diferença; o tamanho de efeito e a diferença em minutos dizem se ela importa, e "
+        f"{_num(minutos, 0)} minutos não mudam nada para quem espera o merge, ao contrário das "
+        f"{_num(mediana_real, 1)} h de diferença na mediana dos dados reais.",
+        f"O Welch nem chega lá: nas horas brutas a cauda longa o segura, e com {_milhar(int(maior.n))} PRs por grupo "
+        f"ele rejeita só {_num(100 * maior.rejeicao_welch, 0)}% das vezes.",
+    ])
+    return f"""
+    <h3>A3 — p-valor × tamanho do efeito com amostra grande</h3>
+    <p>Um efeito sem importância prática, com amostras cada vez maiores: cenário base com a mediana do grupo com bot ×{_num(1 + amostra_grande.AUMENTO, 2)} (δ de Cliff da população = {_num(amostra_grande.delta_verdadeiro(c), 3)}). Cada linha é a mediana de {int(grande['n_rep'].iloc[0])} conjuntos sorteados com aquele n.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>PRs por grupo</th><th>p-valor, Welch</th><th>p-valor, Mann-Whitney</th><th>Rejeita a 5%, Welch</th><th>Rejeita a 5%, Mann-Whitney</th><th>g de Hedges</th><th>δ de Cliff</th><th>Diferença de medianas</th></tr></thead>
+      <tbody>{linhas}</tbody>
+    </table></div>
+    <p class="leitura">{leitura}</p>"""
+
+
 def _secao_apendice(
     curva: pd.DataFrame | None,
     curva_pressupostos: pd.DataFrame,
+    grande: pd.DataFrame,
     p: dict[str, parametros.Parametros],
+    mediana_real: float,
 ) -> str:
     return (
-        "<p>Duas perguntas que o enunciado deixa para o fim: quantos PRs bastariam e se a escolha do teste muda com o "
-        "n. Ficam fora das sete seções, que têm ordem fixa.</p>"
+        "<p>Três perguntas que o enunciado deixa para o fim: quantos PRs bastariam, se a escolha do teste muda com o "
+        "n e o que um p-valor pequeno quer dizer quando o n é enorme. Ficam fora das sete seções, que têm ordem fixa.</p>"
         + _bloco_a1(curva, p["com_bot"].n)
         + _bloco_a2(curva_pressupostos)
+        + _bloco_a3(grande, p, mediana_real)
     )
 
 
@@ -1156,6 +1201,7 @@ def gerar(
     csv: Path = parametros.CSV,
     simulacoes: Path = motor.SAIDA,
     tamanho_amostra: Path = pressupostos_n.SAIDA,
+    grande: Path = amostra_grande.SAIDA,
 ) -> Path:
     reais, com, sem, p = _dados(csv)
     dados_simulacoes = _ler_simulacoes(simulacoes)
@@ -1181,7 +1227,9 @@ def gerar(
         apendice=_secao_apendice(
             curva,
             pressupostos_n.curva(dados_simulacoes, motor.ler(tamanho_amostra), csv),
+            amostra_grande.ler(grande),
             p,
+            resultado_reais.diferenca_medianas,
         ),
     )
     destino.parent.mkdir(parents=True, exist_ok=True)

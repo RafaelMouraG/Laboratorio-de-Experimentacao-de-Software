@@ -31,6 +31,7 @@ python -m lab04.simulacao.q2
 python -m lab04.simulacao.q3
 python -m lab04.simulacao.q4
 python -m lab04.simulacao.pressupostos_n
+python -m lab04.simulacao.amostra_grande
 python -m lab04
 ```
 
@@ -40,7 +41,7 @@ python -m lab04
 |---|---|
 | `data/` | Os PRs coletados, em CSV, e o script da coleta |
 | `simulacao/` | Gerador dos dados simulados, os dois testes e o motor das repetições |
-| `saida/` | `simulacoes.csv`, com as rejeições de cada teste em cada situação, efeito e α; `tamanho_amostra.csv`, do extra de pressupostos × n |
+| `saida/` | `simulacoes.csv`, com as rejeições de cada teste em cada situação, efeito e α; `tamanho_amostra.csv` e `amostra_grande.csv`, dos dois extras |
 | `dashboard/` | Código que monta a página |
 | `tests/` | Testes, com `pytest lab04/tests` |
 
@@ -366,3 +367,30 @@ ainda fica abaixo. No poder, com 10 PRs os dois testes estão perto do chão em 
 com n grande que a violação aparece, porque o Mann-Whitney sobe e o Welch não acompanha. O erro tipo I
 do Mann-Whitney fica perto de 5% em todo n, como na Q3.
 
+## Extra: p-valor × tamanho do efeito com amostra grande
+
+Um efeito sem importância prática, com amostras cada vez maiores. A tabela é gerada por
+`python -m lab04.simulacao.amostra_grande` e não deve ser editada à mão.
+
+<!-- amostra_grande:inicio -->
+Cenário base com a mediana do grupo com bot ×1.10 (27 min a mais sobre a mediana de 4.5 h do grupo sem bot; δ de Cliff da população = 0.025). Mediana de 200 conjuntos por n, semente 42.
+
+| n por grupo | p-valor, Welch | p-valor, Mann-Whitney | Rejeita a 5%, Welch | Rejeita a 5%, Mann-Whitney | g de Hedges | δ de Cliff | Diferença de medianas |
+|---|---|---|---|---|---|---|---|
+| 30 | 0.406 | 0.451 | 2% | 6% | 0.003 | 0.028 | 41 min |
+| 300 | 0.418 | 0.407 | 2% | 8% | 0.027 | 0.026 | 36 min |
+| 3000 | 0.376 | 0.084 | 7% | 38% | 0.018 | 0.026 | 25 min |
+| 30000 | 0.148 | 9.0 × 10^-8 | 32% | 100% | 0.012 | 0.025 | 27 min |
+<!-- amostra_grande:fim -->
+
+A issue sugeria a mediana 2% maior, mas com σ = 2,1 no log isso fica abaixo do ruído mesmo com 30.000
+PRs por grupo (p ≈ 0,7 no Mann-Whitney), então o exemplo usa 10%, uns 27 minutos. Cada linha é a
+mediana de 200 conjuntos: com um conjunto só, o p-valor e o δ dos n pequenos variam tanto de uma
+semente para outra que a tendência some.
+
+**O p-valor mede a certeza, não o tamanho.** O p-valor mediano do Mann-Whitney cai de 0,45 com 30
+PRs por grupo para 9 × 10⁻⁸ com 30.000, enquanto o δ de Cliff fica entre 0,025 e 0,028, o g de Hedges
+perto de zero e a diferença de medianas perto dos 27 minutos da população. Com amostra grande o
+teste confirma que a diferença não é zero, mas 27 minutos não mudam nada para quem espera o merge,
+ao contrário das 34 h de diferença na mediana dos dados reais. O Welch nem chega lá: nas horas
+brutas, com 30.000 PRs por grupo, ele rejeita só 32% das vezes.

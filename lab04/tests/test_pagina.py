@@ -75,15 +75,16 @@ def test_secao_7_confronta_palpite_escolhe_teste_e_da_limitacao(html):
     assert "A1 —" not in secao
 
 
-def test_apendice_tem_os_extras_com_numeros_dos_csvs(html):
+def test_apendice_tem_os_tres_extras_com_numeros_dos_csvs(html):
     secao = _secao(html, "apendice")
     for trecho in ["A1 — Poder × tamanho da amostra", "33 PRs", "203 PRs", "442 PRs", "8 dias", "1,7 mês",
                    "3,6 meses", "mais que o período coletado",
-                   "A2 — O melhor teste muda com o tamanho da amostra?", "não troca de lado", "+57,5 p.p."]:
+                   "A2 — O melhor teste muda com o tamanho da amostra?", "não troca de lado", "+57,5 p.p.",
+                   "A3 — p-valor × tamanho do efeito", "9,0 × 10<sup>−8</sup>", "30.000", "27 min", "33,8 h"]:
         assert trecho in secao
 
 
-@pytest.mark.parametrize("bloco", ["A2"])
+@pytest.mark.parametrize("bloco", ["A2", "A3"])
 def test_textos_do_apendice_tem_de_2_a_4_frases(html, bloco):
     secao = _secao(html, "apendice")
     trecho = secao[secao.index(f"<h3>{bloco} —"):]
