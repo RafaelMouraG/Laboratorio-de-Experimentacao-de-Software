@@ -1,0 +1,21 @@
+snapshot_date,sprint,issue,titulo,status,assignee,state,url
+2026-11-13,final,142,"Estrutura do lab04, comando único e CI",Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/142
+2026-11-13,final,143,"Coleta dos PRs reais do langflow, com e sem CodeRabbit",Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/143
+2026-11-13,final,144,"Cenário: pergunta, hipóteses, parâmetros e palpite",Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/144
+2026-11-13,final,145,Gerador de dados e os dois testes num conjunto simulado,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/145
+2026-11-13,final,146,Dashboard com o G1 e o G2,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/146
+2026-11-13,final,147,Snapshot do board da S01 do Lab04,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/147
+2026-11-13,final,148,Q1: motor da simulação e erro tipo I,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/148
+2026-11-13,final,149,Q2: curvas de poder,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/149
+2026-11-13,final,150,Q3: dados que violam os pressupostos,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/150
+2026-11-13,final,151,G3 e G4 no dashboard,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/151
+2026-11-13,final,152,Snapshot do board da S02 do Lab04,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/152
+2026-11-13,final,153,Os dois testes nos dados reais,Done,mateusdsoc,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/153
+2026-11-13,final,154,Textos e conclusão do dashboard,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/154
+2026-11-13,final,155,Publicação do dashboard no GitHub Pages,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/155
+2026-11-13,final,156,Roteiro das 15 perguntas da apresentação,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/156
+2026-11-13,final,157,Snapshot final do board do Lab04,Done,Athoosz,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/157
+2026-11-13,final,168,[Extra] Poder × tamanho da amostra para o efeito observado,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/168
+2026-11-13,final,169,[Extra] O melhor teste muda com o tamanho da amostra?,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/169
+2026-11-13,final,170,[Extra] p-valor × tamanho do efeito com amostra grande,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/170
+2026-11-13,final,172,Conferência do modelo: os dois testes com a forma dos PRs reais,Done,RafaelMouraG,CLOSED,https://github.com/RafaelMouraG/Laboratorio-de-Experimentacao-de-Software/issues/172
