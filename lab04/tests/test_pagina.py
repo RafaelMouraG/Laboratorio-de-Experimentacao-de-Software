@@ -49,7 +49,7 @@ def test_pagina_tem_as_sete_secoes_na_ordem_e_sem_avisos(html):
 def test_secao_1_tem_hipoteses_origem_e_observacoes(html):
     secao = _secao(html, "pergunta")
     for trecho in ["E[X] = E[Y]", "P(X &gt; Y) = P(Y &gt; X)", "bicaudais", "langflow-ai/langflow",
-                   "01/08/2026", "31/10/2026", "490", "371", "60 PRs", "30 com bot e 30 sem", "880.000"]:
+                   "01/08/2026", "31/10/2026", "490", "371", "60 PRs", "30 com bot e 30 sem", "1.030.000"]:
         assert trecho in secao
 
 
@@ -94,6 +94,16 @@ def test_textos_do_apendice_tem_de_2_a_4_frases(html, bloco):
     assert 2 <= len(frases) <= 4
 
 
+def test_secao_7_confere_o_modelo_com_a_reamostragem_dos_prs_reais(html):
+    secao = _secao(html, "conclusao")
+    for trecho in ["Conferindo o modelo", "Reamostragem dos PRs reais", "80,6%", "4,32%", "75,6%",
+                   "não depende do modelo da cauda"]:
+        assert trecho in secao
+    # A leitura do Welch nos dados reais deixa de dizer que ele passou por sorte.
+    assert "exagerou a diferença" not in _secao(html, "dados-reais")
+    assert "80,6%" in _secao(html, "dados-reais")
+
+
 def test_graficos_g1_a_g4_sao_plotly_autocontidos_e_rotulados(tmp_path):
     html = gerar(tmp_path / "index.html").read_text(encoding="utf-8")
     for grafico in ("g1", "g2", "g3", "g4", "a1", "a2"):
@@ -119,9 +129,12 @@ def test_textos_g3_e_g4_refletem_as_taxas_e_os_poderes_do_csv(html):
     assert "4,38%" in html
     assert "0,07%" in html
     assert "0,84%" in html
-    assert "a vantagem não muda de lado" in html
+    assert "Nas 5 situações que sorteiam de uma lognormal" in _leitura(html, "g4")
+    assert "a vantagem muda de lado" in _leitura(html, "g4")
+    assert "entre ×2,5 e ×8,0" in _leitura(html, "g4")
     assert "Cenário base: ×5,0" in html
-    assert "Welch não alcança 80%" in html
+    assert "o Welch só chega em Reamostragem (×4,7)" in _leitura(html, "g4")
+    assert "4,32%" in _leitura(html, "g3")
     assert "63,3%" in _leitura(html, "g4")
     assert "Nenhum dos dois fica liberal" in _leitura(html, "g3")
 
