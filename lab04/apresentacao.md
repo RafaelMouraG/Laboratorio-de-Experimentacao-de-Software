@@ -114,17 +114,17 @@ diferentes se os grupos tiverem dispersões distintas.
 
 ### 14. Qual teste escolheríamos e quando essa escolha mudaria?
 
-Para saber se um PR tende a demorar mais, escolheríamos Mann-Whitney, que teve mais poder neste
-cenário. Se a pergunta fosse especificamente sobre a média — por exemplo, horas totais de espera —,
-Welch seria mais adequado, mas precisaria de uma amostra maior.
+Mann-Whitney: o poder dele é cerca de 77% tanto na lognormal quanto reamostrando os PRs reais. O do
+Welch vai de 24% a 81% conforme o modelo da cauda, que 30 PRs não deixam medir. Se a pergunta fosse
+sobre a média — horas totais de espera —, o teste certo seria o Welch.
 
-**Onde:** [seção 7 — Qual teste usar neste cenário / Quando a escolha mudaria](https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/#conclusao).
+**Onde:** [seção 7 — Conferindo o modelo / Qual teste usar neste cenário / Quando a escolha mudaria](https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/#conclusao).
 
 ### 15. Qual é a principal limitação da conclusão?
 
-A simulação é uma aproximação lognormal, mas os tempos reais no log são bimodais. Além disso, os
-dados são observacionais: o bot não foi sorteado entre os PRs e há concentração de autoria. Portanto,
-os resultados mostram associação, não que o CodeRabbit causou a diferença.
+A lognormal exagera a cauda à direita: a média do modelo no grupo com bot é 330 h contra 129 h
+reais, e isso derruba o Welch na simulação. Além disso, os dados são observacionais: o bot não foi
+sorteado e há concentração de autoria, então o resultado é associação, não causa.
 
 **Onde:** [seção 7 — Principal limitação](https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/#conclusao) e [seção 1 — dados reais](https://rafaelmourag.github.io/Laboratorio-de-Experimentacao-de-Software/#pergunta).
 

@@ -32,6 +32,7 @@ python -m lab04.simulacao.q3
 python -m lab04.simulacao.q4
 python -m lab04.simulacao.pressupostos_n
 python -m lab04.simulacao.amostra_grande
+python -m lab04.simulacao.reamostragem
 python -m lab04
 ```
 
@@ -275,11 +276,13 @@ calculado de novo: é a linha da Q2 no efeito observado. A tabela é gerada por
 | Mann-Whitney | U = 625 | 0.0099 | δ de Cliff = 0.389 | H₀ (nenhum grupo tende a demorar mais) rejeitada a 5%, rejeitada a 1% | 77.4% | 53.2% |
 <!-- reais:fim -->
 
-**Os dois testes rejeitam H₀ a 5%, mas só o Mann-Whitney tinha poder para isso.** Com 77% de poder
-nesse efeito, a rejeição dele era o esperado. O Welch passou com p = 0,011 tendo 24% de poder, e com
-poder baixo quem passa do corte costuma ser a amostra que exagerou a diferença: o g de 0,69 aqui é
-quase o dobro do 0,39 do conjunto simulado com o mesmo efeito. A 1% só o Mann-Whitney rejeita, e
-por pouco (p = 0,0099). Na prática, 34 h a mais na mediana é mais de um dia por PR, e o δ de 0,39
+**Os dois testes rejeitam H₀ a 5%, e o poder do Welch depende do modelo da cauda.** O Mann-Whitney
+tem cerca de 77% de poder nesse efeito, então a rejeição dele era o esperado. Para o Welch, a
+lognormal da Q2 dá 24%, o que faria do p = 0,011 um resultado de sorte. Mas a lognormal põe nos
+dados uma cauda que os PRs reais não têm: com a forma dos próprios PRs, o poder do Welch sobe para
+81% (seção "Conferindo o modelo"), e a rejeição dele também passa a ser o esperado. A 1% os dois
+p-valores ficam colados no corte (0,0099 e 0,0107), o que na prática é o mesmo resultado, não uma
+diferença entre os testes. Na prática, 34 h a mais na mediana é mais de um dia por PR, e o δ de 0,39
 diz que o PR com bot demora mais em cerca de 69% dos pares. Os limites da seção "Dados reais"
 continuam valendo: é associação, não efeito do bot.
 
@@ -327,8 +330,9 @@ não ajuda o Welch, mas aumentar o n sim, porque com mais PRs a média amostral 
 mais perto de normal. No `langflow` havia 490 PRs com o bot e 371 sem de agosto a outubro, cerca
 de 123 por mês no grupo mais raro. Nesse ritmo, os 33 PRs do Mann-Whitney saem de uns 8 dias de PRs,
 os 203 do Welch de 1,7 mês e os 442 do Welch a 1% de 3,6 meses, mais que o período coletado. Só com
-esse n o Welch passa a ser uma opção para quem quer comparar médias. No dashboard, isso fica no
-apêndice, com o gráfico de poder × n.
+esse n o Welch passa a ser uma opção para quem quer comparar médias. Esses n valem para a cauda da lognormal, que é o pior caso para o Welch: com a forma dos PRs reais
+ele já tem 81% de poder com os 30 coletados (seção "Conferindo o modelo"), então são um teto, não
+uma previsão. No dashboard, isso fica no apêndice, com o gráfico de poder × n.
 
 ## Extra: o melhor teste muda com o tamanho da amostra?
 
@@ -394,3 +398,50 @@ perto de zero e a diferença de medianas perto dos 27 minutos da população. Co
 teste confirma que a diferença não é zero, mas 27 minutos não mudam nada para quem espera o merge,
 ao contrário das 34 h de diferença na mediana dos dados reais. O Welch nem chega lá: nas horas
 brutas, com 30.000 PRs por grupo, ele rejeita só 32% das vezes.
+
+## Conferindo o modelo: a forma dos PRs reais
+
+O cenário base depende de uma escolha: a lognormal. Esta seção repete o erro tipo I e a curva de
+poder trocando só isso. Cada conjunto é sorteado, com reposição, dos próprios 60 PRs: tira-se de
+cada PR a média do log do seu grupo, e os 60 resíduos viram uma forma só para os dois grupos, com
+o efeito somado no grupo com bot. O resto é igual ao cenário base (n, μ, grade de efeitos, motor).
+A tabela é gerada por `python -m lab04.simulacao.reamostragem` e não deve ser editada à mão.
+
+<!-- reamostragem:inicio -->
+A cauda que a lognormal ajustada implica, ao lado da que os PRs têm:
+
+| Grupo | Média real (h) | Média da lognormal (h) | Maior tempo real (h) | Percentil 99 da lognormal (h) |
+|---|---|---|---|---|
+| com_bot | 129 | 330 | 948 | 4938 |
+| sem_bot | 24 | 29 | 147 | 404 |
+
+10000 repetições por ponto, n coletado, semente 42. `base` é a lognormal; `reamostragem` sorteia dos 60 PRs reais.
+
+| Modelo | Teste | Erro tipo I, α = 5% | Erro tipo I, α = 1% | Poder no efeito observado, α = 5% | α = 1% | Chega a 80% em (α = 5%) |
+|---|---|---|---|---|---|---|
+| `base` | t de Welch | 1.56% | 0.07% | 23.5% | 4.3% | não chega |
+| `base` | Mann-Whitney | 4.38% | 0.84% | 77.4% | 53.2% | ×5.0 |
+| `reamostragem` | t de Welch | 4.32% | 0.64% | 80.6% | 40.6% | ×4.7 |
+| `reamostragem` | Mann-Whitney | 4.56% | 1.02% | 75.6% | 51.6% | ×5.2 |
+<!-- reamostragem:fim -->
+
+**A lognormal inventa uma cauda à direita que os PRs não têm.** O σ de 2,1 no log é grande porque
+há muitos merges em menos de uma hora, não porque há PRs de meses. Como a lognormal é simétrica no
+log, ela devolve esse espalhamento também para cima: no grupo com bot a média do modelo é 330 h
+contra 129 h reais, e um PR em cada cem passaria de 4.900 h, mais de seis meses, num período de
+coleta de três. O maior tempo real é 948 h.
+
+**Sem essa cauda, o Welch se comporta bem.** O erro tipo I sobe de 1,6% para 4,3%, na faixa de α, e
+o poder no efeito observado vai de 24% para 81%, um pouco acima do Mann-Whitney. O teto da Q2
+some: o Welch chega a 80% em ×4,7. O Mann-Whitney quase não muda (77% e 76%), porque os postos não
+enxergam o tamanho da cauda.
+
+**Os dois modelos são extremos, e a verdade fica entre eles.** A reamostragem erra para o outro
+lado: nenhum tempo sorteado passa do maior observado, então a cauda fica curta demais e o Welch sai
+favorecido. O que as duas simulações juntas mostram é que o resultado do Welch depende de uma
+coisa que 30 PRs por grupo não deixam medir, o peso da cauda, e o do Mann-Whitney não. Por isso a
+escolha continua sendo o Mann-Whitney, mas pelo motivo certo: ele é o teste cujo poder não muda
+com o modelo, e não porque o Welch seja ruim nestes dados. O "Welch não chega a 80%" da Q2 e os
+203 PRs por grupo da seção anterior valem para a lognormal, não para os PRs do `langflow`.
+
+Esta conferência foi feita depois dos resultados, por isso não está no palpite do `cenario.md`.
