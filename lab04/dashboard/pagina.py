@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from datetime import date
 from pathlib import Path
 from string import Template
 
@@ -13,7 +14,7 @@ from plotly.subplots import make_subplots
 from scipy import stats
 
 from lab04.data import coleta_prs as coleta
-from lab04.simulacao import motor, parametros, q2, q3, q4
+from lab04.simulacao import amostra_grande, motor, parametros, pressupostos_n, q2, q3, q4
 from lab04.simulacao import reais as testes_reais
 from lab04.simulacao.exemplo import SEMENTE
 from lab04.simulacao.gerador import cenario_base, efeito_observado, gerar as gerar_amostra
@@ -27,6 +28,7 @@ DESTINO = Path(__file__).with_name("index.html")
 # Da execução da coleta (#143), registrada no README: o CSV guarda só os PRs sorteados.
 COLETADO_EM = "04/11/2026"
 ELEGIVEIS = {"com_bot": 490, "sem_bot": 371}
+DIAS_POR_MES = 365.25 / 12
 
 # A identidade dos testes fica aqui e é reutilizada por G2, G3 e G4.
 TESTES = {
@@ -47,6 +49,8 @@ SITUACOES = {
     "n_pequeno": "n pequeno",
     "dispersoes": "Dispersões*",
 }
+# Cores das situações no A2, longe do azul e do vermelho dos testes.
+CORES_SITUACOES = {"base": "#334155", "assimetria": "#d97706", "outliers": "#0891b2"}
 
 MODELO = Template("""<!doctype html>
 <html lang="pt-BR">
@@ -132,6 +136,11 @@ footer { padding: 2rem; color: #64748b; text-align: center; }
   <section id="conclusao">
     <h2>7. Palpite, resultados e conclusão</h2>
     $conclusao
+  </section>
+
+  <section id="apendice">
+    <h2>Apêndice — Tamanho da amostra</h2>
+    $apendice
   </section>
 </main>
 <footer>Laboratório de Experimentação de Software — PUC Minas</footer>
@@ -840,7 +849,77 @@ def _curva_amostra(dados: pd.DataFrame, csv: Path) -> pd.DataFrame | None:
         return None
 
 
-def _bloco_amostra(curva: pd.DataFrame | None, coletado: int) -> str:
+def _meses_coletados() -> float:
+    inicio, fim = (date.fromisoformat(d) for d in coleta.PERIODO.split(".."))
+    return ((fim - inicio).days + 1) / DIAS_POR_MES
+
+
+def _prs_por_mes() -> float:
+    """PRs elegíveis por mês do grupo mais raro, no ritmo do período coletado."""
+    return min(ELEGIVEIS.values()) / _meses_coletados()
+
+
+def _grupo_mais_raro() -> str:
+    return "sem bot" if ELEGIVEIS["sem_bot"] <= ELEGIVEIS["com_bot"] else "com bot"
+
+
+def _tempo_de_coleta(n: int) -> str:
+    """Quanto tempo de PRs do repositório dá `n` por grupo, no ritmo do período coletado."""
+    meses = n / _prs_por_mes()
+    if meses < 1:
+        return f"{_num(meses * DIAS_POR_MES, 0)} dias"
+    return f"{_num(meses, 1)} {'mês' if round(meses, 1) < 2 else 'meses'}"
+
+
+def _figura_a1(curva: pd.DataFrame, coletado: int) -> str:
+    figura = go.Figure()
+    for alfa, traco in zip(ALFAS, ("solid", "dash")):
+        for teste, estilo in TESTES.items():
+            linhas = curva[(curva["teste"] == teste) & (curva["alfa"] == alfa)].sort_values("n")
+            figura.add_trace(
+                go.Scatter(
+                    x=linhas["n"],
+                    y=100 * linhas["proporcao"],
+                    customdata=np.column_stack((linhas["rejeicoes"], linhas["n_rep"])),
+                    mode="lines+markers",
+                    name=f"{estilo['nome']}, α = {100 * alfa:g}%",
+                    line=dict(color=estilo["cor"], width=3, dash=traco),
+                    marker=dict(size=6),
+                    hovertemplate=(
+                        "n = %{x} por grupo<br>Poder: %{y:.1f}%<br>"
+                        "Rejeições: %{customdata[0]:.0f} de %{customdata[1]:.0f}"
+                        "<extra>%{fullData.name}</extra>"
+                    ),
+                )
+            )
+    figura.add_hline(
+        y=80, line_dash="dash", line_color="#64748b",
+        annotation_text="Poder de 80%", annotation_position="top left",
+    )
+    # Em eixo log, formas e o range do Plotly ficam em log10, não no valor.
+    figura.add_vline(
+        x=math.log10(coletado), line_dash="dot", line_color="#475569",
+        annotation_text=f"{coletado} coletados", annotation_position="top right",
+    )
+    ticks = [10, 20, 30, 50, 100, 200, 500]
+    figura.update_xaxes(
+        title_text="PRs por grupo (escala log)", type="log", tickvals=ticks, ticktext=[str(t) for t in ticks],
+        range=[math.log10(curva["n"].min() * 0.9), math.log10(curva["n"].max() * 1.1)],
+    )
+    figura.update_yaxes(title_text="Poder estimado (%)", range=[0, 102])
+    figura.update_layout(
+        title="Poder × tamanho da amostra no efeito observado",
+        template="plotly_white",
+        legend_title_text="Teste e α",
+        margin=dict(l=65, r=30, t=90, b=65),
+    )
+    return figura.to_html(
+        full_html=False, include_plotlyjs=False, div_id="grafico-a1",
+        config={"responsive": True, "displaylogo": False},
+    )
+
+
+def _bloco_a1(curva: pd.DataFrame | None, coletado: int) -> str:
     if curva is None:
         return ""
     linhas = []
@@ -858,23 +937,177 @@ def _bloco_amostra(curva: pd.DataFrame | None, coletado: int) -> str:
             f"<tr><td>{celulas[0]}</td>" + "".join(f'<td class="num">{c}</td>' for c in celulas[1:]) + "</tr>"
         )
     n_w, n_m = q4.n_para(curva, "welch"), q4.n_para(curva, "mann_whitney")
-    if n_w is not None and n_m is not None:
+    n_w_01 = q4.n_para(curva, "welch", 0.01)
+    if n_w is not None and n_m is not None and n_w_01 is not None:
+        alem = n_w_01 / _prs_por_mes() > _meses_coletados()
         leitura = (
             f"Com os {coletado} PRs coletados o Mann-Whitney está a poucos PRs dos 80%; o Welch precisaria de "
             f"cerca de {_num(n_w / n_m, 0)} vezes mais. Aumentar o efeito não tira o Welch do teto da Q2, mas aumentar "
-            f"o n sim, porque com mais PRs a média amostral fica mais perto de normal. O <code>{coleta.REPOSITORIO}</code> "
-            f"tinha {ELEGIVEIS['com_bot']} e {ELEGIVEIS['sem_bot']} PRs disponíveis, então esse estudo maior seria viável."
+            "o n sim, porque com mais PRs a média amostral fica mais perto de normal. No ritmo do período coletado, "
+            f"o grupo mais raro ({_grupo_mais_raro()}) teve cerca de {_num(_prs_por_mes(), 0)} PRs elegíveis por mês no "
+            f"<code>{coleta.REPOSITORIO}</code>: os {n_m} PRs por grupo do Mann-Whitney saem de {_tempo_de_coleta(n_m)} "
+            f"de PRs, os {n_w} do Welch de {_tempo_de_coleta(n_w)} e os {n_w_01} do Welch a 1% de "
+            f"{_tempo_de_coleta(n_w_01)}{', mais que o período coletado' if alem else ''}."
         )
     else:
         leitura = f"Até {max(q4.TAMANHOS)} PRs por grupo, ao menos um dos testes não chega a 80%."
     return f"""
-    <h3>Tamanho da amostra</h3>
+    <h3>A1 — Poder × tamanho da amostra</h3>
     <p>Quantos PRs por grupo cada teste precisa para 80% de poder, se o efeito real for o que os dados sugerem. Mesmo cenário base, mudando só o n, igual nos dois grupos.</p>
+    <div class="grafico">{_figura_a1(curva, coletado)}</div>
     <div class="tabela"><table>
       <thead><tr><th>Teste</th><th>Poder com {coletado} por grupo, α = 5%</th><th>n por grupo para 80%, α = 5%</th><th>n por grupo para 80%, α = 1%</th></tr></thead>
       <tbody>{''.join(linhas)}</tbody>
     </table></div>
     <p class="leitura">{leitura}</p>"""
+
+
+def _figura_a2(vantagem: pd.DataFrame) -> str:
+    figura = go.Figure()
+    for situacao in pressupostos_n.SITUACOES:
+        linhas = vantagem[vantagem["situacao"] == situacao].sort_values("n")
+        figura.add_trace(
+            go.Scatter(
+                x=linhas["n"],
+                y=100 * linhas["diferenca"],
+                customdata=100 * np.column_stack((linhas["welch"], linhas["mann_whitney"])),
+                mode="lines+markers",
+                name=SITUACOES[situacao],
+                line=dict(color=CORES_SITUACOES[situacao], width=3),
+                marker=dict(size=8),
+                hovertemplate=(
+                    "n = %{x} por grupo<br>Mann-Whitney − Welch: %{y:+.1f} p.p.<br>"
+                    "Welch: %{customdata[0]:.1f}% · Mann-Whitney: %{customdata[1]:.1f}%"
+                    "<extra>%{fullData.name}</extra>"
+                ),
+            )
+        )
+    figura.add_hline(
+        y=0, line_dash="dash", line_color="#64748b",
+        annotation_text="Abaixo daqui o Welch teria mais poder", annotation_position="bottom right",
+    )
+    ticks = list(pressupostos_n.TAMANHOS)
+    figura.update_xaxes(title_text="PRs por grupo (escala log)", type="log", tickvals=ticks, ticktext=[str(t) for t in ticks])
+    figura.update_yaxes(title_text="Poder do Mann-Whitney − poder do Welch (p.p.)", range=[-10, 100])
+    figura.update_layout(
+        title=f"Vantagem de poder do Mann-Whitney na mediana ×{pressupostos_n.MULTIPLICADOR}, α = 5%",
+        template="plotly_white",
+        legend_title_text="Situação",
+        margin=dict(l=65, r=30, t=90, b=65),
+    )
+    return figura.to_html(
+        full_html=False, include_plotlyjs=False, div_id="grafico-a2",
+        config={"responsive": True, "displaylogo": False},
+    )
+
+
+def _texto_a2(curva: pd.DataFrame, vantagem: pd.DataFrame) -> str:
+    v = vantagem.set_index(["situacao", "n"])
+    maior_n, menor_n = max(pressupostos_n.TAMANHOS), min(pressupostos_n.TAMANHOS)
+
+    def pp(situacao: str, n: int, coluna: str = "diferenca") -> str:
+        valor = 100 * v.loc[(situacao, n), coluna]
+        return (f"{valor:+.1f}".replace(".", ",") + " p.p.") if coluna == "diferenca" else _num(valor, 1) + "%"
+
+    if (vantagem["diferenca"] > 0).all():
+        frases = [
+            f"O Mann-Whitney tem mais poder que o Welch em todos os pontos, então a escolha não troca de lado "
+            f"entre {menor_n} e {maior_n} PRs por grupo."
+        ]
+    else:
+        frases = ["Em algum ponto da grade o Welch tem mais poder: ali a escolha troca de lado."]
+    base = v.loc["base", "diferenca"]
+    pico = int(base.idxmax())
+    if pico != maior_n:
+        frases.append(
+            f"No cenário base a vantagem chega ao máximo em n = {pico} ({pp('base', pico)}) e encolhe em {maior_n} "
+            f"({pp('base', maior_n)}), porque o Mann-Whitney encosta em 100% e o Welch, com a média amostral mais "
+            f"perto de normal, começa a alcançá-lo ({pp('base', maior_n, 'welch')} de poder)."
+        )
+    else:
+        frases.append(f"No cenário base a vantagem cresce com o n até {pp('base', maior_n)}.")
+    violadas = [s for s in pressupostos_n.SITUACOES if s != "base"]
+    crescem = all(v.loc[s, "diferenca"].is_monotonic_increasing for s in violadas)
+    frases.append(
+        f"Com assimetria e outliers ela {'só cresce' if crescem else 'oscila'}, até {pp('assimetria', maior_n)} e "
+        f"{pp('outliers', maior_n)} em n = {maior_n}, com o Welch em {pp('assimetria', maior_n, 'welch')} e "
+        f"{pp('outliers', maior_n, 'welch')} de poder."
+    )
+    zero = curva[(curva["alfa"] == ALFA) & (curva["efeito"] == 0.0) & (curva["teste"] == "welch")]
+    pior = zero.loc[zero["proporcao"].idxmin()]
+    frases.append(
+        f"Os pressupostos pesam no erro tipo I do Welch com n pequeno ({_percentual(pior['proporcao'])} em "
+        f"{SITUACOES[pior['situacao']].lower()} com n = {int(pior['n'])}) e no poder dele com n grande, quando a cauda longa e "
+        "os outliers o seguram enquanto o Mann-Whitney passa de 90%."
+    )
+    return " ".join(frases)
+
+
+def _bloco_a2(curva: pd.DataFrame) -> str:
+    vantagem = pressupostos_n.vantagem(curva)
+    return f"""
+    <h3>A2 — O melhor teste muda com o tamanho da amostra?</h3>
+    <p>Cenário base, assimetria e outliers da Q3 com {', '.join(map(str, pressupostos_n.TAMANHOS[:-1]))} e {pressupostos_n.TAMANHOS[-1]} PRs por grupo. O poder é medido na mediana ×{pressupostos_n.MULTIPLICADOR}, em que o Mann-Whitney tem cerca de metade de poder no cenário base com o n coletado; o erro tipo I, no efeito zero.</p>
+    <div class="grafico">{_figura_a2(vantagem)}</div>
+    <p class="leitura">{_texto_a2(curva, vantagem)}</p>"""
+
+
+def _p_html(p: float) -> str:
+    if p >= 0.001:
+        return _num(p, 3)
+    mantissa, expoente = f"{p:.1e}".split("e")
+    return f"{mantissa.replace('.', ',')} × 10<sup>{int(expoente)}</sup>".replace("<sup>-", "<sup>−")
+
+
+def _bloco_a3(grande: pd.DataFrame, p: dict[str, parametros.Parametros], mediana_real: float) -> str:
+    c = cenario_base(p)
+    minutos = amostra_grande.diferenca_verdadeira_h(c) * 60
+    linhas = "".join(
+        f"<tr><td class=\"num\">{_milhar(int(l.n))}</td><td class=\"num\">{_p_html(l.p_welch)}</td>"
+        f"<td class=\"num\">{_p_html(l.p_mann_whitney)}</td><td class=\"num\">{_num(100 * l.rejeicao_welch, 0)}%</td>"
+        f"<td class=\"num\">{_num(100 * l.rejeicao_mann_whitney, 0)}%</td><td class=\"num\">{_num(l.g_hedges, 3)}</td>"
+        f"<td class=\"num\">{_num(l.delta_cliff, 3)}</td><td class=\"num\">{_num(l.diferenca_medianas_h * 60, 0)} min</td></tr>"
+        for l in grande.itertuples()
+    )
+    menor, maior = grande.iloc[0], grande.iloc[-1]
+    leitura = " ".join([
+        f"Com a mediana do grupo com bot {_num(100 * amostra_grande.AUMENTO, 0)}% maior, uns {_num(minutos, 0)} minutos "
+        f"num PR que leva {_num(math.exp(c.mu), 1)} h, o p-valor mediano do Mann-Whitney cai de "
+        f"{_p_html(menor.p_mann_whitney)} com {_milhar(int(menor.n))} PRs por grupo para {_p_html(maior.p_mann_whitney)} "
+        f"com {_milhar(int(maior.n))}, e ele rejeita H₀ em {_num(100 * maior.rejeicao_mann_whitney, 0)}% dos conjuntos.",
+        f"No mesmo caminho o δ de Cliff fica entre {_num(grande['delta_cliff'].min(), 3)} e "
+        f"{_num(grande['delta_cliff'].max(), 3)} e o g de Hedges perto de zero: o n não aumenta o efeito, só a certeza "
+        "de que ele não é zero.",
+        f"Significância diz se há diferença; o tamanho de efeito e a diferença em minutos dizem se ela importa, e "
+        f"{_num(minutos, 0)} minutos não mudam nada para quem espera o merge, ao contrário das "
+        f"{_num(mediana_real, 1)} h de diferença na mediana dos dados reais.",
+        f"O Welch nem chega lá: nas horas brutas a cauda longa o segura, e com {_milhar(int(maior.n))} PRs por grupo "
+        f"ele rejeita só {_num(100 * maior.rejeicao_welch, 0)}% das vezes.",
+    ])
+    return f"""
+    <h3>A3 — p-valor × tamanho do efeito com amostra grande</h3>
+    <p>Um efeito sem importância prática, com amostras cada vez maiores: cenário base com a mediana do grupo com bot ×{_num(1 + amostra_grande.AUMENTO, 2)} (δ de Cliff da população = {_num(amostra_grande.delta_verdadeiro(c), 3)}). Cada linha é a mediana de {int(grande['n_rep'].iloc[0])} conjuntos sorteados com aquele n.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>PRs por grupo</th><th>p-valor, Welch</th><th>p-valor, Mann-Whitney</th><th>Rejeita a 5%, Welch</th><th>Rejeita a 5%, Mann-Whitney</th><th>g de Hedges</th><th>δ de Cliff</th><th>Diferença de medianas</th></tr></thead>
+      <tbody>{linhas}</tbody>
+    </table></div>
+    <p class="leitura">{leitura}</p>"""
+
+
+def _secao_apendice(
+    curva: pd.DataFrame | None,
+    curva_pressupostos: pd.DataFrame,
+    grande: pd.DataFrame,
+    p: dict[str, parametros.Parametros],
+    mediana_real: float,
+) -> str:
+    return (
+        "<p>Três perguntas que o enunciado deixa para o fim: quantos PRs bastariam, se a escolha do teste muda com o "
+        "n e o que um p-valor pequeno quer dizer quando o n é enorme. Ficam fora das sete seções, que têm ordem fixa.</p>"
+        + _bloco_a1(curva, p["com_bot"].n)
+        + _bloco_a2(curva_pressupostos)
+        + _bloco_a3(grande, p, mediana_real)
+    )
 
 
 def _secao_conclusao(
@@ -934,7 +1167,7 @@ def _secao_conclusao(
     n_w_01 = q4.n_para(curva, "welch", 0.01) if curva is not None else None
     n_media = (
         f" Com essa cauda, porém, o Welch só chega a 80% de poder com cerca de {n_w} PRs por grupo "
-        f"({n_w_01} a 1%), contra os {p['com_bot'].n} coletados."
+        f"({n_w_01} a 1%), contra os {p['com_bot'].n} coletados (ver o apêndice)."
         if n_w is not None and n_w_01 is not None else ""
     )
     autor, fracao = _autor_dominante(reais)
@@ -946,7 +1179,6 @@ def _secao_conclusao(
       <tbody>{tabela}</tbody>
     </table></div>
     <p class="leitura">O palpite acertou quem ganha e por quê, mas subestimou o tamanho: a cauda longa não deixa o Welch só um pouco conservador, tira dele a maior parte do poder. O erro foi em Dispersões*: a mesma cauda que cria a diferença de médias deixa o Welch sem poder para vê-la.</p>
-    {_bloco_amostra(curva, p['com_bot'].n)}
     <h3>Qual teste usar neste cenário</h3>
     <p class="leitura"><strong>Mann-Whitney.</strong> Ele mantém o erro tipo I perto de α em todas as situações simuladas, enquanto o Welch fica conservador em todas. No efeito que os dados sugerem tem {_num(100 * m_real, 1)}% de poder contra {_num(100 * w_real, 1)}% do Welch, então, com o n coletado, um Welch não significativo seria o resultado esperado mesmo com o efeito existindo. E responde a uma pergunta útil para quem espera o merge: sorteando um PR de cada grupo, o com bot tende a demorar mais?</p>
     <h3>Quando a escolha mudaria</h3>
@@ -968,9 +1200,13 @@ def gerar(
     destino: Path = DESTINO,
     csv: Path = parametros.CSV,
     simulacoes: Path = motor.SAIDA,
+    tamanho_amostra: Path = pressupostos_n.SAIDA,
+    grande: Path = amostra_grande.SAIDA,
 ) -> Path:
     reais, com, sem, p = _dados(csv)
     dados_simulacoes = _ler_simulacoes(simulacoes)
+    curva = _curva_amostra(dados_simulacoes, csv)
+    resultado_reais = testes_reais.rodar(csv, simulacoes)
     resumo = resumo_g2(com, sem)
     texto_g1, texto_g2 = _textos(reais, com, sem, resumo)
     html = MODELO.substitute(
@@ -986,8 +1222,15 @@ def gerar(
         g4=_figura_g4(dados_simulacoes),
         texto_g3=_texto_g3(dados_simulacoes),
         texto_g4=_texto_g4(dados_simulacoes, efeito_observado(p)),
-        dados_reais=_secao_dados_reais(testes_reais.rodar(csv, simulacoes)),
-        conclusao=_secao_conclusao(dados_simulacoes, p, reais, _curva_amostra(dados_simulacoes, csv)),
+        dados_reais=_secao_dados_reais(resultado_reais),
+        conclusao=_secao_conclusao(dados_simulacoes, p, reais, curva),
+        apendice=_secao_apendice(
+            curva,
+            pressupostos_n.curva(dados_simulacoes, motor.ler(tamanho_amostra), csv),
+            amostra_grande.ler(grande),
+            p,
+            resultado_reais.diferenca_medianas,
+        ),
     )
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html, encoding="utf-8")

@@ -36,7 +36,7 @@ def _leitura(html, id_secao):
 
 
 def test_pagina_tem_as_sete_secoes_na_ordem_e_sem_avisos(html):
-    ids = ["pergunta", "g1", "g2", "g3", "g4", "dados-reais", "conclusao"]
+    ids = ["pergunta", "g1", "g2", "g3", "g4", "dados-reais", "conclusao", "apendice"]
     posicoes = [html.index(f'<section id="{id_secao}">') for id_secao in ids]
     assert posicoes == sorted(posicoes)
     # Os dados dos gráficos vão em base64 dentro dos <script>, e lá "S02" pode aparecer por acaso.
@@ -70,13 +70,33 @@ def test_secao_7_confronta_palpite_escolhe_teste_e_da_limitacao(html):
     secao = _secao(html, "conclusao")
     for trecho in ["O palpite contra a simulação", "Errou", "Acertou", "Qual teste usar",
                    "<strong>Mann-Whitney.</strong>", "Quando a escolha mudaria", "Principal limitação",
-                   "Tamanho da amostra", "33 PRs", "203 PRs", "77,4%", "23,5%", "2,89%", "5,16%"]:
+                   "203 PRs", "ver o apêndice", "77,4%", "23,5%", "2,89%", "5,16%"]:
         assert trecho in secao
+    assert "A1 —" not in secao
+
+
+def test_apendice_tem_os_tres_extras_com_numeros_dos_csvs(html):
+    secao = _secao(html, "apendice")
+    for trecho in ["A1 — Poder × tamanho da amostra", "33 PRs", "203 PRs", "442 PRs", "8 dias", "1,7 mês",
+                   "3,6 meses", "mais que o período coletado",
+                   "A2 — O melhor teste muda com o tamanho da amostra?", "não troca de lado", "+57,5 p.p.",
+                   "A3 — p-valor × tamanho do efeito", "9,0 × 10<sup>−8</sup>", "30.000", "27 min", "33,8 h"]:
+        assert trecho in secao
+
+
+@pytest.mark.parametrize("bloco", ["A2", "A3"])
+def test_textos_do_apendice_tem_de_2_a_4_frases(html, bloco):
+    secao = _secao(html, "apendice")
+    trecho = secao[secao.index(f"<h3>{bloco} —"):]
+    inicio = trecho.index('<p class="leitura">') + len('<p class="leitura">')
+    texto = re.sub(r"<[^>]+>", "", trecho[inicio:trecho.index("</p>", inicio)]).replace("p.p.", "pp")
+    frases = [f for f in re.split(r"[.?!](?=\s|$)", texto) if f.strip()]
+    assert 2 <= len(frases) <= 4
 
 
 def test_graficos_g1_a_g4_sao_plotly_autocontidos_e_rotulados(tmp_path):
     html = gerar(tmp_path / "index.html").read_text(encoding="utf-8")
-    for grafico in ("g1", "g2", "g3", "g4"):
+    for grafico in ("g1", "g2", "g3", "g4", "a1", "a2"):
         assert f'id="grafico-{grafico}"' in html
     assert "plotly.js" in html.lower()
     for rotulo in [
